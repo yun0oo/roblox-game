@@ -1,0 +1,24 @@
+name: Verify Underwater Egg
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 tools/bootstrap.py
+      - run: python3 tools/check.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnderwaterEgg
+          path: |
+            build/UnderwaterEgg.rbxl
+            build/UnderwaterEgg.rbxlx
+            build/UnderwaterEgg-project.zip
+          if-no-files-found: error

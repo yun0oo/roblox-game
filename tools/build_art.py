@@ -24,12 +24,13 @@ def material(name, color):
     m.diffuse_color = (*color, 1)
     return m
 
-skin = material('Marine pearl', (.24, .54, .65))
-belly = material('Ivory underside', (.78, .85, .79))
-fin = material('Deep turquoise fins', (.08, .24, .31))
-gold = material('Ancient gold', (.8, .56, .2))
+skin = material('Marine pearl', (.21, .66, .83))
+belly = material('Ivory underside', (.94, .96, .9))
+fin = material('Deep turquoise fins', (.09, .32, .59))
+gold = material('Ancient gold', (1, .73, .13))
 eye = material('Obsidian eyes', (.008, .015, .025))
 glow = material('Bioluminescent tissue', (.35, .95, .84))
+white = material('Cartoon eye whites', (1, 1, 1))
 
 def sphere(name, location, scale, mat, segments=16, rings=8):
     bpy.ops.mesh.primitive_uv_sphere_add(segments=segments, ring_count=rings, location=location)
@@ -37,6 +38,8 @@ def sphere(name, location, scale, mat, segments=16, rings=8):
     return o
 
 def tube(name, points, radii, mat, sides=8):
+    preserve = name in {"Curled tentacle", "Serpent neck", "Jointed leg", "Serpentine body", "Coiled body", "Whip tail"}
+    if preserve: sides = min(sides, 6)
     vertices=[]; faces=[]
     for i, p in enumerate(points):
         p=Vector(p)
@@ -54,6 +57,7 @@ def tube(name, points, radii, mat, sides=8):
     faces.extend((tuple(reversed(range(sides))),tuple((len(points)-1)*sides+j for j in range(sides))))
     mesh=bpy.data.meshes.new(name);mesh.from_pydata(vertices,[],faces);mesh.materials.append(mat)
     o=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(o)
+    if preserve: o['KeepSurface'] = True
     return o
 
 def sail(name, points, mat):
@@ -145,8 +149,14 @@ def bake(key, kind, target=650, lod_target=150):
     (OUTPUT/(key+'.json')).write_text(json.dumps(results,separators=(',',':')))
     print('BAKED',key,len(results['Full']['Faces']),len(results['Lod']['Faces']),flush=True)
 
-clear();import_fish();bake('fish','fish',850,180)
-clear();bpy.ops.import_scene.gltf(filepath=str(SOURCE/'KenneyBlaster.glb'));bake('harpoon','weapon',700,180)
+clear();import_fish()
+for side in (-1,1):
+    sclera=sphere('Expressive eye',(side*.52,2,.32),(.28,.35,.29),white,8,4)
+    sclera['KeepSurface']=True
+    sphere('Pupil',(side*.61,2.22,.35),(.19,.2,.19),eye,8,4)
+    sphere('Eye sparkle',(side*.64,2.36,.45),(.06,.06,.06),white,8,4)
+bake('fish','fish',1100,260)
+clear();bpy.ops.import_scene.gltf(filepath=str(SOURCE/'KenneyBlaster.glb'));bake('harpoon','weapon',900,280)
 
 # Anatomical silhouettes are generated in Blender, then shipped as mesh data.
 for key in ('shark','ray','turtle','whale','eel','jelly','octopus','seahorse','crab','kraken','leviathan','dragon','scylla','charybdis'):
@@ -209,11 +219,30 @@ for key in ('shark','ray','turtle','whale','eel','jelly','octopus','seahorse','c
         for i in range(12):
             a=i*math.tau/12
             tube('Ivory tooth',[(math.cos(a)*1.1,2.2,math.sin(a)),(math.cos(a)*.7,2.5,math.sin(a)*.65)],[.14,.005],belly,5)
-    # Contrasting eyes, with a tiny specular glint, readable at gameplay distance.
+    if key in ('leviathan','dragon','kraken'):
+        # Large contrasting facial features survive the portable gameplay mesh.
+        front = 1.2 if key == 'kraken' else 2.4
+        sphere('Dark open jaws',(0,front,.05),(.53,.17,.37),eye,12,6)
+        for side in (-1,1):
+            tube('Heroic ivory fang',[(side*.35,front+.1,.27),(side*.27,front+.22,-.18)],[.13,.005],belly,6)
+            tube('Crown horn',[(side*.7,.3,1),(side*.85,.4,1.8),(side*.65,.65,2.2)],[.21,.13,.005],gold,7)
+        if key == 'dragon':
+            for side in (-1,1):
+                tube('Wing gold ridge',[(side*.5,-.8,.2),(side*3,-1.8,.6),(side*2,1.4,-.2)],[.09,.07,.025],gold,6)
+    # Toy-like, expressive eyes: separate white, pupil and highlight geometry.
+    ex,ey,ez = (.9,1.4,.45) if key=='whale' else (.65,1,.5)
+    if key=='turtle': ex,ey,ez=.35,2,.2
+    if key=='charybdis': ex,ey,ez=1.05,2.25,.95
     for side in (-1,1):
-        sphere('Eye',(side*.65,1,.5),(.2,.22,.2),eye,10,5)
-        sphere('Eye glint',(side*.72,1.13,.58),(.065,.07,.065),glow,8,4)
-    bake(key,'creature' if key in ('kraken','leviathan','dragon','scylla','charybdis') else 'fish',1100 if key in ('kraken','scylla') else 750,180)
+        sclera=sphere('Eye white',(side*ex,ey,ez),(.32,.36,.33),white,8,4)
+        sclera['KeepSurface']=True
+        sphere('Eye',(side*(ex+.03),ey+.23,ez),(.25,.25,.25),eye,10,5)
+        sphere('Eye glint',(side*(ex+.1),ey+.4,ez+.1),(.08,.08,.08),white,8,4)
+    if key=='scylla':
+        for x in (-1,0,1):
+            for side in (-1,1):
+                sphere('Serpent eye',(x*1.5+side*.24,2.52,1.84),(.1,.13,.1),eye,8,4)
+    bake(key,'creature' if key in ('kraken','leviathan','dragon','scylla','charybdis') else 'fish',1100 if key in ('kraken','scylla') else 850,360 if key in ('kraken','leviathan','dragon','scylla','charybdis') else 220)
 
 clear()
 points=[];radii=[]
@@ -221,9 +250,9 @@ for i in range(25):
     t=i/24;angle=math.pi*t
     points.append((0,0,(t-.5)*1.25))
     radii.append(max(.003,.48*math.sin(angle)*(1-.26*(t-.5))))
-eggmat=material('Pearlescent shell',(.88,.91,.85))
+eggmat=material('Pearlescent shell',(.97,.98,1))
 tube('Ovoid shell',points,radii,eggmat,32)
-bake('egg','egg',1000,180)
+bake('egg','egg',1200,320)
 
 # Lua modules are generated from pure numeric data; no asset scripts are imported.
 def lua(value):

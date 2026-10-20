@@ -53,7 +53,7 @@ check(player.Character.HumanoidRootPart.Position.Y > loaded.Config.WaterTop, "Ex
 check(#e.Workspace.Bases:GetChildren() == 8, "Actual World.Build creates eight habitats")
 check(#e.Workspace.Floors:GetChildren() == 6, "Actual World.Build creates all six floors")
 check(#e.Workspace.Eggs:GetChildren() == 36, "Startup spawns six eggs per floor")
-check(#e.Workspace.Guardians:GetChildren() == 36, "Every initial egg receives a guardian")
+check(#e.Workspace.Guardians:GetChildren() == 6, "Every depth has exactly one shared boss")
 check(e.Workspace.Map:FindFirstChild("NÉRÉIDE · Navire d'exploration"), "All personal galleries share one research vessel")
 check(string.find(e.Workspace.Bases.Base_1["Identité du propriétaire"]["Identité"].Portrait.Image, "id=1", 1, true), "Personal gallery displays its owner's avatar portrait")
 check(string.find(e.Workspace.Bases.Base_1["Identité du propriétaire"]["Identité"].Pseudo.Text, player.DisplayName, 1, true), "Personal gallery displays its owner's large nameplate")
@@ -70,6 +70,11 @@ for _, guardian in ipairs(e.Workspace.Guardians:GetChildren()) do
     check(guardian.PrimaryPart and guardian:GetAttribute("Guardian") and guardian:GetAttribute("Health") > 0,
         "Guardian model has a body and combat state")
 end
+check(player.Character:FindFirstChild("Équipement de plongée") ~= nil, "Avatar visibly wears diving equipment")
+for _, key in ipairs(loaded.Config.UpgradeOrder) do
+    check(e.Workspace.NPCs:FindFirstChild("Marchand_" .. key), "Each equipment type has its own merchant: " .. key)
+end
+check(e.Workspace.Bases.Base_1["Pancarte amélioration"].ProximityPrompt ~= nil, "Base upgrade has a separate physical sign")
 local remote = e.ReplicatedStorage.RemoteEvents
 check(remote.Snapshot.Messages[player][1][1].Offline, "Offline session is visible in the first UI snapshot")
 local second = e:Player(2)
@@ -118,10 +123,17 @@ end
 local eggId = reefEgg:GetAttribute("EggId")
 travel(player, reefEgg.Position)
 reefEgg.ProximityPrompt.Triggered:Fire(player)
+remote.Action.OnServerEvent:Fire(player, "Sync")
+check(#latest(player).Eggs == 1 and latest(player).Eggs[1].Unsecured and reefEgg.Destroyed, "Collected egg immediately appears as unsecured inventory, without an attached model")
+check(player.Character:FindFirstChild("Transport · " .. latest(player).Eggs[1].Rarity), "Carrier has the rarity highlight visible to other clients")
 travel(player, e.Vector3.new(0, 98, 0))
 travel(player, e.Vector3.new(0, 118, 0))
 travel(player, spawn)
-check(#latest(player).Eggs == 1 and not latest(player).Eggs[1].ReadyAt, "Returning to the surface secures the egg without an instant hatch")
+check(#latest(player).Eggs == 1 and not latest(player).Eggs[1].Unsecured and not latest(player).Eggs[1].ReadyAt, "Own gallery secures pending inventory without an instant hatch")
+check(not player.Character:FindFirstChild("Transport · " .. latest(player).Eggs[1].Rarity), "Securing removes the carrier highlight")
+replacement = e:Character(player); player.CharacterAdded:Fire(replacement)
+replacement.Humanoid.Health = 1000000
+check(#latest(player).Eggs == 1 and replacement:FindFirstChild("Équipement de plongée"), "Respawn preserves inventory and reapplies visible gear")
 remote.Action.OnServerEvent:Fire(player, "Hatch", eggId)
 local readyAt = latest(player).Eggs[1].ReadyAt
 check(readyAt ~= nil, "Deposit remote creates a server incubation deadline")
@@ -140,7 +152,21 @@ travel(player, spawn)
 local goldBefore = latest(player).Money
 remote.Action.OnServerEvent:Fire(player, "Upgrade", "Oxygen")
 e.Clock += 1; e.RunService.Heartbeat:Fire(0.8)
-check(latest(player).Equipment.Oxygen == 2 and latest(player).Money < goldBefore, "Gold buys equipment in the surface workshop")
+check(latest(player).Equipment.Oxygen == 1, "Remote purchase away from the matching merchant is rejected")
+local merchant = e.Workspace.NPCs.Marchand_Oxygen.Enseigne
+travel(player, merchant.Position + e.Vector3.new(0, -6, -3))
+remote.Action.OnServerEvent:Fire(player, "Upgrade", "Shield")
+e.Clock += 1; e.RunService.Heartbeat:Fire(0.8)
+check(latest(player).Equipment.Shield == 1, "Merchant cannot sell another specialty through a forged key")
+merchant.ProximityPrompt.Triggered:Fire(player)
+local messages = remote.FX.Messages[player]
+check(messages[#messages][1] == "OpenShop" and messages[#messages][2].Key == "Oxygen", "Merchant opens the correct specialist shop")
+remote.Action.OnServerEvent:Fire(player, "Upgrade", "Oxygen")
+e.Clock += 1; e.RunService.Heartbeat:Fire(0.8)
+check(latest(player).Equipment.Oxygen == 2 and latest(player).Money < goldBefore, "Gold buys equipment beside its specialist merchant")
+check(replacement["Équipement de plongée"]["Bouteille d’oxygène"]:GetAttribute("EquipmentLevel") == 2, "Purchase immediately updates equipment worn by the avatar")
+remote.Action.OnServerEvent:Fire(player, "Upgrade", { Oxygen = 75 })
+check(latest(player).Equipment.Oxygen == 2, "Malformed upgrade payload cannot modify equipment")
 
 local failed = run(true)
 check(failed.Workspace:GetAttribute("UnderwaterBootState") == "Failed", "Boot exceptions become a visible failure state")

@@ -23,35 +23,38 @@
         "UnderwaterEgg": {
           "$path": "src/client"
         }
+      },
+      "$properties": {
+        "EnableMouseLockOption": false
       }
     },
     "Lighting": {
       "$properties": {
         "Ambient": [
-          0.22,
-          0.29,
-          0.35
+          0.45,
+          0.55,
+          0.7
         ],
-        "Brightness": 2,
-        "ClockTime": 15.5,
+        "Brightness": 3,
+        "ClockTime": 13.5,
         "GlobalShadows": true,
         "OutdoorAmbient": [
-          0.46,
-          0.52,
-          0.56
+          0.65,
+          0.72,
+          0.85
         ],
         "EnvironmentDiffuseScale": 0.7,
         "EnvironmentSpecularScale": 1,
-        "ShadowSoftness": 0.25,
+        "ShadowSoftness": 0.3,
         "LightingStyle": "Realistic",
-        "ExposureCompensation": -0.1
+        "ExposureCompensation": 0
       },
       "Bloom": {
         "$className": "BloomEffect",
         "$properties": {
-          "Intensity": 0.24,
+          "Intensity": 0.15,
           "Size": 26,
-          "Threshold": 1.7
+          "Threshold": 1.8
         }
       },
       "SunRays": {
@@ -64,7 +67,7 @@
       "Atmosphere": {
         "$className": "Atmosphere",
         "$properties": {
-          "Density": 0.24,
+          "Density": 0.18,
           "Offset": 0.1,
           "Color": [
             0.69,
@@ -77,7 +80,7 @@
             0.57
           ],
           "Glare": 0.15,
-          "Haze": 1
+          "Haze": 0.6
         }
       }
     },

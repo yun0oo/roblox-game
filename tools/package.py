@@ -11,7 +11,7 @@ if not source.is_file() or not source.read_bytes().startswith(b'<roblox!'):
 downloads = ROOT / 'downloads'
 downloads.mkdir(exist_ok=True)
 shutil.copyfile(source, downloads / source.name)
-instructions = '''UNDERWATER EGG — NÉRÉIDE · NAVIRE & NOUVEAUX MODÈLES
+instructions = '''UNDERWATER EGG — NÉRÉIDE · MARCHANDS, BOSS & INVENTAIRE
 
 1. Extraire ce ZIP dans un nouveau dossier.
 2. Ouvrir le fichier UnderwaterEgg.rbxl avec Roblox Studio sur Windows/macOS.
@@ -20,11 +20,19 @@ instructions = '''UNDERWATER EGG — NÉRÉIDE · NAVIRE & NOUVEAUX MODÈLES
    Retrouvez votre portrait et votre pseudo au-dessus de votre aquarium.
 5. Rejoindre le bassin central : tous les joueurs plongent et remontent ici.
    Utiliser les échelles pour revenir sur le pont.
-6. Explorer vers le bas et récupérer un œuf lumineux gardé par un monstre.
-7. Rejoindre sa galerie : l'œuf est sécurisé. Le déposer au terminal devant
+6. Explorer vers le bas : un boss géant surveille chaque palier.
+   E près d’un œuf l’ajoute à votre inventaire NON SÉCURISÉ.
+   Aucun œuf n’est attaché au personnage : sa rareté colore le plongeur.
+   Un harpon peut faire tomber cet œuf pour permettre son vol.
+7. Rejoindre sa propre galerie sécurise définitivement l’œuf.
+   Déposer ensuite l’œuf de l’inventaire au terminal devant
    l'aquarium avec E, ou utiliser Collection > Déposer.
 8. Attendre l'éclosion : l'animal nage dans l'aquarium et produit des gold.
-   Dépenser ces gold dans l'atelier pour améliorer son équipement.
+   Dépenser ces gold chez les 7 marchands spécialisés sur le pont.
+   E à un stand ouvre sa boutique : prix et effets avant achat.
+   Le menu Équipement peut vous guider jusqu’au bon marchand.
+9. F à la pancarte dorée de sa galerie améliore la base et l’aquarium.
+   Cette pancarte est séparée du dépôt des œufs.
 
 Toutes les profondeurs sont ouvertes, même sans le niveau conseillé. Attention :
 les monstres mythologiques sont géants et de plus en plus rapides en profondeur.
@@ -38,15 +46,21 @@ Aucune case API à cocher pour cette partie de test. Une session locale non
 publiée est temporaire : sa progression ne sera pas sauvegardée.
 
 Commandes : commandes Roblox / WASD pour nager, Espace pour monter,
-Ctrl pour descendre, Shift pour accélérer, clic gauche pour tirer,
-E près d'un œuf pour le transporter et au terminal de sa galerie pour le déposer. F ouvre les améliorations de la base.
+Ctrl pour descendre, R pour accélérer, clic gauche pour tirer,
+Shift pour bloquer/libérer la caméra (viseur centré).
+E près d’un œuf pour le mettre dans l’inventaire, au terminal pour le déposer,
+ou chez un marchand pour sa boutique. F à la pancarte améliore la base.
 
 Pour conserver la progression : publier une expérience privée, puis autoriser
 l'accès Studio aux services API dans les paramètres de l'expérience.
 
-Nouveautés : bateau commun, portraits et pseudos, bases améliorables, nouveaux
-modèles 3D, poissons CC0 adaptés, harpon détaillé et grandes coques ovoïdes.
-Les bases ont cinq niveaux : achat dans Base & Aquarium avec vos gold.
+Nouveautés : 7 marchands, boutique avec aperçu 3D et comparaison des niveaux,
+pancarte de base séparée, équipements visibles sur le personnage, style Roblox
+plus coloré, aquariums lumineux, œufs géants et un seul boss par profondeur.
+Le harpon vole les œufs NON SÉCURISÉS : le tir les fait tomber, puis E les
+récupère. Les œufs arrivés dans leur propre base restent protégés à jamais.
+Un viseur suit la souris en mode libre et reste centré en mode Shift.
+Les bases ont cinq niveaux : achat près de la pancarte avec vos gold.
 Les modèles sont intégrés : aucun import manuel n'est requis.
 
 Correction incluse : démarrage sans DataStore dans un fichier non publié,

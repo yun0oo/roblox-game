@@ -1,97 +1,77 @@
-# Validation native Roblox Studio
+# Vérification dans Roblox Studio
 
-État : procédure préparée, **non exécutée dans l'environnement Linux**. Les tests Luau et les builds sont indépendants de cette validation native.
+Procédure préparée, **non exécutée dans le cloud Linux**. Les tests automatisés utilisent des primitives moteur simulées ; le rendu, la physique, le réseau et DataStore réel demandent Roblox Studio sur Windows/macOS.
 
-Utiliser d'abord une expérience privée et deux joueurs locaux. Tester le MVP avec `Config.ActiveFloors = 3`, puis les six paliers. Revenir aux valeurs de production après toute accélération des timers ou attribution de monnaie par la console serveur. Aucune commande d'administration distante n'est incluse.
+Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les performances. Toute accélération des timers ou attribution de gold de test doit rester dans une copie privée, avec restauration des valeurs de production avant publication.
 
-## Démarrage et déplacement
+## Démarrage et navire
 
-- Commencer avec le fichier `.rbxl` non publié, sans changer les réglages API, puis appuyer sur **F5 / Play**. Vérifier le personnage Roblox pendant le chargement, puis son arrivée dans son habitat ; l'interface doit indiquer la session Studio non sauvegardée.
-- Refaire le test dans une expérience privée publiée avec accès API désactivé : le démarrage doit également réussir en session temporaire.
-- Ouvrir le fichier construit, lancer le serveur et vérifier l'absence d'erreurs dans Output côté serveur et clients.
-- Vérifier la génération de l'eau, des navire Néréide, de son bassin central et des huit galeries avec leur aquarium géant et des paliers actifs ; les passages du puits central doivent rester traversables.
-- Vérifier que chacun apparaît dans sa propre galerie avec son harpon et une réserve d'oxygène pleine. Marcher sur le pont jusqu'au bassin commun, sauter, puis revenir par une échelle. Tenter un saut depuis un bord extérieur : le serveur doit ramener au plongeoir ; une remontée extérieure doit rester sous l'eau.
-- Nager dans les six directions, utiliser le propulseur, mourir puis réapparaître ; vérifier la caméra, la lampe et les animations.
-- Tester l'émulateur tactile et une manette : réticule central, tir, montée, descente, achat, défilement et fermeture des panneaux.
-- Mesurer la durée de génération de terrain, la mémoire serveur/client et les images/seconde. Faire un essai avec huit clients avant publication publique.
+- Ouvrir le `.rbxl` non publié et appuyer sur F5 sans changer de case API. Vérifier le personnage, le chargement puis l'arrivée dans sa propre galerie, avec le statut de session temporaire.
+- Vérifier l'absence d'erreur serveur/client dans Output. Refaire le démarrage dans une expérience privée publiée avec API désactivées.
+- Parcourir le navire : pont continu, coque, hublots, proue, passerelle, huit galeries, aquariums, clôtures et pancartes. Le portrait, le pseudo et le niveau doivent correspondre au propriétaire, y compris après départ/réattribution.
+- Tous plongent au bassin central. Tester les échelles et le refus de traverser la surface ailleurs. Nager dans six directions, utiliser le propulseur, mourir et réapparaître.
+- Tester R6 et R15, y compris un avatar à échelle personnalisée : masque, harnais, bouteilles, épaulières, palmes, lampe et turbines suivent correctement les membres sans gêner les contrôles ou modifier les vêtements.
 
-## Œufs et gardiens
+## Sept marchands et interface
 
-- Observer six œufs maximum par palier, chacun accompagné d'un gardien. Les nids occupés ne doivent pas recevoir un deuxième œuf.
-- Attendre les cycles et expirations : plusieurs positions et raretés doivent apparaître, avec des variations à l'intérieur des nids.
-- Attirer un gardien, esquiver, l'éloigner du nid et vérifier son retour. Le combattre au harpon et récupérer l'œuf.
-- Comparer les tailles, les silhouettes mythologiques et les vitesses des six profondeurs ; vérifier les yeux lumineux, cornes, tentacules et dents. Comparer une poursuite avec la combinaison conseillée et avec la combinaison 1.
-- Vérifier les auras colorées de chaque rareté sur les œufs sauvages, transportés et en incubation, ainsi que leur visibilité dans les grottes.
-- Vérifier qu'aucun gardien ni attaque spéciale ne blesse un joueur sur le pont protégé.
-- Aux paliers profonds, vérifier les avertissements d'attaque puis les effets de siphon, onde de choc et vortex. Les joueurs doivent pouvoir esquiver avant l'impact.
+- Vérifier les sept stands, leurs couleurs, noms, spécialités, visages et orientations vers la promenade.
+- E à chaque stand ouvre la bonne spécialité. Le panneau montre le plongeur équipé, le niveau, les effets actuels/suivants, le prix et le solde.
+- Depuis le menu, parcourir les spécialités à distance : Localiser ferme le panneau et guide vers le bon marchand ; il ne débite rien.
+- Acheter près du marchand correct : une seule dépense, un seul niveau, effet réel et mise à jour immédiate sur l'avatar. Un achat Harpon remplace l'arme tenue sans duplicata.
+- Refaire avec gold insuffisants, niveau maximum, mauvais marchand et requête distante hors portée : aucun débit ni amélioration indue.
+- La pancarte dorée d'amélioration de base est séparée du dépôt d'œufs. F ouvre Base & Aquarium ; comparer le prochain niveau et le bonus avant achat.
+- Vérifier les cinq niveaux, croissance de la cuve, filtres/coraux/cristaux, capacité exposée et bonus de revenu. L'achat exige sa propre galerie et la proximité de sa pancarte.
+- Depuis le menu à distance, Localiser guide vers sa propre pancarte. La pancarte d'un autre joueur ne donne aucun achat.
+- Tester les panneaux à petite résolution, le défilement, la fermeture, les touches manette et les boutons tactiles.
 
-## Interception à deux joueurs
+## Collecte et inventaire
 
-1. A prend un œuf ; vérifier sa visibilité et le ralentissement de nage.
-2. B touche simplement A avec son personnage : aucun transfert ni chute.
-3. B tire à côté de A : aucun effet de gameplay.
-4. B touche un joueur sans œuf : aucun dégât et aucun vol.
-5. B touche A dans la portée : l'œuf tombe, sans transfert automatique.
-6. B récupère l'œuf tombé : il devient transporteur et gagne un vol réussi.
-7. A poursuit B et peut l'intercepter à son tour après son cooldown.
-8. Tirer à travers une paroi : elle bloque le projectile. Tester également chaque extrémité de portée et les niveaux de harpon 1/2/3.
-9. A entre dans sa propre galerie pendant qu'un projectile arrive : l'œuf doit rester sécurisé, même à la limite de la zone.
-10. B entre dans la galerie de A avec son propre œuf : B est protégé, mais seul l'habitat de B peut sécuriser cet œuf pour lui.
-11. Tester une mort/déconnexion avec un œuf en exploration, dans sa base et en visite dans une autre galerie.
+- Observer six œufs maximum et **un seul boss par palier**. Attendre plusieurs cycles : positions et raretés varient, sans doublon de nid.
+- Comparer les six auras et grandes coques ovoïdes, de Common à Secret. E doit fonctionner à la surface de chaque taille, sans traverser les murs.
+- Ramasser sous l'eau : retrait immédiat du monde, notification et entrée dans Inventaire. Aucun modèle derrière le joueur, ni ralentissement lié au transport.
+- Deux joueurs activent simultanément le même œuf : un seul le reçoit. Répéter le prompt ou son identifiant ne duplique rien.
+- Remplir les 24 places : la collecte supplémentaire échoue et l'œuf reste disponible.
+- Toucher le collecteur ou tirer à côté : aucun effet. Le toucher au harpon hors base : l’œuf non sécurisé quitte son inventaire et réapparaît au sol. Vérifier la disparition de sa surbrillance, puis sa réapparition sur le nouveau transporteur après ramassage. Les œufs déjà sécurisés ne bougent jamais.
+- Mourir ou quitter sous l’eau avec l’œuf non sécurisé : il tombe. Rejoindre sa propre galerie avant : sécurisation, suppression de la surbrillance et sauvegarde permanente. Vérifier le refus du retour rapide avec un œuf non sécurisé, y compris un ramassage pendant les quatre secondes de retour. Rejoindre une autre galerie protège du harpon mais ne sécurise pas l’œuf.
 
-## Progression et oxygène
+## Boss et harpon
 
-- Avec la combinaison 1, traverser les paliers 2 et 3 : avertissement de danger sans téléportation ni interdiction de ramasser un œuf. Un gardien doit détecter, poursuivre, rattraper et attaquer le plongeur.
-- Comparer la survie avec les combinaisons conseillées 10 / 20 / 35 / 50 / 75, puis la nage, le propulseur et la protection améliorés.
-- Comparer la réserve maximale et la consommation après amélioration ; vérifier chaque station O₂ et le rechargement en surface.
-- À oxygène critique : avertissement ; à zéro : baisse de santé, puis chute d'un œuf transporté à la mort.
-- Vérifier les coûts et l'effet des sept équipements, y compris la recharge du propulseur et la portée de lampe.
+- Le même boss patrouille entre les nids et poursuit un joueur dans toute sa profondeur. Collecter, expirer ou renouveler un œuf ne doit pas supprimer le boss.
+- Comparer les six silhouettes et tailles, cornes, yeux, tentacules et dents. Les profondeurs augmentent vitesse, santé et dégâts ; un plongeur mal équipé doit être rattrapé.
+- Le harpon affiche canon, flèche, sandows, moulinet, corde, ardillons, animation et impact. Tester ses trois niveaux et chaque limite de portée.
+- Tirer à côté : aucun dégât. Un mur bloque le tir. Un coup valide blesse le boss ; un joueur touché ne perd pas de santé, mais son œuf non sécurisé tombe. Le cooldown refuse les tirs trop rapprochés.
+- Vaincre un boss : il disparaît une fois et les œufs restent. Il réapparaît seul après 50 à 75 secondes selon le palier, même sans nouvelle apparition d'œuf.
+- Aux profondeurs avancées, esquiver les zones annoncées de siphon, choc et vortex. Le pont et toutes les galeries sont immunisés.
 
-## Éclosion, collection et fusion
+## Viseur et caméra Shift
 
-- Ramener un œuf : message de sécurisation, ajout à l'incubateur, retrait définitif du monde partagé.
-- Déposer avec E au terminal puis avec Collection → Déposer : l'œuf doit être visible dans la cuve et afficher le compte à rebours. Vérifier les délais 15 / 40 / 90 / 180 / 360 / 720 secondes selon rareté. Répéter une requête ne redémarre pas le délai et ne provoque jamais une éclosion anticipée.
-- Quitter la galerie pendant l'incubation : éclosion automatique, animation et animal dans l'aquarium ; une espèce inconnue passe de `???` à son entrée complète. Quitter/revenir avec de vraies sauvegardes : le délai doit être conservé, même si l'échéance est dépassée pendant l'absence.
-- Pendant une minute connecté, comparer les gold réellement reçus au revenu affiché ; acheter ensuite un équipement avec ces gold. Vérifier les revenus des paliers profonds.
-- Observer les animaux nager à l'intérieur des vitres. Vérifier la flèche, les ardillons et la corde du nouveau harpon équipé et lors d'un tir.
-- Fusionner trois normaux en Gold, trois Gold en Diamond et trois Diamond en Mythic. Vérifier consommation, prix et multiplicateurs.
-- Tester les cinq recettes connues, une recette secrète, une combinaison inconnue, un manque d'ingrédients et un manque d'argent.
-- Une recette secrète doit apparaître après découverte ; rejouer la même recette ne doit pas annoncer une nouvelle découverte.
+- Équiper le harpon : viseur visible au curseur sur PC, au centre sur mobile/manette. Sans harpon ou avec un menu ouvert, il disparaît. Comparer son point avec le rayon de visée et l’impact du projectile.
+- Appuyer sur Shift : curseur bloqué au centre, caméra à l’épaule, personnage orienté avec la caméra. Marcher, nager et viser en haut/en bas ; les déplacements restent valides côté serveur.
+- Appuyer une seconde fois : retour à la caméra libre, sans décalage résiduel. La rotation avec clic droit doit continuer à fonctionner en mode libre.
+- Ouvrir une boutique en mode verrouillé : curseur libre pour acheter et fermer ; le verrouillage reprend à la fermeture. Alt-Tab libère aussi le pointeur. Tester mort/réapparition, saisie dans un champ texte et escalade des échelles.
+- R déclenche le propulseur sur PC ; Shift ne déclenche aucun boost.
 
-## Événements
+## Oxygène et progression
 
-- En copie de test uniquement, réduire les trois intervalles et leurs durées dans Config afin de vérifier les transitions rapidement.
-- Vérifier l'avertissement, le début, les courants et l'obscurité, les nouveaux poids d'œufs et la force des gardiens.
-- Un œuf porté ou tombé doit survivre au renouvellement des œufs sauvages lors d'un événement.
-- L'événement légendaire doit prévaloir sur les événements inférieurs simultanés, puis expirer.
-- Restaurer 300 / 900 / 2400 secondes avant la construction destinée à publication.
+- Avec la combinaison 1, traverser les paliers 2 à 6 : avertissement sans mur ni téléportation de niveau. Comparer la survie avec les combinaisons conseillées 10/20/35/50/75 et les protections améliorées.
+- Mesurer réserve, consommation en profondeur, stations O₂ et recharge en surface. À zéro, la santé diminue ; les œufs sécurisés sont conservés, l’œuf non sécurisé tombe.
+- Vérifier les effets réels de nage, protection, combinaison, lampe et propulseur après achat.
 
-## Prestige, décoration et classements
+## Aquarium et économie
 
-- Acheter une palette, l'aquarium annexe, les bulles et la statue. L'aquarium géant principal doit être inclus dès l'arrivée. Les achats répétés d'un objet possédé ne doivent pas refaire payer.
-- Vérifier chacun des six tris de classement avec des joueurs ayant des statistiques différentes.
-- Le prestige insuffisant doit être refusé. Un prestige valide demande une confirmation, efface uniquement les éléments annoncés et conserve bestiaire/recettes/décorations/statistiques.
-- Vérifier les bonus du prestige dans le revenu, la réserve, la vitesse et les fusions suivantes.
+- Un œuf d'inventaire n'éclot pas avant dépôt. E au terminal ou Inventaire → Déposer, dans sa propre galerie, démarre l'incubation et expose l'œuf dans la cuve.
+- Délais : 15/40/90/180/360/720 secondes selon rareté. Répéter la requête ne remet pas le timer à zéro ni ne l'accélère.
+- Quitter sa galerie : éclosion automatique et animal visible à l'échéance. Avec DataStore réel, une reconnexion conserve le délai et termine une incubation dépassée.
+- Observer les animaux nager dans les vitres, les bulles et les éclairages. Vérifier que tous les revenus sont crédités pendant une minute connecté, puis acheter un équipement avec ces gold.
+- Vérifier bestiaire, fusion classique, recettes connues/secrètes, expérience inconnue sans consommation, prestige et cosmétiques.
+- Un prestige garde le niveau de base, actualise les équipements portés et remplace le harpon ; aucune pièce ancienne ni arme supplémentaire ne doit rester.
 
-## DataStore réel
+## Événements, sauvegarde et performances
 
-- Activer les API sur une expérience privée, quitter puis revenir. Vérifier tous les champs du profil, dont les variantes et cosmétiques.
-- Vérifier une sauvegarde périodique, une déconnexion normale et une fermeture du serveur.
-- Essayer de rejoindre pendant qu'un bail de session est encore détenu : le second chargement doit être refusé sans écraser les données.
-- Désactiver l'accès API dans Studio : la session temporaire doit être signalée et ne doit écrire aucun profil de secours.
-- Les tests Studio utilisent le suffixe `_Studio`. Ne pas changer ce nom pour pointer sur les profils des joueurs en production.
+- Tester les avertissements et événements 300/900/2400 s ; bonus de rareté, danger, courants et obscurité. Les œufs transportés ou tombés et les boss partagés survivent au renouvellement des œufs.
+- Avec API activées dans une expérience privée, tester sauvegarde périodique, départ, fermeture et reconnexion. Vérifier tous les champs, les échéances et le niveau de base.
+- Tester le refus d'une deuxième session concurrente et l'absence d'écriture de secours après erreur de chargement. Studio utilise uniquement le magasin suffixé `_Studio`.
+- Tester le rendu de secours sans API de maillage, puis le rendu natif si disponible. Aucune activation particulière ne doit être requise pour afficher les modèles.
+- Mesurer FPS/mémoire avec huit joueurs, aquariums pleins, six boss et 36 œufs. Vérifier la distance d'affichage, le chargement progressif et la destruction des modèles devenus lointains.
 
-## Avant publication publique
-
-Ne considérer le gameplay natif validé qu'après réussite de ces essais. Ajuster les valeurs économiques et les probabilités à partir de sessions réelles ; les tableaux configurables facilitent ces ajustements. Publier via Roblox Studio lorsque la validation multijoueur, la persistance réelle et les performances sont satisfaisantes.
-
-## Vérification graphique et galeries
-
-- Observer les véritables coques ovoïdes, plus grosses et asymétriques ; comparer les six raretés et l'aura sur la coque. Transporter un Secret : son modèle doit rester derrière le plongeur.
-- Vérifier les modèles intégrés du poisson et de l'arme, les sculptures du Kraken, du Léviathan et de Scylla, leurs orientations pendant la nage et la poursuite. Aucune erreur de modèle ne doit apparaître côté client.
-- Tester sans accès aux API de maillage : le rendu de secours doit afficher les modèles, sans bloquer la partie. Vérifier aussi le rendu natif lorsqu'il est disponible.
-- Observer le navire depuis l'eau et depuis le pont : coque, hublots, proue, passerelle, éclairage, bassin dégagé et trajet continu vers toutes les galeries.
-- Comparer deux comptes : portrait et pseudo propres à chacun, sans inversion à la reconnexion ou après libération d'une galerie.
-- Ouvrir F → Base & Aquarium ; vérifier le coût avant achat, l'impossibilité d'acheter depuis la galerie d'autrui, puis les cinq niveaux, la transformation de la cuve, le nombre d'espèces exposées et le bonus de gold.
-- Quitter/revenir avec DataStore et effectuer un prestige : le niveau de base et les améliorations doivent rester acquis.
-- Mesurer les FPS et la mémoire sur mobile, avec plusieurs aquariums pleins et des gardiens proches. Vérifier l'absence de blocage pendant le chargement des modèles et la libération des détails lorsqu'ils s'éloignent.
+N'annoncer le gameplay natif et la qualité graphique validés qu'après ces essais. Ajuster l'économie et les performances à partir de sessions réelles avant une publication publique.

@@ -14,6 +14,7 @@ local Config = require(modules.Config)
 local Rules = require(modules.Rules)
 local Visuals = require(modules.Visuals)
 local UI = require(script.Parent.UI)
+local aim = require(script.Parent.AimController).new(UserInputService)
 local controls
 task.spawn(function()
     local module = player.PlayerScripts:WaitForChild("PlayerModule", 15)
@@ -27,6 +28,8 @@ end)
 
 local context = { Config = Config, Rules = Rules, Visuals = Visuals, Action = remotes.Action }
 local ui, character, humanoid, root, velocity, light, lampAttachment
+local navigation
+function context.Navigate(position, title) navigation = { Position = position, Title = title } end
 local movement = Vector3.zero
 local padUp, padDown = false, false
 
@@ -43,7 +46,7 @@ function context.Fire()
     local camera = workspace.CurrentCamera
     local input = UserInputService:GetLastInputType()
     local ray
-    if input == Enum.UserInputType.Touch or string.find(input.Name, "Gamepad") then
+    if aim:Centered(input) then
         ray = camera:ViewportPointToRay(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
     else
         local mouse = UserInputService:GetMouseLocation()
@@ -81,7 +84,8 @@ if player.Character then task.spawn(attach, player.Character) end
 
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed or UserInputService:GetFocusedTextBox() then return end
-    if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.ButtonX then context.Action:FireServer("Boost")
+    if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then aim:Toggle()
+    elseif input.KeyCode == Enum.KeyCode.R or input.KeyCode == Enum.KeyCode.ButtonX then context.Action:FireServer("Boost")
     elseif input.KeyCode == Enum.KeyCode.ButtonL1 then padUp = true
     elseif input.KeyCode == Enum.KeyCode.ButtonR1 then padDown = true
     elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.KeyCode == Enum.KeyCode.ButtonR2 then context.Fire()
@@ -91,10 +95,11 @@ UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.ButtonL1 then padUp = false end
     if input.KeyCode == Enum.KeyCode.ButtonR1 then padDown = false end
 end)
-UserInputService.WindowFocusReleased:Connect(function() ui.Ascend = 0; ui.Descend = 0; padUp = false; padDown = false end)
+UserInputService.WindowFocused:Connect(function() aim.Focused = true end)
+UserInputService.WindowFocusReleased:Connect(function() aim.Focused = false; ui.Ascend = 0; ui.Descend = 0; padUp = false; padDown = false end)
 
 local correction = Instance.new("ColorCorrectionEffect")
-correction.Name = "UnderwaterAtmosphere"; correction.Saturation = -0.08; correction.Parent = Lighting
+correction.Name = "UnderwaterAtmosphere"; correction.Saturation = 0.12; correction.Parent = Lighting
 local function localSound(position, soundId, volume)
     local part = Visuals.Part(workspace.Events, "Audio", Vector3.one, CFrame.new(position), Color3.new())
     part.Transparency = 1
@@ -103,7 +108,8 @@ local function localSound(position, soundId, volume)
 end
 
 remotes.FX.OnClientEvent:Connect(function(kind, data)
-    if kind == "OpenUpgrades" then ui:Open("Équipement")
+    if kind == "OpenShop" then ui:OpenShop(data.Key)
+    elseif kind == "OpenUpgrades" then ui:Open("Équipement")
     elseif kind == "OpenBase" then ui:Open("Habitat")
     elseif kind == "Shot" then
         localSound(data.Position, "rbxasset://sounds/swordslash.wav", 0.25)
@@ -139,6 +145,11 @@ remotes.FX.OnClientEvent:Connect(function(kind, data)
     end
 end)
 
+RunService:BindToRenderStep("UnderwaterAimLock", Enum.RenderPriority.Camera.Value + 1, function()
+    local blocked = ui.Tab ~= nil or UserInputService:GetFocusedTextBox() ~= nil or not humanoid or humanoid.Health <= 0 or not root or not root.Parent
+    aim:Step(humanoid, root, workspace.CurrentCamera, blocked, character and character:FindFirstChild("Harpon") ~= nil)
+end)
+
 local uiTick = 0
 RunService.RenderStepped:Connect(function(dt)
     uiTick += dt
@@ -149,9 +160,12 @@ RunService.RenderStepped:Connect(function(dt)
     end
     local camera = workspace.CurrentCamera
     local lastInput = UserInputService:GetLastInputType()
-    ui.Reticle.Visible = not ui.Tab and (lastInput == Enum.UserInputType.Touch or string.find(lastInput.Name, "Gamepad") ~= nil)
+    local armed = character:FindFirstChild("Harpon") ~= nil
+    ui.Reticle.Visible = not ui.Tab and not UserInputService:GetFocusedTextBox() and aim.Focused and armed
     local inset = GuiService:GetGuiInset()
-    ui.Reticle.Position = UDim2.fromOffset((camera.ViewportSize.X / 2 - inset.X) / ui.Scale.Scale, (camera.ViewportSize.Y / 2 - inset.Y) / ui.Scale.Scale)
+    local aimPoint = aim:Centered(lastInput) and camera.ViewportSize / 2 or UserInputService:GetMouseLocation()
+    ui.Reticle.Position = UDim2.fromOffset((aimPoint.X - inset.X) / ui.Scale.Scale, (aimPoint.Y - inset.Y) / ui.Scale.Scale)
+    ui.CameraHint.Text = aim.Locked and "SHIFT · CAMÉRA VERROUILLÉE" or "SHIFT · VERROUILLER LA CAMÉRA"
     local move = Vector3.zero
     if not UserInputService:GetFocusedTextBox() and not ui.Tab then
         if controls then move = controls:GetMoveVector() else
@@ -182,30 +196,32 @@ RunService.RenderStepped:Connect(function(dt)
     local floor = Rules.FloorAt(Config, root.Position.Y)
     local event = ui.State and ui.State.Event.Active
     local darkness = (floor.Id - 1) / math.max(1, #Config.Floors - 1) * 0.78 + (event and 0.12 or 0)
-    Lighting.Brightness = 1.8 - darkness * 1.5
-    Lighting.Ambient = Color3.fromRGB(45, 107, 131):Lerp(Color3.fromRGB(9, 18, 43), darkness)
+    Lighting.Brightness = 2.4 - darkness * 1.8
+    Lighting.Ambient = Color3.fromRGB(78, 146, 166):Lerp(Color3.fromRGB(9, 18, 43), darkness)
     Lighting.FogColor = Color3.fromRGB(35, 120, 145):Lerp(Color3.fromRGB(12, 24, 52), darkness)
     Lighting.FogStart = 25; Lighting.FogEnd = 210 - darkness * 170 + lampLevel * 4
     correction.TintColor = Color3.fromRGB(207, 246, 255):Lerp(Color3.fromRGB(139, 172, 225), darkness * 0.5)
     if not underwater then
-        Lighting.Brightness = 2.5; Lighting.Ambient = Color3.fromRGB(135, 151, 158)
+        Lighting.Brightness = 3; Lighting.Ambient = Color3.fromRGB(155, 179, 204)
         Lighting.FogStart = 700; Lighting.FogEnd = 1800
         Lighting.FogColor = Color3.fromRGB(170, 221, 241)
         correction.TintColor = Color3.new(1, 1, 1)
     end
     local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
     if atmosphere then
-        atmosphere.Density = underwater and (0.22 + darkness * 0.4) or 0.24
-        atmosphere.Haze = underwater and (1.3 + darkness * 2) or 1
+        atmosphere.Density = underwater and (0.22 + darkness * 0.4) or 0.18
+        atmosphere.Haze = underwater and (1.3 + darkness * 2) or 0.6
         atmosphere.Color = underwater and Lighting.FogColor or Color3.fromRGB(176, 209, 227)
     end
     camera.FieldOfView += ((70 + math.max(0, speed - 25) * 0.35) - camera.FieldOfView) * math.min(1, dt * 5)
     if ui.State then
-        local toDive = root.Position.Y > Config.WaterTop and not ui.State.Carrying and not ui.State.OwnBase
-        local delta = (toDive and ui.State.DivePosition or ui.State.BasePosition) - root.Position
+        local toDive = root.Position.Y > Config.WaterTop and #ui.State.Eggs == 0 and not ui.State.OwnBase
+        if navigation and (root.Position - navigation.Position).Magnitude < 11 then navigation = nil end
+        local destination = navigation and navigation.Position or (toDive and ui.State.DivePosition or ui.State.BasePosition)
+        local delta = destination - root.Position
         local localDirection = camera.CFrame:VectorToObjectSpace(delta)
         local arrow = math.abs(localDirection.X) > math.abs(localDirection.Z) and (localDirection.X > 0 and "→" or "←") or (localDirection.Z < 0 and "↑" or "↓")
-        ui.Compass.Text = ui.State.OwnBase and "◇ VOTRE GALERIE · AQUARIUM SÉCURISÉ" or (arrow .. (toDive and "  Bassin commun · " or "  Votre galerie · ") .. math.floor(delta.Magnitude) .. " studs")
+        ui.Compass.Text = navigation and (arrow .. "  " .. navigation.Title .. " · " .. math.floor(delta.Magnitude) .. " studs") or ui.State.OwnBase and "◇ VOTRE GALERIE · AQUARIUM SÉCURISÉ" or (arrow .. (toDive and "  Bassin commun · " or "  Votre galerie · ") .. math.floor(delta.Magnitude) .. " studs")
     end
 end)
 context.Action:FireServer("Sync")

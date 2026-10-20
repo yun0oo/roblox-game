@@ -28,8 +28,8 @@ Config.MaxAnimals = 10000
 Config.MaxMoney = 1e15
 Config.SpawnInterval = 14
 Config.EggsPerFloor = 6
-Config.EggLifetime = 210
 Config.DroppedEggLifetime = 75
+Config.EggLifetime = 210
 Config.PickupDistance = 11
 Config.SnapshotInterval = 0.7
 Config.AutosaveInterval = 60
@@ -39,12 +39,12 @@ Config.DataStoreName = "UnderwaterEgg_v1"
 
 Config.RarityOrder = { "Common", "Rare", "Epic", "Legendary", "Mythic", "Secret" }
 Config.Rarities = {
-    Common = { Label = "COMMON", Color = { 183, 215, 218 }, Size = 4.2, Slow = 0.94, Power = 1 },
-    Rare = { Label = "RARE", Color = { 62, 178, 255 }, Size = 5, Slow = 0.89, Power = 1.2 },
-    Epic = { Label = "EPIC", Color = { 183, 117, 255 }, Size = 6, Slow = 0.82, Power = 1.5 },
-    Legendary = { Label = "LEGENDARY", Color = { 255, 195, 74 }, Size = 7.2, Slow = 0.73, Power = 1.9 },
-    Mythic = { Label = "MYTHIC", Color = { 255, 99, 141 }, Size = 8.4, Slow = 0.64, Power = 2.5 },
-    Secret = { Label = "SECRET", Color = { 119, 255, 223 }, Size = 10, Slow = 0.55, Power = 3.5 },
+    Common = { Slow = 0.94, Label = "COMMON", Color = { 183, 215, 218 }, Size = 6, Power = 1 },
+    Rare = { Slow = 0.89, Label = "RARE", Color = { 62, 178, 255 }, Size = 7.5, Power = 1.2 },
+    Epic = { Slow = 0.82, Label = "EPIC", Color = { 183, 117, 255 }, Size = 9, Power = 1.5 },
+    Legendary = { Slow = 0.73, Label = "LEGENDARY", Color = { 255, 195, 74 }, Size = 11, Power = 1.9 },
+    Mythic = { Slow = 0.64, Label = "MYTHIC", Color = { 255, 99, 141 }, Size = 13, Power = 2.5 },
+    Secret = { Slow = 0.55, Label = "SECRET", Color = { 119, 255, 223 }, Size = 16, Power = 3.5 },
 }
 
 Config.Floors = {
@@ -118,6 +118,16 @@ Config.Upgrades = {
     Harpoon = { Name = "Harpon", Max = 3, BaseCost = 400, Growth = 4, Description = "Portée, cadence et dégâts aux gardiens" },
 }
 Config.UpgradeOrder = { "Suit", "Oxygen", "Swim", "Shield", "Lamp", "Thruster", "Harpoon" }
+Config.Merchants = {
+    Suit = { Name = "CAPITAINE CORAIL", Icon = "🤿", Color = { 255, 139, 66 }, Motto = "Paré pour les grandes profondeurs !" },
+    Oxygen = { Name = "BULLE", Icon = "🫧", Color = { 63, 205, 255 }, Motto = "Une grande inspiration, une grande aventure." },
+    Swim = { Name = "FLASH", Icon = "🏊", Color = { 113, 230, 64 }, Motto = "Des palmes faites pour semer les boss." },
+    Shield = { Name = "BASTION", Icon = "🛡", Color = { 142, 153, 255 }, Motto = "Une armure solide pour rester en vie." },
+    Lamp = { Name = "LUCIOLE", Icon = "🔦", Color = { 255, 228, 73 }, Motto = "Éclaire les trésors des abysses." },
+    Thruster = { Name = "TURBO", Icon = "🚀", Color = { 255, 110, 165 }, Motto = "Une poussée, et le danger est loin !" },
+    Harpoon = { Name = "TRIDENT", Icon = "🔱", Color = { 65, 230, 190 }, Motto = "Un vrai harpon pour affronter les titans." },
+}
+Config.MerchantDistance = 15
 Config.Harpoons = {
     { Range = 25, Speed = 95, Cooldown = 5, Damage = 28 },
     { Range = 35, Speed = 120, Cooldown = 4, Damage = 55 },
@@ -235,8 +245,12 @@ for index, floor in ipairs(Config.Floors) do
     floor.GuardianSpeed = ({ 14, 22, 28, 34, 40, 46 })[index]
     floor.Detection = 65 + index * 28
     floor.ChaseRadius = 150 + index * 35
-    floor.GuardianSize = 2.5 + index * 0.65
-    floor.AttackRange = 6 + index * 2.5
+    floor.GuardianSize = 6 + index * 1.5
+    floor.BossRespawn = 45 + index * 5
+    floor.BossHealth = floor.GuardianHealth * 3
+    floor.BossStyle = ({ "leviathan", "kraken", "scylla", "dragon", "charybdis", "leviathan" })[index]
+    floor.BossName = ({ "TYRAN DU RÉCIF", "KRAKEN DE L’ÉPAVE", "SCYLLA DES RUINES", "DRAGON DES ABYSSES", "CHARYBDE", "LÉVIATHAN PRIMORDIAL" })[index]
+    floor.AttackRange = 17 + index * 3
     floor.AttackCooldown = 1.6 - index * 0.1
 end
 return Config

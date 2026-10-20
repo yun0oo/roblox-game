@@ -28,8 +28,8 @@ frameMeta.__mul = function(a, b) return CFrame.new(a.Position + b.Position) end
 local Color3 = { fromRGB = function() return {} end }
 local ColorSequence = { new = function() return {} end }
 local RaycastParams = { new = function() return {} end }
-local Enum = { RaycastFilterType = { Exclude = 1 }, Material = { Neon = 1 }, DataStoreRequestType = { UpdateAsync = 1 } }
-local Instance = { new = function() return { Triggered = { Connect = function() end } } end }
+local Enum = { RaycastFilterType = { Exclude = 1 }, Material = { Neon = 1 }, HighlightDepthMode = { Occluded = 1 }, DataStoreRequestType = { UpdateAsync = 1 } }
+local Instance = { new = function() return { Triggered = { Connect = function() end }, Destroy = function(self) self.Destroyed = true end } end }
 local function typeof(value) return getmetatable(value) == vectorMeta and "Vector3" or type(value) end
 local function warn(...) end
 local task = { wait = function() return 0 end }
@@ -76,7 +76,7 @@ local function context()
         Random = { NextNumber = function() return 0.3 end, NextInteger = function() return 1 end },
         Visuals = { Part = function(_, _, _, frame) return fakePart(frame.Position) end,
             HarpoonProjectile = function(_, frame) return fakePart(frame.Position) end,
-            Egg = function(_, _, _, frame) return fakePart(frame.Position) end, Color = function() return {} end, Label = function() end,
+            Egg = function(_, _, _, frame) return fakePart(frame.Position) end, Color = function(rgb) return rgb end, Label = function() end,
             Animal = function(_, spec, frame) return fakeModel(spec.Name, frame.Position) end },
         FX = { FireAllClients = function() end, FireClient = function() end } }
     ctx.World = setmetatable({ Config = Config, Bases = { { Center = V.new(200, 0, 0), TankCenter = V.new(200, 0, 0), Core = { Position = V.new(200, 0, 0) }, OwnerId = 1 } }, Spawns = {}, Eggs = {}, Events = {}, Guardians = {}, RefreshAnimals = function() end, RefreshIncubators = function() end }, World)
@@ -100,7 +100,7 @@ local function state(ctx, id, position)
 end
 local function egg(ctx, id, position, carrier)
     local value = { Id = id, PointId = id, Name = "Œuf test", Floor = 1, Rarity = "Common", State = carrier and "Carried" or "World",
-        Part = fakePart(position), Prompt = { Enabled = not carrier }, Carrier = carrier and carrier.Player, Home = position }
+        Part = fakePart(position), Prompt = { Enabled = not carrier }, Carrier = carrier and carrier.Player, Home = position, Expires = clock + 1000 }
     ctx.Eggs.Eggs[id] = value
     if carrier then carrier.Carrying = id end
     return value
@@ -110,10 +110,12 @@ local ctx = context()
 local a, b = state(ctx, 1, V.new()), state(ctx, 2, V.new(3, 0, 0))
 local item = egg(ctx, "steal", V.new(5, 0, 0))
 ctx.Eggs:Pickup(a.Player, item.Id)
-check(a.Carrying == item.Id and item.State == "Carried", "Prompt pickup creates a carrier")
+check(a.Carrying == item.Id and item.State == "Carried" and item.Part == nil, "Pickup creates an unsecured inventory slot without a world model")
+check(a.Aura and a.Aura.FillColor == Config.Rarities.Common.Color, "Carrier is highlighted with the egg rarity color")
+check(#a.Profile.Eggs == 0, "Pending inventory egg is not persisted as secured loot")
 ctx.Eggs:Pickup(b.Player, item.Id)
 check(b.Carrying == nil and item.Carrier == a.Player, "Second pickup cannot steal a carried egg")
-check(ctx.Eggs:Drop(a, "Harpoon"), "Valid interception drops the egg")
+check(ctx.Eggs:Drop(a, "Harpoon") and item.Part ~= nil and a.Aura == nil, "Harpoon removes the carrier aura and recreates the dropped world egg")
 ctx.Eggs:Pickup(b.Player, item.Id)
 check(b.Carrying == item.Id and b.Profile.Stats.Steals == 1, "Another player can recover a harpooned egg")
 ctx.Eggs:Drop(b, "Harpoon"); ctx.Eggs:Pickup(b.Player, item.Id)
@@ -154,10 +156,23 @@ ctx.Eggs:Pickup(a.Player, item.Id); check(a.Carrying == nil, "Pickup through a w
 hitResult = nil; a.Valid = false
 ctx.Eggs:Pickup(a.Player, item.Id); check(a.Carrying == nil, "Invalid movement prevents pickup")
 
+ctx = context(); a = state(ctx, 1, V.new())
+item = egg(ctx, "mythic-inventory", V.new(2, 0, 0)); item.Rarity = "Mythic"
+ctx.Eggs:Pickup(a.Player, item.Id)
+check(a.Aura.FillColor == Config.Rarities.Mythic.Color, "Highlight uses the actual collected egg rarity")
+ctx.Eggs:Hatch(a, item.Id)
+check(#a.Profile.Eggs == 0 and a.Carrying == item.Id, "An unsecured inventory egg cannot be hatched remotely")
+ctx.Eggs.Spawn = function() end
+ctx.Eggs:RefreshForEvent()
+check(ctx.Eggs.Eggs[item.Id] == item and a.Carrying == item.Id, "Events cannot discard an unsecured inventory egg")
+ctx.Eggs:Drop(a, "Death")
+check(a.Carrying == nil and a.Aura == nil and item.State == "Dropped" and item.Part, "Death restores the unsecured egg in the shared world")
+
 local function projectileCase(targetPosition, hasEgg, collision)
     local c = context()
     local shooter, target = state(c, 1, V.new()), state(c, 2, targetPosition)
     local e = hasEgg and egg(c, "projectile", targetPosition, target)
+    if hasEgg then table.insert(target.Profile.Eggs, { Id = "permanent", Name = "Œuf sécurisé", Floor = 1, Rarity = "Common" }) end
     hitResult = collision and { Position = targetPosition, Instance = { FindFirstAncestorOfClass = function() return target.Player.Character end } } or nil
     c.Harpoons.Projectiles = { { Spec = Config.Harpoons[1], Position = V.new(), Direction = V.new(1, 0, 0), Traveled = 0, Part = fakePart(V.new()), Shooter = shooter } }
     c.Harpoons:Step(0.4)
@@ -165,6 +180,8 @@ local function projectileCase(targetPosition, hasEgg, collision)
 end
 local c, shooter, target = projectileCase(V.new(10, 0, 0), true, true)
 check(target.Carrying == nil and shooter.Profile.Stats.Hits == 1, "Swept projectile collision drops carried egg")
+check(target.Aura == nil and target.Humanoid.Health == 100, "Interception removes only the pending egg, without player damage")
+check(#target.Profile.Eggs == 1 and target.Profile.Eggs[1].Id == "permanent", "A harpoon hit never removes a permanently secured inventory egg")
 c, shooter, target = projectileCase(V.new(10, 0, 0), true, false)
 check(target.Carrying == "projectile" and shooter.Profile.Stats.Hits == 0, "Miss has no gameplay effect")
 c, shooter, target = projectileCase(V.new(10, 0, 0), false, true)
@@ -240,40 +257,45 @@ check(stale:IsClosing(stalePlayer) and stalePlayer.Kicked, "Expired save lease f
 
 ctx = context(); a = state(ctx, 1, V.new(17, 3, 0))
 item = egg(ctx, "guarded", V.new())
-local guardian = ctx.Guardians:Spawn(item, Config.Floors[1]); item.Guardian = guardian
-check(guardian.Health == Config.Floors[1].GuardianHealth, "Common reef guardian uses baseline strength")
+local guardian = ctx.Guardians:Spawn(item, Config.Floors[1])
+check(guardian.Health == Config.Floors[1].BossHealth, "Reef boss uses configured zone health")
+local another = egg(ctx, "second-egg", V.new(200, 0, 0))
+check(ctx.Guardians:Spawn(another, Config.Floors[1]) == guardian, "All nests in a floor share exactly the same boss")
+ctx.Eggs:Remove(item)
+check(ctx.Guardians.ByFloor[1] == guardian and not guardian.Model.Destroyed, "Removing an egg never destroys its shared boss")
 ctx.Guardians:Step(0.1)
-check(a.Humanoid.Health < 100, "Nearby exploration target takes guardian damage")
-local rareEgg = egg(ctx, "deep", V.new()); rareEgg.Rarity = "Mythic"
-local deep = ctx.Guardians:Spawn(rareEgg, Config.Floors[3])
-check(deep.Health > guardian.Health and deep.Floor.GuardianDamage > guardian.Floor.GuardianDamage, "Depth and rarity strengthen guardians")
-ctx.Guardians:Remove(deep)
+check(a.Humanoid.Health < 100, "Nearby exploration target takes boss damage")
+local deep = ctx.Guardians.ByFloor[3]
+check(deep.Health > guardian.Health and deep.Floor.GuardianSpeed > guardian.Floor.GuardianSpeed, "Deeper bosses have more health and speed")
 a.Root.Position = V.new(200, 0, 0); a.LastPosition = a.Root.Position; a.Humanoid.Health = 100
 guardian.Model.Position = V.new(199, 0, 0)
-clock += 3
-ctx.Guardians:Step(0.1)
-check(a.Humanoid.Health == 100, "Guardians never attack a player in a safe base")
-a.Root.Position = V.new(145, 0, 0)
-guardian.Model.Position = V.new(130, 0, 0)
-ctx.Guardians:Step(0.1)
-check(guardian.Model.Position.X < 130, "Lured guardian returns toward its nest")
+clock += 3; ctx.Guardians:Step(0.1)
+check(a.Humanoid.Health == 100, "Bosses never attack a player in a safe base")
+a.Root.Position = V.new(-300, 0, 0); a.LastPosition = a.Root.Position
+clock += 3; ctx.Guardians:Step(0.1)
+check(guardian.Target == a, "Zone boss detects a diver across distant nests in its floor")
 ctx.Guardians:Damage(guardian.Model, guardian.Health + 1, a.Player)
-check(guardian.Model.Destroyed and item.Guardian == nil and ctx.Guardians.Active[guardian.Model] == nil, "Defeated guardian is removed without duplicating the egg")
-
-ctx = context(); a = state(ctx, 1, V.new(17, 3, 0))
-item = egg(ctx, "rage", V.new())
-local angry = ctx.Guardians:Spawn(item, Config.Floors[2])
+check(guardian.Model.Destroyed and ctx.Guardians.ByFloor[1] == nil, "Defeated boss is removed once")
 ctx.Guardians:Step(0.1)
-local badSpeed = (angry.Model.Position - V.new(20, 3, 0)).Magnitude / 0.1
+check(ctx.Guardians.ByFloor[1] == nil, "Defeated boss grants a real cooldown before respawn")
+clock += Config.Floors[1].BossRespawn; ctx.Guardians:Step(0.1)
+check(ctx.Guardians.ByFloor[1] and ctx.Guardians.ByFloor[1] ~= guardian, "Boss respawns after configured delay even without a new egg")
+
+ctx = context(); a = state(ctx, 1, V.new(17, -300, 0))
+item = egg(ctx, "rage", V.new(0, -303, 0))
+local angry = ctx.Guardians:Spawn(item, Config.Floors[2])
+local origin = angry.Model.Position
+ctx.Guardians:Step(0.1)
+local badSpeed = (angry.Model.Position - origin).Magnitude / 0.1
 local badDamage = 100 - a.Humanoid.Health
-angry.Model.Position = V.new(20, 3, 0); a.Profile.Equipment.Suit = 10; a.Humanoid.Health = 100
+angry.Model.Position = origin; a.Profile.Equipment.Suit = 10; a.Humanoid.Health = 100
 clock += 2; ctx.Guardians:Step(0.1)
-check(badSpeed > (angry.Model.Position - V.new(20, 3, 0)).Magnitude / 0.1, "Actual guardian movement is faster against inadequate equipment")
-check(badDamage > 100 - a.Humanoid.Health, "Adequate equipment reduces actual guardian attack damage")
-ctx = context(); a = state(ctx, 1, V.new(17, 3, 0))
-item = egg(ctx, "deadly", V.new()); item.Rarity = "Secret"
+check(badSpeed > (angry.Model.Position - origin).Magnitude / 0.1, "Actual boss movement is faster against inadequate equipment")
+check(badDamage > 100 - a.Humanoid.Health, "Adequate equipment reduces actual boss attack damage")
+ctx = context(); a = state(ctx, 1, V.new(17, -1600, 0))
+item = egg(ctx, "deadly", V.new(0, -1603, 0))
 ctx.Guardians:Spawn(item, Config.Floors[6]); ctx.Guardians:Step(0.1)
-check(a.Humanoid.Health <= 0, "A deep Secret guardian can kill a starting diver")
+check(a.Humanoid.Health <= 0, "A deep boss can kill a starting diver")
 
 clock = 0; ctx = context()
 ctx.Eggs.RefreshForEvent = function(self) self.Refreshed = true end
@@ -308,19 +330,15 @@ for _, spawnedEgg in pairs(ctx.Eggs.Eggs) do
     points[spawnedEgg.PointId] = true
 end
 check(spawned == Config.EggsPerFloor, "Egg count respects floor capacity")
-ctx = context(); a = state(ctx, 1, V.new())
-local held = egg(ctx, "held", V.new(), a)
-local fallen = egg(ctx, "fallen", V.new()); fallen.State = "Dropped"
-local wild = egg(ctx, "wild", V.new())
+local sharedBoss = ctx.Guardians.ByFloor[1]
 local replacements = 0
 ctx.Eggs.Spawn = function() replacements += 1 end
 ctx.Eggs:RefreshForEvent()
-check(ctx.Eggs.Eggs.held == held and ctx.Eggs.Eggs.fallen == fallen, "Event refresh preserves every carried and dropped egg")
-check(ctx.Eggs.Eggs.wild == nil and wild.Part.Destroyed, "Event refresh removes only untouched wild eggs")
+check(ctx.Guardians.ByFloor[1] == sharedBoss and not sharedBoss.Model.Destroyed, "Event egg replacement preserves the zone boss")
 check(replacements == Config.ActiveFloors, "Event rarity applies immediately to every active floor")
 for _, ability in ipairs({ "Siphon", "Shock", "Vortex" }) do
-    ctx = context(); a = state(ctx, 1, V.new(40, 3, 0)); a.Oxygen = 100
-    item = egg(ctx, "boss-" .. ability, V.new())
+    ctx = context(); a = state(ctx, 1, V.new(60, -1000, 0)); a.Oxygen = 100
+    item = egg(ctx, "boss-" .. ability, V.new(0, -1003, 0))
     local floor = table.clone(Config.Floors[4]); floor.Ability = ability
     local boss = ctx.Guardians:Spawn(item, floor); boss.NextAbility = clock
     ctx.Guardians:Step(0.01)

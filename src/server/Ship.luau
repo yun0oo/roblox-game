@@ -1,14 +1,14 @@
 --!nonstrict
 -- NÉRÉIDE: one continuous research vessel, eight personal galleries, one moonpool.
 local Ship = {}
-local navy = Color3.fromRGB(22, 43, 57)
-local brass = Color3.fromRGB(192, 148, 76)
-local ivory = Color3.fromRGB(225, 223, 204)
-local teak = Color3.fromRGB(113, 78, 54)
-local teal = Color3.fromRGB(83, 221, 209)
+local navy = Color3.fromRGB(26, 75, 156)
+local brass = Color3.fromRGB(255, 195, 56)
+local ivory = Color3.fromRGB(247, 251, 255)
+local teak = Color3.fromRGB(205, 141, 75)
+local teal = Color3.fromRGB(36, 230, 212)
 
 local function solid(visuals, parent, name, size, frame, color, material, shape)
-    local part = visuals.Part(parent, name, size, frame, color, material or Enum.Material.Metal, shape)
+    local part = visuals.Part(parent, name, size, frame, color, material or Enum.Material.SmoothPlastic, shape)
     part.CanCollide = true; part.CanQuery = true; part.CastShadow = true
     return part
 end
@@ -43,7 +43,8 @@ function Ship.Build(world, config, visuals)
         local length = 320 - config.DiveHalfLength
         local z = side * (config.DiveHalfLength + length / 2)
         block("Coque centrale", Vector3.new(70, 24, length), Vector3.new(0, deckY - 14, z), navy)
-        block("Promenade centrale", Vector3.new(70, 4, length), Vector3.new(0, deckY, z), teak, Enum.Material.WoodPlanks)
+        local promenade = block("Promenade centrale", Vector3.new(70, 4, length), Vector3.new(0, deckY, z), ivory)
+        promenade.TopSurface = Enum.SurfaceType.Studs
         block("Cadre du bassin", Vector3.new(72, 3, 2), Vector3.new(0, deckY + 2, side * config.DiveHalfLength), brass)
         block("Marche du bassin", Vector3.new(28, 1, 9), Vector3.new(0, deckY + 3, side * (config.DiveHalfLength + 6)), navy)
     end
@@ -101,7 +102,8 @@ function Ship.Build(world, config, visuals)
         local row = math.floor((i - 1) / 2)
         local center = Vector3.new(column * 104, config.BaseHeight, -195 + row * 130)
         local model = Instance.new("Model"); model.Name = "Base_" .. i; model.Parent = world.BasesFolder
-        solid(visuals, model, "Galerie personnelle", Vector3.new(88, 0.4, 100), CFrame.new(center - Vector3.new(0, 9.8, 0)), Color3.fromRGB(41, 69, 76), Enum.Material.Slate)
+        local plot = solid(visuals, model, "Galerie personnelle", Vector3.new(88, 0.4, 100), CFrame.new(center - Vector3.new(0, 9.8, 0)), Color3.fromRGB(78, 220, 78), Enum.Material.SmoothPlastic)
+        plot.TopSurface = Enum.SurfaceType.Studs
         for side = -1, 1, 2 do
             visuals.Part(model, "Filet de laiton", Vector3.new(88, 0.15, 0.3), CFrame.new(center + Vector3.new(0, -9.5, side * 49)), brass, Enum.Material.Metal)
         end
@@ -109,12 +111,25 @@ function Ship.Build(world, config, visuals)
         visuals.Part(model, "Écran du dépôt", Vector3.new(7, 0.2, 3), core.CFrame * CFrame.new(0, 2.6, 0), teal, Enum.Material.Neon)
         local prompt = Instance.new("ProximityPrompt"); prompt.ActionText = "Déposer un œuf"; prompt.ObjectText = "Aquarium personnel"
         prompt.HoldDuration = 0.4; prompt.MaxActivationDistance = 12; prompt.RequiresLineOfSight = false; prompt.Parent = core
-        local bench = visuals.Part(model, "Atelier", Vector3.new(10, 5, 6), CFrame.new(center + Vector3.new(-29, -7, 31)), navy, Enum.Material.Metal)
-        visuals.Label(bench, "ATELIER\nÉQUIPEMENT & GOLD", brass, 6, 110)
-        local upgrade = Instance.new("ProximityPrompt"); upgrade.ActionText = "Équipement"; upgrade.ObjectText = "Atelier"
+        local bench = visuals.Part(model, "Guide du marché", Vector3.new(9, 3, 4), CFrame.new(center + Vector3.new(-29, -7, 31)), teal)
+        visuals.Label(bench, "← MARCHÉ DU PONT →\n7 MARCHANDS SPÉCIALISÉS", ivory, 4, 110)
+        local upgrade = Instance.new("ProximityPrompt"); upgrade.ActionText = "Trouver un marchand"; upgrade.ObjectText = "Marché des plongeurs"
         upgrade.MaxActivationDistance = 12; upgrade.RequiresLineOfSight = false; upgrade.Parent = bench
-        local upgradeBase = Instance.new("ProximityPrompt"); upgradeBase.ActionText = "Améliorer la base"; upgradeBase.ObjectText = "Galerie & aquarium"
-        upgradeBase.KeyboardKeyCode = Enum.KeyCode.F; upgradeBase.MaxActivationDistance = 12; upgradeBase.RequiresLineOfSight = false; upgradeBase.Parent = core
+        -- A separate, unmistakable upgrade board, away from the egg deposit.
+        local signPos = center + Vector3.new(29, -3, 31)
+        solid(visuals, model, "Pied de pancarte", Vector3.new(0.8, 7, 0.8), CFrame.new(signPos - Vector3.new(0, 3, 0)), teak)
+        local baseSign = visuals.Part(model, "Pancarte amélioration", Vector3.new(14, 6, 0.65), CFrame.new(signPos), brass)
+        visuals.Label(baseSign, "⬆ AMÉLIORER LA BASE\nAQUARIUM · REVENUS · DÉCORS", ivory, 2, 110)
+        local upgradeBase = Instance.new("ProximityPrompt"); upgradeBase.ActionText = "Améliorer ma base"; upgradeBase.ObjectText = "Pancarte d’amélioration"
+        upgradeBase.KeyboardKeyCode = Enum.KeyCode.F; upgradeBase.MaxActivationDistance = 12; upgradeBase.RequiresLineOfSight = false; upgradeBase.Parent = baseSign
+        for side = -1, 1, 2 do
+            for z = -45, 15, 15 do
+                solid(visuals, model, "Piquet de galerie", Vector3.new(1, 5, 1), CFrame.new(center + Vector3.new(side * 42, -7, z)), Color3.fromRGB(102, 65, 35), Enum.Material.Wood)
+            end
+            for y = -8, -5, 3 do
+                solid(visuals, model, "Clôture de galerie", Vector3.new(0.65, 0.7, 61), CFrame.new(center + Vector3.new(side * 42, y, -15)), teak, Enum.Material.Wood)
+            end
+        end
         local marker = visuals.Part(model, "Identité du propriétaire", Vector3.one, CFrame.new(center + Vector3.new(0, 38, -8)), brass)
         marker.Transparency = 1
         local gui = Instance.new("BillboardGui"); gui.Name = "Identité"; gui.Size = UDim2.fromScale(30, 18)
@@ -129,12 +144,13 @@ function Ship.Build(world, config, visuals)
         local tier = label:Clone(); tier.Name = "Niveau"; tier.Position = UDim2.fromScale(0, 0.86); tier.Size = UDim2.fromScale(1, 0.14)
         tier.TextSize = 19; tier.TextColor3 = brass; tier.Text = "AQUARIUM · NIVEAU 1"; tier.Parent = gui
         local base = { Model = model, Center = center, Spawn = center + Vector3.new(0, -6, 37), TankCenter = center + Vector3.new(0, 8, -10),
-            Core = core, Bench = bench, HatchPrompt = prompt, UpgradePrompt = upgrade, BasePrompt = upgradeBase, Label = label, Avatar = portrait, TierLabel = tier,
+            Core = core, Bench = bench, BaseSign = baseSign, HatchPrompt = prompt, UpgradePrompt = upgrade, BasePrompt = upgradeBase, Label = label, Avatar = portrait, TierLabel = tier,
             Min = center + Vector3.new(-44, -16, -50), Max = center + Vector3.new(44, 80, 50),
             OwnerId = 0, Swimmers = {}, Incubators = {}, Level = 0 }
         table.insert(world.Bases, base)
         Ship.Aquarium(base, 1, config, visuals)
     end
+    require(script.Parent.Merchants).Build(world, config, visuals)
 end
 
 function Ship.Aquarium(base, level, config, visuals)
@@ -160,18 +176,25 @@ function Ship.Aquarium(base, level, config, visuals)
             piece("Montant brossé", Vector3.new(0.9, height + 2, 0.9), center + Vector3.new(side * width / 2, 0, edge * depth / 2), brass)
         end
     end
-    piece("Sable nacré", Vector3.new(width - 1, 1, depth - 1), center - Vector3.new(0, height / 2 - 1, 0), Color3.fromRGB(208, 191, 148), Enum.Material.Sand)
+    piece("Sable nacré", Vector3.new(width - 1, 1, depth - 1), center - Vector3.new(0, height / 2 - 1, 0), Color3.fromRGB(255, 230, 151), Enum.Material.Sand)
     local lightBar = visuals.Part(tank, "Rampe lumineuse", Vector3.new(width - 4, 0.2, 0.8), CFrame.new(center + Vector3.new(0, height / 2 - 1.5, depth / 2 - 2)), accent, Enum.Material.Neon)
     local lamp = Instance.new("PointLight"); lamp.Color = Color3.fromRGB(164, 235, 239); lamp.Range = 38; lamp.Brightness = 1.5 + level * 0.2; lamp.Parent = lightBar
     for side = -1, 1, 2 do
         local rockPos = center + Vector3.new(side * (width / 2 - 8), -height / 2 + 3, -depth / 2 + 5)
-        visuals.Part(tank, "Roche de récif", Vector3.new(9, 5, 7), CFrame.new(rockPos), Color3.fromRGB(56, 87, 89), Enum.Material.Rock, Enum.PartType.Ball)
+        visuals.Part(tank, "Roche de récif", Vector3.new(9, 5, 7), CFrame.new(rockPos), Color3.fromRGB(77, 154, 184), Enum.Material.Rock, Enum.PartType.Ball)
         for branch = 1, 3 + level do
             local start = rockPos + Vector3.new(branch - 3, 2, 0)
             local top = start + Vector3.new(math.sin(branch) * 2, 3 + branch * 0.65, math.cos(branch) * 2)
-            visuals.Rod(tank, "Corail vivant", start, top, 0.5, side > 0 and Color3.fromRGB(229, 133, 132) or Color3.fromRGB(132, 157, 214))
+            visuals.Rod(tank, "Corail vivant", start, top, 0.5, side > 0 and Color3.fromRGB(255, 117, 156) or Color3.fromRGB(148, 106, 255))
             visuals.Part(tank, "Polype", Vector3.one * 1.2, CFrame.new(top), Color3.fromRGB(233, 184, 163), nil, Enum.PartType.Ball)
         end
+    end
+    for side = -1, 1, 2 do
+        local air = visuals.Part(tank, "Diffuseur de bulles", Vector3.new(1, 0.3, depth - 4), CFrame.new(center + Vector3.new(side * (width / 2 - 3), -height / 2 + 1.6, 0)), ivory)
+        local bubbles = Instance.new("ParticleEmitter"); bubbles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+        bubbles.Color = ColorSequence.new(Color3.fromRGB(194, 246, 255)); bubbles.Rate = 4
+        bubbles.Lifetime = NumberRange.new(2, 4); bubbles.Speed = NumberRange.new(3, 5); bubbles.Size = NumberSequence.new(0.18)
+        bubbles.LightEmission = 0.7; bubbles.Parent = air
     end
     if level >= 2 then
         for side = -1, 1, 2 do

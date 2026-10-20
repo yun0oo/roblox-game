@@ -55,6 +55,14 @@ function Engine.new()
         return copy
     end
     function methods:GetChildren() return table.clone(self._children) end
+    function methods:GetDescendants()
+        local result = {}
+        for _, child in ipairs(self:GetChildren()) do
+            table.insert(result, child)
+            for _, descendant in ipairs(child:GetDescendants()) do table.insert(result, descendant) end
+        end
+        return result
+    end
     function methods:FindFirstChild(name)
         for _, child in ipairs(self._children) do if child.Name == name then return child end end
     end
@@ -110,7 +118,7 @@ function Engine.new()
     end
     instance = function(class)
         return setmetatable({ _props = { Name = class, ClassName = class, CFrame = CF.new(), Health = 100,
-            Triggered = signal(), Died = signal(), CharacterAdded = signal(), PlayerAdded = signal(), PlayerRemoving = signal(),
+            Activated = signal(), Triggered = signal(), Died = signal(), CharacterAdded = signal(), PlayerAdded = signal(), PlayerRemoving = signal(),
             Heartbeat = signal(), OnServerEvent = signal(), Messages = {}, Broadcasts = {} }, _children = {}, _attributes = {} }, instanceMeta)
     end
     e.Instance = { new = instance }
@@ -120,17 +128,17 @@ function Engine.new()
     e.ReplicatedStorage = instance("ReplicatedStorage")
     local modules = instance("Folder"); modules.Name = "Modules"; modules.Parent = e.ReplicatedStorage
     local server = instance("Folder")
-    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer" }) do
+    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer", "EquipmentVisuals" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = modules
     end
-    for _, name in ipairs({ "DataSystem", "World", "Ship", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do
+    for _, name in ipairs({ "DataSystem", "World", "Ship", "Merchants", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = server
     end
     e.Script = instance("Script"); e.Script.Parent = server
     local guid = 0
     e.RunService = { IsStudio = function() return true end, IsClient = function() return false end, Heartbeat = signal() }
     local services = { Workspace = e.Workspace, Players = e.Players, ReplicatedStorage = e.ReplicatedStorage,
-        RunService = e.RunService, HttpService = { GenerateGUID = function() guid += 1; return "id-" .. guid end },
+        UserInputService = { TouchEnabled = false }, RunService = e.RunService, HttpService = { GenerateGUID = function() guid += 1; return "id-" .. guid end },
         DataStoreService = { GetDataStore = function() e.StoreCalls += 1; error("Unpublished Studio place") end } }
     e.Game = { JobId = "", PlaceId = 0, GetService = function(_, name) return assert(services[name], name) end,
         BindToClose = function(_, fn) e.Close = fn end }
@@ -158,6 +166,9 @@ function Engine.new()
     function e:Character(player)
         local character = instance("Model"); character.Parent = e.Workspace
         local root = instance("Part"); root.Name = "HumanoidRootPart"; root.Parent = character
+        for _, name in ipairs({ "Torso", "Head", "Left Arm", "Right Arm", "Left Leg", "Right Leg" }) do
+            local limb = instance("Part"); limb.Name = name; limb.Size = V.new(1, 2, 1); limb.Parent = character
+        end
         instance("Humanoid").Parent = character
         player.Character = character
         return character

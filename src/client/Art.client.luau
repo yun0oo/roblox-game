@@ -17,19 +17,39 @@ RunService.RenderStepped:Connect(function(dt)
     tick += dt
     local buildBudget = tick >= 0.12 and 1 or 0
     if buildBudget > 0 then tick = 0 end
+    -- Prioritize nearby models and cap the portable renderer's live parts.
+    -- Full aquariums across eight galleries must not create unlimited wedges.
+    local candidates, wanted = {}, {}
     for root, record in pairs(roots) do
+        if root.Parent then
+            local distance = (root.Position - camera.CFrame.Position).Magnitude
+            local limit = root.Parent:GetAttribute("Guardian") and 420 or 270
+            if distance <= limit then table.insert(candidates, { Root = root, Record = record, Distance = distance }) end
+        end
+    end
+    table.sort(candidates, function(a, b) return a.Distance < b.Distance end)
+    local remaining = 20000
+    for _, candidate in ipairs(candidates) do
+        local cost = candidate.Record.Cost or Renderer.Cost(candidate.Root:GetAttribute("ArtAsset"))
+        if cost <= remaining then wanted[candidate.Root] = true; remaining -= cost end
+    end
+    for _, candidate in ipairs(candidates) do
+        local root, record = candidate.Root, candidate.Record
+        if wanted[root] and not record.Model and not record.Loading and not record.Failed and buildBudget > 0 then record.Queued = true; buildBudget -= 1 end
+    end
+    for root, record in pairs(roots) do
+        record.Wanted = wanted[root] == true
         if not root.Parent then
             if record.Model then record.Model:Destroy() end
             roots[root] = nil
             continue
         end
-        local distance = (root.Position - camera.CFrame.Position).Magnitude
-        if distance > 270 then
+        if not record.Wanted then
             if record.Model then record.Model:Destroy(); record.Model = nil end
             continue
         end
-        if not record.Model and buildBudget > 0 and not record.Loading and not record.Failed then
-            record.Loading = true; buildBudget -= 1
+        if not record.Model and record.Queued and not record.Loading and not record.Failed then
+            record.Loading = true; record.Queued = nil
             task.spawn(function()
                 local key = root:GetAttribute("ArtAsset")
                 local scale = root:GetAttribute("ArtScale") or 1
@@ -41,13 +61,14 @@ RunService.RenderStepped:Connect(function(dt)
                     warn("[Underwater Egg] Modèle visuel indisponible:", key, model)
                     return
                 end
-                if not root.Parent then model:Destroy(); return end
+                if not root.Parent or not record.Wanted then model:Destroy(); return end
                 model.Parent = root
                 model:PivotTo(root.CFrame)
                 root.LocalTransparencyModifier = 1
                 local aura = root:FindFirstChild("Aura de rareté")
                 if aura then aura.Adornee = model end
                 record.Model = model; record.Frame = root.CFrame; record.InitialHeight = root.Size.Y
+                record.Cost = model:GetAttribute("ArtCost")
             end)
         end
         if record.Model then

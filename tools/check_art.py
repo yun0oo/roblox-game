@@ -16,7 +16,8 @@ for path in sorted((ROOT/'assets/generated').glob('*.json')):
     for name in ('Full','Lod'):
         mesh = data[name]
         assert len(mesh['Faces']) == len(mesh['Colors']) > 0
-        assert len(mesh['Faces']) <= (1600 if name=='Full' else 240)
+        limit = 2200 if name == 'Full' else (1200 if data['Kind'] == 'creature' else 800)
+        assert len(mesh['Faces']) <= limit
         assert all(math.isfinite(x) for p in mesh['Vertices'] for x in p)
         assert all(0 <= x <= 255 for c in mesh['Colors'] for x in c)
         for face in mesh['Faces']:

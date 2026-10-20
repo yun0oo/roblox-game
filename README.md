@@ -1,109 +1,69 @@
 # Underwater Egg
 
-Jeu Roblox multijoueur en Luau, construit avec Rojo : exploration sous-marine depuis un gigantesque bateau commun, le **Néréide**, avec huit galeries personnelles et leurs aquariums géants. La carte, les animaux, les gardiens et les interfaces sont générés par le projet : aucun modèle payant ni pack externe n'est nécessaire.
+Jeu Roblox en Luau/Rojo : exploration de six profondeurs depuis le navire **Néréide**, huit galeries personnelles, aquariums géants et boss marins. Les modèles sont intégrés ; aucun import manuel, achat de modèle ou réglage API de maillage n'est requis.
 
-**Plonger → prendre un œuf gardé → échapper aux harpons → remonter par le bassin commun → déposer dans l'aquarium → attendre l'éclosion → produire des gold → s'équiper → descendre.**
+**Plonger → esquiver le boss → récupérer des œufs dans l'inventaire → déposer dans son aquarium → attendre l'éclosion → produire des gold → acheter de l'équipement → descendre.**
 
-## Télécharger sur GitHub
+## Télécharger et jouer sur Windows
 
-Les fichiers prêts à ouvrir sont dans [`downloads/`](downloads/) :
+- [Télécharger le ZIP](downloads/UnderwaterEgg.zip), puis l'extraire dans un nouveau dossier.
+- Ouvrir `UnderwaterEgg.rbxl` dans Roblox Studio et appuyer sur **F5 / Play** pour jouer avec son personnage Roblox.
+- Attendre le chargement du navire et de l'océan. Retrouvez votre portrait et votre pseudo au-dessus de votre aquarium.
+- Tous les joueurs plongent et remontent par le bassin central, avec ses deux échelles.
 
-- [`UnderwaterEgg.zip`](downloads/UnderwaterEgg.zip) : jeu et instructions pour Windows/macOS ;
-- [`UnderwaterEgg.rbxl`](downloads/UnderwaterEgg.rbxl) : fichier Roblox Studio directement.
+Le [fichier Studio seul](downloads/UnderwaterEgg.rbxl) est également fourni. Sur une page GitHub, utiliser **Download raw file** pour télécharger le fichier.
 
-Sur la page du fichier GitHub, cliquer sur **Download raw file** (icône de téléchargement). Extraire le ZIP, puis ouvrir `UnderwaterEgg.rbxl` dans Roblox Studio et cliquer sur **Play**.
+Un fichier non publié démarre sans activer de case API. Sa session est marquée **NON SAUVEGARDÉ** : sa progression reste temporaire. Pour tester les vraies sauvegardes, publier une expérience privée et activer l'accès Studio aux services API dans ses paramètres de sécurité. Studio utilise un magasin distinct, `UnderwaterEgg_v1_Studio` ; une erreur de chargement en production ne crée jamais de profil de secours susceptible d'écraser les données.
 
-La version corrigée permet de tester un fichier non publié **sans cocher de réglage API**. Elle conserve l'apparition automatique du personnage Roblox pendant la génération de l'océan. Un message indique le chargement et signale une éventuelle erreur de démarrage.
+Roblox Studio est nécessaire sur Windows/macOS pour jouer. Le cloud Linux construit les fichiers et vérifie le code ; il ne lance pas Studio. Configurer l'expérience pour huit joueurs. Pour un essai multijoueur, démarrer un serveur local avec deux joueurs dans Studio.
 
-## Ouvrir le jeu
+## Marché et équipement visible
 
-1. Ouvrir `build/UnderwaterEgg.rbxl` ou `build/UnderwaterEgg.rbxlx` dans Roblox Studio sur Windows ou macOS.
-2. Appuyer sur **F5** (**Play**, avec un personnage). Attendre la fin du message de chargement : la carte, les œufs et les gardiens sont générés au démarrage du serveur. Le plongeur rejoint ensuite son habitat avec son harpon.
-3. Pour tester les poursuites, utiliser l'onglet **Test**, un serveur local et **2 joueurs**.
-4. Pour tester les vraies sauvegardes, publier une expérience privée et activer **Game Settings → Security → Enable Studio Access to API Services**. Studio utilise un magasin distinct : `UnderwaterEgg_v1_Studio`.
+Sept vrais marchands colorés occupent la promenade centrale du pont :
 
-Sans accès DataStore, Studio autorise une session temporaire explicitement marquée **NON SAUVEGARDÉ**. Dans une expérience publiée, une erreur de chargement bloque la connexion pour éviter d'écraser la progression avec un profil neuf.
+| Marchand | Spécialité | Équipement porté |
+| --- | --- | --- |
+| Capitaine Corail | Combinaison | Gilet, masque, harnais et couleurs de palier |
+| Bulle | Oxygène | Bouteilles jumelles et détendeur |
+| Flash | Nage | Palmes |
+| Bastion | Protection | Épaulières renforcées |
+| Luciole | Lampe | Lampe frontale |
+| Turbo | Propulseur | Turbines dorsales |
+| Trident | Harpon | Fusil avec canon, sandows, moulinet et pointe à ardillons |
 
-Configurer la capacité de l'expérience à **8 joueurs**, correspondant aux huit habitats.
+Interagir avec **E** devant un stand ouvre sa spécialité. Le menu **Équipement** permet aussi de parcourir les sept boutiques : aperçu 3D du plongeur équipé, effets actuels et suivants, prix, solde, achat ou directions vers le marchand. Un achat n'est autorisé côté serveur qu'à proximité du bon spécialiste. Les visuels sont actualisés à l'achat, à la réapparition et au prestige. Les accessoires sont soudés, sans masse ni collision, compatibles R6/R15 ; ils conservent l'avatar et ses vêtements.
 
-L'archive `build/UnderwaterEgg-project.zip` regroupe les sources, les tests, la documentation et les deux fichiers Roblox.
+L'amélioration de la base est séparée : **F** à la pancarte dorée de sa propre galerie. Le panneau compare les capacités et revenus avant achat. À distance, il donne les directions vers cette pancarte.
 
-## Ce qui est implémenté
-
-| Système | Contenu |
-| --- | --- |
-| Océan | Six paliers verticaux, récif, épave, ruines, forêt bioluminescente, squelette de titan et fosse interdite ; puits central et stations O₂ |
-| Exploration | Nage 3D, oxygène, pression, lampe, propulseur, ralentissement selon l'œuf |
-| Œufs | 24 noms d'œufs, 16 nids par palier, choix aléatoire des nids et raretés, expiration ; jusqu'à 36 œufs actifs |
-| Gardiens | Géants mythologiques : Kraken, Léviathan, dragon marin, Scylla et Charybde ; vitesse croissante de 14 à 46 studs/s, rage contre les plongeurs mal équipés, poursuite prolongée et attaques meurtrières |
-| Boss | Attaques annoncées : siphon d'oxygène, onde de choc, ralentissement de vortex ; immunité complète des habitats |
-| Harpon | Fusil détaillé avec crosse, canon, sandows, moulinet, flèche et pointe à ardillons ; projectile, corde, recul, sons et collision balayée côté serveur |
-| Habitats | Un navire commun avec coque, pont, passerelle et hublots ; un seul bassin de plongée/remontée ; huit galeries protégées identifiées par portrait et pseudo |
-| Incubation | Dépôt manuel dans sa galerie ; œuf visible dans l'aquarium, compte à rebours et éclosion automatique selon rareté ; échéance sauvegardée lors d'une reconnexion |
-| Collection | 61 animaux d'éclosion, au moins dix par palier ; huit hybrides de fusion ; bestiaire avec modèles et espèces inconnues `???` |
-| Économie | Les animaux produisent automatiquement des gold par minute ; ces gold achètent les sept équipements, les décorations et les fusions |
-| Fusion | Trois identiques → Gold → Diamond → Mythic ; cinq recettes connues et trois recettes secrètes privées côté serveur |
-| Phénomènes | Paliers de 5, 15 et 40 minutes ; avertissement, courants, obscurité, gardiens renforcés et probabilités modifiées |
-| Prestige | Progression recommençable, bonus permanents d'argent, oxygène, nage, harpon et coût de fusion |
-| Personnalisation | Palettes, aquarium, statue, bulles et effets de prestige persistants |
-| Classements | Six classements du serveur : argent, valeur de collection, vols, profondeur, animaux rares et fusions découvertes |
-| Persistance | Profils DataStore, bail de session, sauvegarde périodique, départ et fermeture, protection contre les profils incompatibles |
-
-La direction visuelle est stylisée : maillages colorés pour les animaux, œufs ovoïdes plus gros, créatures mythologiques sculptées, arme détaillée, aquariums en verre/laiton avec récifs et éclairage. Deux modèles CC0 de Microsoft et Kenney sont intégrés et adaptés ; leur provenance et leurs licences sont documentées dans [assets/CREDITS.md](assets/CREDITS.md). Certaines espèces partagent une silhouette et se distinguent par leur palette, leur nom et leurs statistiques.
-
-## Commandes
-
-| Action | Clavier/souris | Manette | Mobile |
+| Niveau de base | Prix | Espèces exposées | Bonus de gold |
 | --- | --- | --- | --- |
-| Nager | WASD / commandes Roblox locales | Stick gauche | Joystick |
-| Monter / descendre | Espace / Ctrl | LB / RB | ↑ / ↓ |
-| Propulseur | Shift | X | BOOST |
-| Harpon | Viser et clic gauche | Viser au centre et RT | Réticule central et TIRER |
-| Œuf / incubateur / atelier | Interaction Roblox E | Interaction Roblox | Bouton contextuel |
+| Explorateur | Inclus | 4 | — |
+| Océanographe | 600 | 6 | +10 % |
+| Sanctuaire | 2 500 | 8 | +20 % |
+| Atlantide | 12 500 | 10 | +30 % |
+| Palais des abysses | 60 000 | 12 | +40 % |
 
-Le retour rapide est interdit avec un œuf. Un contact physique entre personnages ne vole jamais un œuf. Un harpon ne blesse pas les joueurs : il fait tomber leur œuf lorsqu'une collision valide a lieu en exploration. Le même harpon peut combattre les gardiens.
+La cuve grandit et reçoit filtres, coraux et cristaux. Le niveau de base reste acquis après un prestige.
 
-## Développer dans le cloud Linux
+## Œufs, inventaire et boss
 
-Python 3.12 suffit pour installer les outils épinglés :
+Chaque palier possède 16 nids possibles et au plus six œufs actifs, choisis aléatoirement. Les grandes coques ovoïdes mesurent de 7,5 à 20 studs de haut ; particules, halo et aura indiquent leur rareté. Les œufs expirent et les événements renouvellent une partie des apparitions.
 
-```sh
-cd /workspace/roblox-game
-python3 tools/bootstrap.py
-python3 tools/check.py
-```
+**Le ramassage ajoute immédiatement un œuf NON SÉCURISÉ à l'inventaire affiché, sans modèle derrière le personnage.** Son transporteur apparaît en surbrillance de la couleur de sa rareté. Un seul œuf non sécurisé peut voyager à la fois ; les autres places accueillent les œufs déjà sécurisés ou en incubation. Une requête répétée ou un simple contact ne transfère rien.
 
-L'installation télécharge les versions officielles et vérifie les SHA-256 de `tools/toolchain.json`. Les outils et caches restent dans `.tools/`, ignoré par Git. Le vérificateur fonctionne aussi avec l'outillage déjà installé dans l'environnement cloud.
+Un harpon valide fait tomber cet œuf : il réapparaît dans le monde et le premier joueur qui le ramasse devient son transporteur. Le changement de transporteur déplace la surbrillance et crédite un vol si l'interception venait d'un autre joueur. Une mort ou déconnexion en exploration fait aussi tomber l'œuf non sécurisé. Les événements ne le suppriment pas.
 
-Pour travailler avec le plugin Rojo de Studio sur une machine compatible :
+L'arrivée dans **sa propre galerie** sécurise automatiquement l'œuf dans l'inventaire persistant et retire la surbrillance. Il devient définitivement protégé. Toute la zone du navire est sans interception ; visiter une autre galerie ne donne pas la propriété permanente de l'œuf. L'inventaire a 24 places ; s'il est plein, le ramassage laisse l'œuf dans le monde.
 
-```sh
-export PATH="$PWD/.tools/bin:$PATH"
-rojo serve default.project.json --address 127.0.0.1 --port 34872
-```
+**Un seul boss géant par profondeur** surveille tous les nids de sa zone : Tyran du récif, Kraken de l'épave, Scylla des ruines, Dragon des abysses, Charybde et Léviathan primordial. Il patrouille, repère les plongeurs dans tout le palier, poursuit et attaque. Sa santé, sa taille, ses dégâts et sa vitesse augmentent avec la profondeur. Ramasser, expirer ou renouveler un œuf ne supprime jamais le boss partagé. Un boss vaincu laisse un répit de 50 à 75 secondes avant de réapparaître.
 
-Ne pas présumer qu'un serveur Rojo cloud sera accessible depuis un Studio local : le fichier `.rbxl` permet d'ouvrir le jeu sans connexion au serveur de synchronisation. Aucun port public n'est requis pour construire ou tester les règles dans le cloud.
+Le harpon tire un vrai projectile, avec corde, recul, sons, collision balayée, portée et cooldown validés côté serveur. Il combat les boss et permet de voler les œufs non sécurisés des autres joueurs, sans leur infliger de dégâts. Les œufs sécurisés restent toujours protégés. Le navire entier est une zone sans combat.
 
-## Validation
+Tous les paliers restent accessibles sans niveau minimum bloquant. Les combinaisons **1 / 10 / 20 / 35 / 50 / 75** sont recommandées. Sous le niveau conseillé, les boss gagnent jusqu'à **85 % de vitesse** et **150 % de dégâts**. La vitesse de base passe de 14 à 46 studs/s. Oxygène, pression, protection, nage et propulseur ont des effets réels ; des stations O₂ permettent de recharger.
 
-`python3 tools/check.py` exécute :
+## Aquarium, collection et progression
 
-- compilation des sources Luau et analyse des modules purs ;
-- tests de probabilités, économie, équipements, inventaires, fusions, prestige et décoration ;
-- scénarios des vrais modules serveur avec primitives moteur simulées : vol, bases, collisions, gardiens, événements, verrou et reconnexion DataStore ;
-- démarrage complet avec la vraie génération de carte et des modèles, les 36 gardiens, un personnage déjà présent, un nouvel arrivant et une réapparition ; refus simulé des propriétés réservées à Studio et des accès DataStore d'un fichier non publié ;
-- construction `.rbxl` et `.rbxlx`, génération du sourcemap et vérification que toutes les sources sont incluses ;
-- analyse avec `luau-lsp` et les définitions de l'API Roblox épinglées.
-
-Le workflow GitHub Actions reprend cette commande et conserve les deux fichiers construits. Son exécution sur GitHub nécessite un commit/push ; la validation effectuée ici est locale.
-
-Ces contrôles ne remplacent pas Roblox Studio : le rendu, la physique réseau, les contrôles tactiles réels, la latence et l'accès DataStore distant doivent suivre la procédure de [tests Studio](docs/STUDIO_TESTS.md). Aucun essai natif Studio n'a été exécuté dans le cloud Linux.
-
-## Régler le jeu
-
-Les valeurs publiques sont centralisées dans `src/shared/Config.luau` : probabilités par profondeur, catalogues, revenus, tailles, ralentissements, oxygène, équipement, harpons, durées et bonus d'événement. Les poids sont normalisés ; ils n'ont pas besoin de totaliser 100.
-
-Tous les paliers sont accessibles, même avec la combinaison 1. Les niveaux **1 / 10 / 20 / 35 / 50 / 75** sont des recommandations de survie. Sous le niveau conseillé, les gardiens gagnent jusqu'à **85 % de vitesse** et **150 % de dégâts** ; aucun mur ou téléportation ne remplace ce danger. Les améliorations de nage, protection, combinaison et propulseur permettent de survivre. Chaque combinaison réduit aussi la consommation liée à la pression.
+Déposer un œuf avec **E** au terminal devant son aquarium, ou **Inventaire → Déposer** dans sa galerie, lance l'incubation. L'œuf devient visible dans la cuve, puis l'animal apparaît automatiquement, même si le propriétaire explore ailleurs.
 
 | Rareté | Incubation après dépôt | Aura |
 | --- | --- | --- |
@@ -112,55 +72,58 @@ Tous les paliers sont accessibles, même avec la combinaison 1. Les niveaux **1 
 | Epic | 90 s | Violette |
 | Legendary | 3 min | Dorée |
 | Mythic | 6 min | Rose |
-| Secret | 12 min | Turquoise intense |
+| Secret | 12 min | Turquoise |
 
-Les délais sont configurables dans `Config.HatchTimes`. Le serveur conserve l'échéance absolue : une reconnexion ne redémarre pas l'incubation. Un œuf terminé pendant l'absence éclot au retour. Les animaux produisent des gold pendant la connexion. Les variantes produisent **Gold ×3,5 / Diamond ×12 / Mythic ×45**, avant le multiplicateur de prestige.
+Les échéances sont sauvegardées avec les œufs : une reconnexion ne remet pas le délai à zéro. Un œuf prêt pendant une absence éclot au retour. Les animaux produisent des gold pendant la connexion ; toute la collection produit, même quand seule une partie est exposée.
 
-Pour revenir au test MVP initial, régler `Config.ActiveFloors = 3`. Les paliers supplémentaires ne sont alors pas construits et leurs œufs n'apparaissent pas. La configuration par défaut active les six paliers.
+- Six paliers : récif, épave, ruines, forêt abyssale, grande abyss et fosse interdite.
+- 61 animaux d'éclosion, au moins dix par palier, et huit hybrides de fusion. Bestiaire 3D ; espèces inconnues `???`.
+- Fusion de trois identiques : Gold ×3,5, Diamond ×12, Mythic ×45. Cinq recettes connues et trois secrètes ; les recettes secrètes restent privées côté serveur avant découverte.
+- Événements de 5, 15 et 40 minutes : avertissements, bonus de rareté, courants et gardiens renforcés. Attaques spéciales annoncées des boss profonds : siphon, choc et vortex.
+- Prestige avec bonus permanents ; décorations et palettes de galerie ; six classements du serveur.
+- DataStore avec bail de session, sauvegarde périodique, départ et fermeture ; validation des actions et déplacements côté serveur.
 
-Les recettes complètes se trouvent exclusivement dans `src/server/FusionData.luau`. Le serveur ne transmet les recettes secrètes qu'après leur découverte. Les probabilités d'éclosion choisissent un animal du palier et de la rareté de l'œuf ; les hybrides `FusionOnly` sont exclus de l'éclosion.
+La direction graphique suit un style Roblox coloré : sols de galerie à tenons, clôtures en bois, silhouettes lisibles, yeux expressifs, navire bleu/blanc/or, stands rayés et aquariums lumineux. Certaines espèces partagent une silhouette et se distinguent par leur palette et leurs statistiques. Deux modèles CC0 de Microsoft et Kenney sont intégrés et adaptés ; les autres silhouettes et les accessoires sont originaux. Voir [les crédits](assets/CREDITS.md).
 
-## Sauvegarde et règles de propriété
+## Commandes
 
-Le profil contient argent, équipement (harpon compris), animaux normaux et variantes, bestiaire, œufs sécurisés, recettes, prestige, XP, profondeur record, statistiques et personnalisation. Le revenu est produit pendant la connexion, sans revenu hors ligne.
+| Action | Clavier/souris | Manette | Mobile |
+| --- | --- | --- | --- |
+| Nager | WASD / commandes Roblox | Stick gauche | Joystick |
+| Monter / descendre | Espace / Ctrl | LB / RB | ↑ / ↓ |
+| Propulseur | R | X | BOOST |
+| Verrouillage caméra | Shift (bascule) | Visée centrée | Visée centrée |
+| Harpon | Viser et clic | Réticule et RT | Réticule et TIRER |
+| Œuf / aquarium / marchand | E | Interaction Roblox | Bouton contextuel |
+| Pancarte de base | F | Interaction Roblox | Bouton contextuel |
 
-Les œufs en cours de transport restent dans le monde : une mort ou déconnexion les fait tomber. Un œuf arrivé dans la galerie de son transporteur passe dans son inventaire persistant et disparaît du monde partagé. Le joueur le dépose ensuite avec **E** au terminal devant l'aquarium, ou avec **Collection → Déposer** dans sa galerie. Le compte à rebours commence alors et l'animal rejoint automatiquement l'aquarium à la fin. La galerie expose de quatre à douze espèces selon son niveau ; toute la collection produit des gold. Tout le pont est protégé, mais seule sa propre galerie sécurise un œuf pour soi.
+Le viseur est visible avec le harpon équipé : il suit la souris en mode libre et reste centré avec Shift, sur manette et sur mobile. Shift active une caméra à l’épaule, avec orientation du personnage dans la direction de visée ; une seconde pression rétablit la caméra libre. Les menus et la perte de focus libèrent le curseur. Le retour rapide prend quatre secondes et exige de ne pas transporter d’œuf non sécurisé, y compris à la fin du délai.
 
-Les profils existants restent compatibles : le champ persistant `Money` représente désormais les gold affichés. Les échéances d'incubation sont des champs facultatifs des œufs déjà sécurisés.
+## Développer et vérifier
 
-Le prestige requiert la combinaison 20 et son prix affiché. Après une confirmation à deux étapes, il remet argent à 150, équipement à 1, XP à zéro et vide les animaux/variantes/œufs. Bestiaire, recettes découvertes, statistiques, record de profondeur et cosmétiques restent acquis.
-
-Chaque action distante est limitée en fréquence et validée côté serveur. Le client transmet une intention de tir, un identifiant d'œuf ou une sélection de fusion ; il ne transmet jamais de montant à créditer, de rareté obtenue, de propriétaire choisi ou de résultat de collision. Le serveur vérifie aussi les déplacements et les zones protégées.
-
-## Organisation
-
-```text
-src/shared/   Config, règles pures, modèles procéduraux
-src/server/   Carte, œufs/spawns/vols, gardiens, harpon,
-              DataStore, événements, recettes privées, orchestration
-src/client/   Contrôles, atmosphère, effets et interface
-tests/        Règles, progression et scénarios de services
-tools/        Installation vérifiée et commande de validation
-docs/         Procédure de tests dans Roblox Studio
-build/        Fichiers Roblox générés, non suivis par Git
+```sh
+cd /workspace/roblox-game
+python3 tools/bootstrap.py
+python3 tools/check.py
+python3 tools/package.py
 ```
 
-Les budgets DataStore, les performances de génération de terrain, les tarifs de fin de jeu et les fréquences de butin doivent être évalués avec de vrais joueurs avant une publication publique. Aucun achat Robux, outil d'administration caché ou identifiant d'asset privé n'est nécessaire.
+Python 3.12 installe les outils officiels épinglés avec vérification SHA-256. `.tools/` et `build/` sont ignorés par Git. Le vérificateur utilise aussi l'outillage partagé de l'environnement cloud.
 
-## Néréide et galeries améliorables
+`tools/check.py` compile et analyse les sources Luau, teste probabilités/économie/inventaires/fusions/prestige, les services serveur, le démarrage complet et les callbacks de boutique avec des primitives moteur simulées. Il vérifie la collecte simultanée, l’interception au harpon, les protections des bases, le viseur/verrouillage de caméra, le boss partagé et sa réapparition, les achats près du bon marchand, les sauvegardes et l'incubation. Il construit `.rbxl` et `.rbxlx`, vérifie les sources embarquées et exécute `luau-lsp` avec les définitions Roblox.
 
-Tous les joueurs plongent et remontent par le bassin central, avec deux échelles. Le serveur refuse les traversées de la surface ailleurs, et le pont conserve un accès continu aux huit galeries. Au-dessus de chacune : portrait Roblox, pseudo, identifiant `@username` et niveau de base.
+**Ces contrôles ne simulent pas le rendu ou la physique natifs Roblox.** Les essais visuels, réseau, mobile, performance et DataStore réel restent à effectuer selon [la procédure Studio](docs/STUDIO_TESTS.md). Aucun essai natif Studio n'a été exécuté ici.
 
-**Base & Aquarium** dans le menu, ou **F** au terminal, affiche les améliorations :
+`build/UnderwaterEgg-project.zip` contient les sources, tests et fichiers Studio. `tools/package.py` prépare le ZIP prêt à ouvrir dans `downloads/`. Le workflow GitHub Actions reprend la vérification.
 
-| Niveau | Coût du passage | Espèces exposées | Bonus de production |
-| --- | --- | --- | --- |
-| Explorateur | Inclus | 4 | — |
-| Océanographe | 600 gold | 6 | +10 % |
-| Sanctuaire | 2 500 gold | 8 | +20 % |
-| Atlantide | 12 500 gold | 10 | +30 % |
-| Palais des abysses | 60 000 gold | 12 | +40 % |
+La configuration publique est dans `src/shared/Config.luau` : prix, marchands, tailles, boss, probabilités, revenus et timers. Les poids sont normalisés. `ActiveFloors = 3` réactive le périmètre MVP ; la valeur livrée active six paliers. Les recettes sont exclusivement dans `src/server/FusionData.luau`.
 
-L'aquarium grandit et reçoit de nouveaux éléments visibles : filtres, coraux, cadres et cristaux. Le niveau de base est sauvegardé et conservé après un prestige.
+Les modèles détaillés se construisent côté client, avec distance d'affichage et budget : jusqu'à 420 studs pour les boss, 270 pour le reste. EditableMesh est utilisé si disponible ; un rendu géométrique de secours fonctionne sans activer d'API. `python3 tools/check_art.py` vérifie provenance CC0, budgets et forme ovoïde. Blender sert uniquement à régénérer les données : `blender -b -t 2 --python tools/build_art.py`. `tools/preview_art.py` produit un aperçu hors ligne, qui n'est pas une capture Roblox.
 
-L'art détaillé est construit côté client avec un budget et une distance d'affichage. Le rendu natif EditableMesh est utilisé s'il est disponible ; un rendu local de secours évite d'imposer des réglages API au joueur. `python3 tools/check_art.py` vérifie les sources CC0, les budgets géométriques et la forme des œufs. Blender n'est nécessaire que pour régénérer les fichiers graphiques : `blender -b -t 2 --python tools/build_art.py`. Le build normal utilise les données déjà incluses.
+Pour synchroniser localement avec le plugin Rojo de Studio : `.tools/bin/rojo serve default.project.json --address 127.0.0.1 --port 34872`. La synchronisation cloud vers un Studio local n'est pas présumée accessible ; le fichier `.rbxl` reste autonome.
+
+## Sauvegarde
+
+Le profil contient gold (champ historique `Money`), équipement, œufs sécurisés et échéances, animaux/variantes, bestiaire, recettes, prestige, XP, profondeur record, statistiques et personnalisation. Les sauvegardes existantes restent compatibles.
+
+Le prestige réinitialise les éléments annoncés dans l'interface après confirmation ; base, bestiaire découvert, recettes, statistiques, record et cosmétiques restent acquis. Aucun achat Robux ni outil d'administration distant n'est nécessaire. L'équilibrage économique et les performances à huit joueurs doivent être évalués dans Studio avant une publication publique.

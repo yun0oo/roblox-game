@@ -10,6 +10,8 @@ local function start()
     local Config = require(Modules.Config)
     local Rules = require(Modules.Rules)
     local Visuals = require(Modules.Visuals)
+    local EquipmentVisuals = require(Modules.EquipmentVisuals)
+    local Merchants = require(script.Parent.Merchants)
     local DataSystem = require(script.Parent.DataSystem)
     local World = require(script.Parent.World)
     local EggSystem = require(script.Parent.EggSystem)
@@ -106,8 +108,9 @@ local function start()
     ctx.Events = EventSystem.new(ctx)
 
     local function equipTool(state, character)
+        if state.Tool then state.Tool:Destroy() end
         local tool = Instance.new("Tool")
-        tool.Name = "Harpon"; tool.ToolTip = "Viser et tirer • les habitats sont protégés"
+        tool.Name = "Harpon"; tool.ToolTip = "Viser et tirer • combattez les boss des profondeurs"
         tool.CanBeDropped = false; tool.RequiresHandle = true
         tool.Grip = CFrame.new(0, -0.35, 0.3)
         Visuals.Harpoon(tool, state.Profile.Equipment.Harpoon)
@@ -119,6 +122,8 @@ local function start()
     local function makeSnapshot(state)
         local profile = state.Profile
         local egg = state.Carrying and ctx.Eggs.Eggs[state.Carrying]
+        local inventory = table.clone(profile.Eggs)
+        if egg then table.insert(inventory, 1, { Id = egg.Id, Name = egg.Name, Floor = egg.Floor, Rarity = egg.Rarity, Unsecured = true }) end
         local safe = ctx.World:SafeBase(state.LastPosition)
         local ranks = {}
         for _, other in pairs(ctx.States) do
@@ -136,16 +141,21 @@ local function start()
         state.Player:SetAttribute("SwimSpeed", speed)
         state.Player:SetAttribute("LampLevel", profile.Equipment.Lamp)
         state.Player:SetAttribute("CurrentX", current.X); state.Player:SetAttribute("CurrentZ", current.Z)
-        return { Money = math.floor(profile.Money), Gold = math.floor(profile.Money), ServerTime = os.time(), Income = Rules.Income(profile, Config), Oxygen = state.Oxygen,
+        local merchants, nearMerchant = {}, nil
+        for key, merchant in pairs(ctx.World.Merchants) do
+            merchants[key] = merchant.Position
+            if Merchants.Near(ctx.World, Config, key, state.LastPosition) then nearMerchant = key end
+        end
+        return { NearMerchant = nearMerchant, Merchants = merchants, NearBaseSign = (state.LastPosition - state.Base.BaseSign.Position).Magnitude <= 13, BaseSignPosition = state.Base.BaseSign.Position, Money = math.floor(profile.Money), Gold = math.floor(profile.Money), ServerTime = os.time(), Income = Rules.Income(profile, Config), Oxygen = state.Oxygen,
             MaxOxygen = Rules.MaxOxygen(profile), Health = select(2, ctx:Root(state)) and select(2, ctx:Root(state)).Health or 0,
             Depth = math.max(0, math.floor(Config.WaterTop - state.LastPosition.Y)), Floor = state.Floor,
-            Equipment = profile.Equipment, Animals = profile.Animals, Discovered = profile.Discovered, Eggs = profile.Eggs,
+            Equipment = profile.Equipment, Animals = profile.Animals, Discovered = profile.Discovered, Eggs = inventory, Carrying = egg and { Id = egg.Id, Name = egg.Name, Rarity = egg.Rarity },
             Variants = profile.Variants, Prestige = profile.Prestige, PrestigeCost = Rules.PrestigeCost(profile), Recipes = recipes,
             OwnedDecor = profile.OwnedDecor, Palette = profile.Palette, BaseLevel = profile.BaseLevel or 1,
             BaseUpgradeCost = Config.BaseUpgrades[(profile.BaseLevel or 1) + 1] and Config.BaseUpgrades[(profile.BaseLevel or 1) + 1].Cost,
             DivePosition = ctx.World.DiveStart,
             XP = profile.XP, Level = 1 + math.floor(math.sqrt(profile.XP / 30)), MaxDepth = profile.MaxDepth, Stats = profile.Stats,
-            Carrying = egg and { Name = egg.Name, Rarity = egg.Rarity }, Safe = safe ~= nil,
+            Safe = safe ~= nil,
             OwnBase = safe ~= nil and safe.OwnerId == state.Player.UserId, BasePosition = state.Base.Center,
             ShotRemaining = math.max(0, (state.NextShot or 0) - os.clock()), BoostRemaining = math.max(0, (state.NextBoost or 0) - os.clock()),
             Offline = state.Offline, SaveStatus = state.SaveStatus, Event = ctx.Events:Snapshot(), Rankings = ranks }
@@ -153,6 +163,7 @@ local function start()
 
     local function onCharacter(state, character)
         if state.Character == character then return end
+        if state.Carrying then ctx.Eggs:Drop(state, "Death") end
         state.Character = character
         local root = character:WaitForChild("HumanoidRootPart", 12)
         local humanoid = character:WaitForChild("Humanoid", 12)
@@ -162,10 +173,9 @@ local function start()
         humanoid.WalkSpeed = Rules.SwimSpeed(state.Profile)
         humanoid.JumpPower = 50
         humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
-        humanoid.Died:Connect(function()
-            ctx.Eggs:Drop(state, "Death")
-        end)
+        humanoid.Died:Connect(function() ctx.Eggs:Drop(state, "Death") end)
         equipTool(state, character)
+        EquipmentVisuals.Apply(character, state.Profile.Equipment, Visuals)
         ctx.World:RefreshAnimals(state)
         ctx.World:RefreshIncubators(state)
         character:SetAttribute("UnderwaterReady", true)
@@ -190,7 +200,7 @@ local function start()
         player.CharacterAdded:Connect(function(character) onCharacter(state, character) end)
         -- The automatic avatar may already exist by the time the world/profile loads.
         if player.Character then task.spawn(onCharacter, state, player.Character) end
-        ctx:Notify(player, "Bienvenue à bord du Néréide !\nTrouvez un œuf, évitez son gardien, Plongez par le bassin central, puis rapportez vos œufs à votre aquarium.", "Success")
+        ctx:Notify(player, "Bienvenue à bord du Néréide !\nPlongez par le bassin central, évitez le boss et récupérez des œufs dans votre inventaire. Le marché vous attend sur le pont !", "Success")
         if offline then ctx:Notify(player, "MODE STUDIO HORS LIGNE\nDataStore indisponible : cette session ne sera pas sauvegardée.", "Warning") end
     end
 
@@ -199,6 +209,7 @@ local function start()
         if not state or not ctx:Validate(state) or os.clock() < (state.NextBaseUpgrade or 0) then return end
         local base = ctx.World:SafeBase(state.LastPosition)
         if not base or base.OwnerId ~= player.UserId then ctx:Notify(player, "Rejoignez votre galerie pour l'améliorer.", "Warning"); return end
+        if (state.LastPosition - state.Base.BaseSign.Position).Magnitude > 13 then ctx:Notify(player, "Approchez de la pancarte AMÉLIORER LA BASE.", "Warning"); return end
         state.NextBaseUpgrade = os.clock() + 1
         local success, message = Rules.PurchaseBaseUpgrade(state.Profile, Config)
         if success then ctx.World:RefreshAnimals(state); ctx.World:RefreshIncubators(state) end
@@ -208,7 +219,7 @@ local function start()
     for _, base in ipairs(ctx.World.Bases) do
         base.BasePrompt.Triggered:Connect(function(player)
             local state = ctx.States[player]
-            if state and base.OwnerId == player.UserId and ctx:Validate(state) and (state.LastPosition - base.Core.Position).Magnitude <= 13 then
+            if state and base.OwnerId == player.UserId and ctx:Validate(state) and (state.LastPosition - base.BaseSign.Position).Magnitude <= 13 then
                 ctx.FX:FireClient(player, "OpenBase", {})
             end
         end)
@@ -226,6 +237,13 @@ local function start()
         end)
     end
 
+    for key, merchant in pairs(ctx.World.Merchants) do
+        merchant.Prompt.Triggered:Connect(function(player)
+            local state = ctx.States[player]
+            if state and ctx:Validate(state) and Merchants.Near(ctx.World, Config, key, state.LastPosition) then ctx.FX:FireClient(player, "OpenShop", { Key = key }) end
+        end)
+    end
+
     ctx.Action.OnServerEvent:Connect(function(player, action, payload)
         local state = ctx.States[player]
         if not state or type(action) ~= "string" or #action > 24 or ctx.ShuttingDown or ctx.Data:IsClosing(player) then return end
@@ -240,10 +258,13 @@ local function start()
             state.NextHatch = now + 0.8; ctx.Eggs:Hatch(state, payload)
         elseif action == "Upgrade" then
             if not ctx:Validate(state) then return end
-            local base = ctx.World:SafeBase(state.LastPosition)
-            if not base or base.OwnerId ~= player.UserId then ctx:Notify(player, "Les améliorations s'achètent dans votre habitat.", "Warning"); return end
+            if not Merchants.Near(ctx.World, Config, payload, state.LastPosition) then ctx:Notify(player, "Approchez du marchand de cet équipement sur le pont.", "Warning"); return end
             local success, message = Rules.PurchaseUpgrade(state.Profile, Config, payload)
-            if success then state.Oxygen = math.min(Rules.MaxOxygen(state.Profile), state.Oxygen + 18) end
+            if success then
+                state.Oxygen = math.min(Rules.MaxOxygen(state.Profile), state.Oxygen + 18)
+                EquipmentVisuals.Apply(state.Player.Character, state.Profile.Equipment, Visuals)
+                if payload == "Harpoon" then equipTool(state, state.Player.Character) end
+            end
             ctx:Notify(player, message, success and "Success" or "Warning")
         elseif action == "Fuse" or action == "Prestige" or action == "Decorate" then
             if not ctx:Validate(state) then return end
@@ -259,10 +280,12 @@ local function start()
                 if result.Secret then ctx:Broadcast("🚨 " .. player.DisplayName .. " A DÉCOUVERT UNE FUSION SECRÈTE !", "Secret")
                 else ctx:Notify(player, "🧬 FUSION RÉUSSIE !", "Success") end
             elseif action == "Prestige" then
-                if state.Carrying then ctx:Notify(player, "Sécurisez d'abord votre œuf.", "Warning"); return end
+                if state.Carrying then ctx:Notify(player, "Ramenez d’abord votre œuf à votre base.", "Warning"); return end
                 local success, message = Rules.Rebirth(state.Profile, Config)
                 if success then
                     state.Oxygen = Rules.MaxOxygen(state.Profile)
+                    EquipmentVisuals.Apply(state.Player.Character, state.Profile.Equipment, Visuals)
+                    equipTool(state, state.Player.Character)
                     ctx.World:RefreshAnimals(state); ctx.World:RefreshIncubators(state)
                 end
                 ctx:Notify(player, message, success and "Success" or "Warning")
@@ -274,14 +297,12 @@ local function start()
         elseif action == "Boost" then
             if not ctx:Validate(state) or now < (state.NextBoost or 0) then return end
             state.NextBoost = now + 7; state.BoostUntil = now + 1.4
-        elseif action == "Drop" then
-            if ctx:Validate(state) then ctx.Eggs:Drop(state, "Manual") end
         elseif action == "Return" then
             if not ctx:Validate(state) then return end
-            if state.Carrying then ctx:Notify(player, "Le retour rapide est interdit avec un œuf !", "Warning"); return end
+            if state.Carrying then ctx:Notify(player, "Retour rapide interdit avec un œuf non sécurisé.", "Warning"); return end
             if state.Returning then return end
             state.Returning = true
-            ctx:Notify(player, "Retour à l'habitat dans 4 secondes. Aucun œuf ne peut voyager avec vous.")
+            ctx:Notify(player, "Retour à votre aquarium dans 4 secondes. Vos œufs restent dans votre inventaire.")
             task.delay(4, function()
                 state.Returning = false
                 if ctx.States[player] == state and not state.Carrying and ctx:Root(state) then ctx:Teleport(state, state.Base.Spawn) end
@@ -330,7 +351,7 @@ local function start()
         end
     end)
 
-    -- Populate six independently randomized, individually guarded eggs per active floor.
+    -- Populate six independently randomized eggs under one zone boss per active floor.
     workspace:SetAttribute("UnderwaterBootMessage", "Apparition des œufs et des gardiens…")
     for _ = 1, Config.EggsPerFloor do for _, floor in ipairs(Config.Floors) do ctx.Eggs:Spawn(floor) end end
     Players.PlayerAdded:Connect(onPlayer)

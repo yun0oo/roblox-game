@@ -9,8 +9,8 @@ function World.Build(config, visuals)
         local folder = Instance.new("Folder"); folder.Name = name; folder.Parent = Workspace; self[name] = folder
     end
     local terrain = Workspace.Terrain
-    terrain.WaterColor = Color3.fromRGB(25, 126, 155)
-    terrain.WaterTransparency = 0.55
+    terrain.WaterColor = Color3.fromRGB(21, 165, 204)
+    terrain.WaterTransparency = 0.65
     terrain.WaterReflectance = 0.3
     terrain.WaterWaveSize = 0.08
     terrain.WaterWaveSpeed = 4
@@ -224,7 +224,7 @@ function World:RefreshAnimals(state)
         local grade, displaySpec = "Normal", table.clone(spec)
         for _, variant in ipairs({ "Gold", "Diamond", "Mythic" }) do if ((state.Profile.Variants[entry.Id] or {})[variant] or 0) > 0 then grade = variant end end
         if grade == "Gold" then displaySpec.Color = { 255, 204, 81 } elseif grade == "Diamond" then displaySpec.Color = { 166, 244, 255 } elseif grade == "Mythic" then displaySpec.Color = { 239, 133, 255 } end
-        local model = self.Visuals.Animal(base.Display, displaySpec, CFrame.new(position), 0.9, spec.Name .. " ×" .. entry.Count .. "\n" .. string.upper(grade) .. " · " .. spec.Income .. " gold/min")
+        local model = self.Visuals.Animal(base.Display, displaySpec, CFrame.new(position), 1.2, spec.Name .. " ×" .. entry.Count .. "\n" .. string.upper(grade) .. " · " .. spec.Income .. " gold/min")
         table.insert(base.Swimmers, { Model = model, Origin = position, Phase = i * 1.7 })
     end
     self:ApplyCustomization(state)
@@ -239,7 +239,7 @@ function World:RefreshIncubators(state)
         index += 1
         local position = base.TankCenter + Vector3.new(((index - 1) % 6 - 2.5) * 7, -9, math.floor((index - 1) / 6) * 6 - 10)
         local part = self.Visuals.Egg(base.EggDisplay, egg.Name, self.Config.Rarities[egg.Rarity], CFrame.new(position))
-        part.Size *= 0.36; part.CanQuery = false
+        part.Size *= math.min(0.36, 4 / part.Size.Y); part.CanQuery = false
         local label = self.Visuals.Label(part, "INCUBATION", self.Visuals.Color(self.Config.Rarities[egg.Rarity].Color), 3, 100)
         table.insert(base.Incubators, { Egg = egg, Label = label })
     end

@@ -8,9 +8,15 @@ local nativeAvailable = true
 
 local function color(rgb, tint, kind)
     local base = Color3.fromRGB(rgb[1], rgb[2], rgb[3])
-    if kind == "weapon" then return base end
+    if kind == "weapon" then
+        if rgb[1] > rgb[2] * 1.15 and rgb[2] > rgb[3] * 1.1 then return Color3.fromRGB(36, 165, 207) end
+        return base
+    end
+    if kind == "egg" then return base:Lerp(tint, 0.6) end
+    if math.min(rgb[1], rgb[2], rgb[3]) > 235 then return base end
+    if rgb[1] > 220 and rgb[2] > 150 and rgb[3] < 80 then return base end
     if math.max(rgb[1], rgb[2], rgb[3]) < 45 then return base end
-    return base:Lerp(tint, kind == "egg" and 0.5 or 0.35)
+    return base:Lerp(tint, 0.68)
 end
 
 local function nativeMesh(key, asset, tint)
@@ -83,8 +89,13 @@ function ArtRenderer.Build(key, tint, scale, allowNative)
             wedge(model, (a + c) / 2, -right, up, -back, height, math.abs(ac:Dot(back)), paint)
         end
     end
+    model:SetAttribute("ArtCost", part and 1 or #model:GetChildren())
     model.WorldPivot = CFrame.new()
     return model
+end
+
+function ArtRenderer.Cost(key)
+    return #(data[key] or data.fish).Lod.Faces * 2
 end
 
 function ArtRenderer.Bounds(key)

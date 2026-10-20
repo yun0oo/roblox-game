@@ -3,8 +3,8 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local UI = {}
 UI.__index = UI
-local C = { Navy = Color3.fromRGB(8, 24, 39), Panel = Color3.fromRGB(14, 38, 55), White = Color3.fromRGB(232, 249, 250),
-    Muted = Color3.fromRGB(137, 175, 188), Teal = Color3.fromRGB(106, 247, 210), Gold = Color3.fromRGB(255, 206, 114), Red = Color3.fromRGB(255, 120, 139) }
+local C = { Navy = Color3.fromRGB(17, 41, 80), Panel = Color3.fromRGB(31, 72, 127), White = Color3.fromRGB(249, 253, 255),
+    Muted = Color3.fromRGB(190, 218, 247), Teal = Color3.fromRGB(61, 240, 173), Gold = Color3.fromRGB(255, 214, 63), Red = Color3.fromRGB(255, 122, 139) }
 local function make(class, parent, props)
     local item = Instance.new(class)
     for key, value in pairs(props or {}) do item[key] = value end
@@ -22,7 +22,8 @@ local function button(parent, text, props, callback)
     local item = make("TextButton", parent, { Text = text, Font = Enum.Font.GothamBold, TextSize = 14,
         TextColor3 = C.Navy, BackgroundColor3 = C.Teal, BorderSizePixel = 0, AutoButtonColor = true })
     for key, value in pairs(props or {}) do item[key] = value end
-    round(item, 9)
+    round(item, 12)
+    make("UIStroke", item, { Color = C.Navy, Transparency = 0.2, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
     if callback then item.Activated:Connect(callback) end
     return item
 end
@@ -30,7 +31,7 @@ local function panel(parent, props)
     local item = make("Frame", parent, { BackgroundColor3 = C.Panel, BackgroundTransparency = 0.08, BorderSizePixel = 0 })
     for key, value in pairs(props or {}) do item[key] = value end
     round(item)
-    make("UIStroke", item, { Color = Color3.fromRGB(46, 94, 108), Transparency = 0.4, Thickness = 1 })
+    make("UIStroke", item, { Color = Color3.fromRGB(87, 146, 214), Transparency = 0.15, Thickness = 2 })
     return item
 end
 function UI.Format(value)
@@ -70,7 +71,8 @@ function UI.new(context)
     local menu = make("Frame", root, { Position = UDim2.fromOffset(20, 126), Size = UDim2.fromOffset(152, 460), BackgroundTransparency = 1 })
     label(menu, "VOTRE EXPÉDITION", 10, C.Muted, { Size = UDim2.fromOffset(152, 18) })
     for i, entry in ipairs({ { "Collection", "ŒUFS & ANIMAUX" }, { "Bestiaire", "BESTIAIRE" }, { "Équipement", "ÉQUIPEMENT" }, { "Fusion", "FUSION" }, { "Prestige", "PRESTIGE" }, { "Habitat", "BASE & AQUARIUM" }, { "Classement", "CLASSEMENT" }, { "Guide", "COMMENT JOUER" } }) do
-        button(menu, entry[2], { Position = UDim2.fromOffset(0, 26 + (i - 1) * 48), Size = UDim2.fromOffset(152, 40), BackgroundColor3 = C.Panel, TextColor3 = C.White, TextSize = 12 }, function() self:Open(entry[1]) end)
+        local item = button(menu, entry[2], { Position = UDim2.fromOffset(0, 26 + (i - 1) * 48), Size = UDim2.fromOffset(152, 40), BackgroundColor3 = C.Panel, TextColor3 = C.White, TextSize = 12 }, function() self:Open(entry[1]) end)
+        if entry[1] == "Collection" then self.InventoryButton = item end
     end
     button(menu, "ÉQUIPER LE HARPON", { Position = UDim2.fromOffset(0, 416), Size = UDim2.fromOffset(152, 42), TextSize = 11 }, function() context.Equip() end)
     self.Home = button(root, "RETOUR À L'HABITAT", { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 20, 1, -80), Size = UDim2.fromOffset(180, 38), BackgroundColor3 = C.Panel, TextColor3 = C.Muted, TextSize = 11 }, function() context.Action:FireServer("Return") end)
@@ -82,12 +84,17 @@ function UI.new(context)
     make("UIListLayout", self.ToastBox, { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder })
     self.Objective = label(root, "TROUVEZ UN ŒUF  →  ÉVITEZ SON GARDIEN  →  REVENEZ À VOTRE HABITAT", 12, C.White,
         { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -46), Size = UDim2.new(1, -50, 0, 28), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold })
-    self.Help = label(root, "WASD · NAGER    ESPACE / CTRL · MONTER / DESCENDRE    SHIFT · PROPULSEUR    CLIC · HARPON", 10, C.Muted,
+    self.Help = label(root, "WASD · NAGER    ESPACE / CTRL · MONTER / DESCENDRE    R · PROPULSEUR    SHIFT · CAMÉRA    CLIC · HARPON", 10, C.Muted,
         { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -15), Size = UDim2.new(1, -40, 0, 24), TextXAlignment = Enum.TextXAlignment.Center })
     self.Compass = label(root, "Votre habitat", 12, C.Teal, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 106), Size = UDim2.new(0.5, -24, 0, 18), TextXAlignment = Enum.TextXAlignment.Right })
     self.Save = label(root, "CONNEXION AU SERVEUR…", 10, C.Muted, { Position = UDim2.fromOffset(22, 106), Size = UDim2.new(0.5, -24, 0, 16) })
     self.Cooldown = label(root, "HARPON PRÊT", 11, C.Teal, { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -24, 1, -84), Size = UDim2.fromOffset(220, 20), TextXAlignment = Enum.TextXAlignment.Right })
-    self.Reticle = label(root, "+", 26, C.Teal, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(28, 28), TextXAlignment = Enum.TextXAlignment.Center, Visible = false, ZIndex = 2 })
+    self.Reticle = make("Frame", root, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(32, 32), BackgroundTransparency = 1, Visible = false, ZIndex = 2 })
+    for _, segment in ipairs({ { 15, 0, 2, 9 }, { 15, 23, 2, 9 }, { 0, 15, 9, 2 }, { 23, 15, 9, 2 }, { 14, 14, 4, 4 } }) do
+        local line = make("Frame", self.Reticle, { Position = UDim2.fromOffset(segment[1], segment[2]), Size = UDim2.fromOffset(segment[3], segment[4]), BackgroundColor3 = C.White, BorderSizePixel = 0, ZIndex = 2 })
+        round(line, 2); make("UIStroke", line, { Color = C.Navy, Thickness = 1.2 })
+    end
+    self.CameraHint = label(root, "SHIFT · VERROUILLER LA CAMÉRA", 10, C.Muted, { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -106), Size = UDim2.fromOffset(320, 18), TextXAlignment = Enum.TextXAlignment.Center })
     self.Dimmer = make("TextButton", root, { Size = UDim2.fromScale(1, 1), Text = "", BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.4, Visible = false, ZIndex = 20 })
     self.Dimmer.Activated:Connect(function() self:Open(nil) end)
     self.Modal = panel(root, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.new(0.88, 0, 0.76, 0), Visible = false, ZIndex = 21 })
@@ -95,6 +102,7 @@ function UI.new(context)
     button(self.Modal, "×", { Position = UDim2.new(1, -54, 0, 20), Size = UDim2.fromOffset(32, 32), BackgroundColor3 = C.Navy, TextColor3 = C.White, TextSize = 24, ZIndex = 22 }, function() self:Open(nil) end)
     self.List = make("ScrollingFrame", self.Modal, { Position = UDim2.fromOffset(24, 78), Size = UDim2.new(1, -48, 1, -100), BackgroundTransparency = 1, BorderSizePixel = 0,
         ScrollBarThickness = 4, ScrollBarImageColor3 = C.Teal, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 22 })
+    self.CameraHint.Visible = not UserInputService.TouchEnabled
     if UserInputService.TouchEnabled then
         self.Help.Text = "JOYSTICK · NAGER    ↑ / ↓ · PROFONDEUR    TIRER · HARPON"
         self.Home.Position = UDim2.new(0, 20, 1, -152)
@@ -131,6 +139,29 @@ function UI:Open(tab)
     if tab then self:RenderPanel() end
 end
 
+function UI:OpenShop(key)
+    self.SelectedEquipment = self.Ctx.Config.Merchants[key] and key or nil
+    self:Open("Équipement")
+end
+
+function UI:EquipmentPreview(parent, equipment)
+    local view = make("ViewportFrame", parent, { Position = UDim2.fromOffset(8, 8), Size = UDim2.fromOffset(150, 175), BackgroundTransparency = 1, Ambient = Color3.fromRGB(210, 229, 255), LightColor = Color3.new(1, 1, 1), LightDirection = Vector3.new(-1, -1, -2), ZIndex = 24 })
+    local scene = make("WorldModel", view)
+    local dummy = make("Model", scene)
+    local v = self.Ctx.Visuals
+    for _, item in ipairs({
+        { "Torso", Vector3.new(2, 2, 1), Vector3.new(0, 0, 0) },
+        { "Head", Vector3.new(1.5, 1.5, 1.5), Vector3.new(0, 1.75, 0) },
+        { "Left Arm", Vector3.new(1, 2, 1), Vector3.new(-1.5, 0, 0) },
+        { "Right Arm", Vector3.new(1, 2, 1), Vector3.new(1.5, 0, 0) },
+        { "Left Leg", Vector3.new(1, 2, 1), Vector3.new(-0.5, -2, 0) },
+        { "Right Leg", Vector3.new(1, 2, 1), Vector3.new(0.5, -2, 0) },
+    }) do v.Part(dummy, item[1], item[2], CFrame.new(item[3]), item[1] == "Head" and Color3.fromRGB(255, 215, 161) or C.Navy) end
+    require(game:GetService("ReplicatedStorage").Modules.EquipmentVisuals).Apply(dummy, equipment, v, true)
+    local camera = make("Camera", view, { CFrame = CFrame.lookAt(Vector3.new(6, 3, -10), Vector3.new(0, -0.3, 0)), FieldOfView = 37 })
+    view.CurrentCamera = camera
+end
+
 function UI:Viewport(parent, spec)
     local viewport = make("ViewportFrame", parent, { BackgroundTransparency = 1, Position = UDim2.fromOffset(2, 3), Size = UDim2.fromOffset(104, 92), Ambient = Color3.fromRGB(185, 211, 226), LightColor = Color3.new(1, 1, 1), ZIndex = 24 })
     local world = make("WorldModel", viewport)
@@ -157,17 +188,18 @@ function UI:RenderPanel()
     end
     self.HatchTimers = {}
     if self.Tab == "Collection" then
-        paragraph(string.format("%d œuf(s) sécurisé(s)  ·  %d animaux  ·  +%s gold / min\nDéposez les œufs dans l'aquarium : les animaux produisent des gold pendant votre connexion.", #state.Eggs, rules.AnimalCount(state), UI.Format(state.Income)), 70, C.Teal)
+        paragraph(string.format("%d œuf(s) dans l’inventaire  ·  %d animaux  ·  +%s gold / min\nDéposez les œufs dans l'aquarium : les animaux produisent des gold pendant votre connexion.", #state.Eggs, rules.AnimalCount(state), UI.Format(state.Income)), 70, C.Teal)
         for _, egg in ipairs(state.Eggs) do
             local row = self:Row(112)
             local color = self.Ctx.Visuals.Color(config.Rarities[egg.Rarity].Color)
-            label(row, "ŒUF SÉCURISÉ  /  " .. string.upper(egg.Rarity), 11, color, { Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -180, 0, 20), ZIndex = 24 })
+            label(row, (egg.Unsecured and "⚠ VOLABLE AU HARPON / " or "ŒUF SÉCURISÉ / ") .. string.upper(egg.Rarity), 11, color, { Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -180, 0, 20), ZIndex = 24 })
             label(row, egg.Name, 18, C.White, { Position = UDim2.fromOffset(16, 38), Size = UDim2.new(1, -180, 0, 32), Font = Enum.Font.GothamBold, ZIndex = 24 })
             local timer = label(row, "", 12, color, { Position = UDim2.fromOffset(16, 76), Size = UDim2.new(1, -32, 0, 24), ZIndex = 24 })
             if egg.ReadyAt then table.insert(self.HatchTimers, { Egg = egg, Label = timer })
+            elseif egg.Unsecured then timer.Text = "Ramenez-le à votre base · transporteur en surbrillance"
             else timer.Text = "Durée : " .. config.HatchTimes[egg.Rarity] .. " s après dépôt" end
-            local enabled = state.OwnBase and not egg.ReadyAt
-            button(row, egg.ReadyAt and "EN INCUBATION" or state.OwnBase and "DÉPOSER" or "SUR VOTRE ÎLE", { Position = UDim2.new(1, -160, 0, 26), Size = UDim2.fromOffset(144, 38), TextSize = 12, BackgroundColor3 = enabled and C.Teal or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 24 }, function() if enabled then self.Ctx.Action:FireServer("Hatch", egg.Id) end end)
+            local enabled = state.OwnBase and not egg.ReadyAt and not egg.Unsecured
+            button(row, egg.Unsecured and "À SÉCURISER" or egg.ReadyAt and "EN INCUBATION" or state.OwnBase and "DÉPOSER" or "À VOTRE AQUARIUM", { Position = UDim2.new(1, -160, 0, 26), Size = UDim2.fromOffset(144, 38), TextSize = 12, BackgroundColor3 = enabled and C.Teal or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 24 }, function() if enabled then self.Ctx.Action:FireServer("Hatch", egg.Id) end end)
         end
         local ids = {}; for id in pairs(config.Animals) do if rules.SpeciesCount(state, id) > 0 then table.insert(ids, id) end end
         table.sort(ids, function(a, b) return config.Animals[a].Income > config.Animals[b].Income end)
@@ -202,15 +234,43 @@ function UI:RenderPanel()
             end
         end
     elseif self.Tab == "Équipement" then
-        paragraph(state.OwnBase and "ATELIER OUVERT · Chaque achat est validé par le serveur." or "Rejoignez votre galerie sur le navire pour acheter des améliorations.\nProfondeurs ouvertes : équipez-vous pour survivre aux gardiens.", 72, state.OwnBase and C.Teal or C.Gold)
-        for _, key in ipairs(config.UpgradeOrder) do
-            local spec, level = config.Upgrades[key], state.Equipment[key]
-            local price = rules.UpgradeCost(config, key, level); local row = self:Row(104)
-            label(row, spec.Name .. "  ·  NIVEAU " .. level .. " / " .. spec.Max, 17, C.White, { Position = UDim2.fromOffset(16, 14), Size = UDim2.new(1, -185, 0, 28), Font = Enum.Font.GothamBold, ZIndex = 24 })
-            label(row, spec.Description, 12, C.Muted, { Position = UDim2.fromOffset(16, 48), Size = UDim2.new(1, -185, 0, 40), ZIndex = 24 })
-            local enabled = price and state.OwnBase and state.Money >= price
-            button(row, price and (UI.Format(price) .. " gold") or "MAXIMUM", { Position = UDim2.new(1, -160, 0, 33), Size = UDim2.fromOffset(144, 40), BackgroundColor3 = enabled and C.Teal or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 24 }, function() if enabled then self.Ctx.Action:FireServer("Upgrade", key) end end)
+        self.Title.Text = "LE MARCHÉ DES PLONGEURS"
+        paragraph("7 marchands sur le pont · Choisissez un équipement.\nL’achat se fait auprès du spécialiste. Votre équipement apparaît sur votre personnage dès l’amélioration.", 76, C.White)
+        local tabs = self:Row(88)
+        local selected = self.SelectedEquipment or state.NearMerchant or "Suit"
+        for index, key in ipairs(config.UpgradeOrder) do
+            local merchant = config.Merchants[key]
+            button(tabs, merchant.Icon .. "\n" .. config.Upgrades[key].Name, { Position = UDim2.new((index - 1) / 7, 4, 0, 8), Size = UDim2.new(1 / 7, -8, 0, 70), TextSize = 12,
+                BackgroundColor3 = selected == key and self.Ctx.Visuals.Color(merchant.Color) or C.Panel, TextColor3 = selected == key and C.Navy or C.White, ZIndex = 24 }, function() self.SelectedEquipment = key; self:RenderPanel() end)
         end
+        local key = selected
+        local spec, merchant, level = config.Upgrades[key], config.Merchants[key], state.Equipment[key]
+        local tint = self.Ctx.Visuals.Color(merchant.Color)
+        local price = rules.UpgradeCost(config, key, level)
+        local vendor = self:Row(194)
+        self:EquipmentPreview(vendor, state.Equipment)
+        label(vendor, merchant.Icon .. " " .. merchant.Name, 23, tint, { Position = UDim2.fromOffset(172, 24), Size = UDim2.new(1, -190, 0, 36), Font = Enum.Font.GothamBlack, ZIndex = 24 })
+        label(vendor, merchant.Motto .. "\n\n" .. spec.Name:upper() .. " · NIVEAU " .. level .. " / " .. spec.Max, 15, C.White, { Position = UDim2.fromOffset(172, 68), Size = UDim2.new(1, -190, 0, 100), ZIndex = 24 })
+        local function benefit(n)
+            if key == "Oxygen" then return (100 + (n - 1) * 18 + state.Prestige * 5) .. " unités d’oxygène" end
+            if key == "Swim" then return string.format("%.1f studs/s", 20 + (n - 1) * 2 + math.sqrt(state.Prestige) * 0.3) end
+            if key == "Suit" then return "Pression ×" .. string.format("%.2f", 1 / (1 + (n - 1) * 0.018)) .. " · préparation " .. n end
+            if key == "Shield" then return "−" .. math.floor(math.min(0.54, (n - 1) * 0.06) * 100 + 0.5) .. " % de dégâts" end
+            if key == "Lamp" then return (24 + (n - 1) * 8) .. " studs de lumière" end
+            if key == "Thruster" then return "+" .. (12 + n * 2) .. " studs/s pendant le boost" end
+            local h = config.Harpoons[n]
+            return h.Range .. " studs · " .. h.Cooldown .. " s · " .. h.Damage .. " dégâts de base"
+        end
+        local detail = self:Row(226)
+        label(detail, "ACTUEL     " .. benefit(level) .. (price and ("\nSUIVANT   " .. benefit(level + 1)) or "\nNIVEAU MAXIMUM ATTEINT"), 17, C.White, { Position = UDim2.fromOffset(20, 18), Size = UDim2.new(1, -40, 0, 70), ZIndex = 24 })
+        label(detail, price and ("Prix : " .. UI.Format(price) .. " gold   ·   Votre solde : " .. UI.Format(state.Money) .. " gold") or "Vous possédez le meilleur modèle.", 15, C.Gold, { Position = UDim2.fromOffset(20, 96), Size = UDim2.new(1, -40, 0, 28), ZIndex = 24 })
+        local near = state.NearMerchant == key
+        local affordable = price and state.Money >= price
+        local text = not near and "LOCALISER CE MARCHAND" or not price and "ÉQUIPEMENT AU MAXIMUM" or affordable and "ACHETER L’AMÉLIORATION" or ("IL MANQUE " .. UI.Format(price - state.Money) .. " GOLD")
+        button(detail, text, { Position = UDim2.fromOffset(20, 143), Size = UDim2.new(1, -40, 0, 52), BackgroundColor3 = not near and tint or affordable and C.Teal or C.Panel, TextColor3 = (not near or affordable) and C.Navy or C.Muted, ZIndex = 24 }, function()
+            if not near then self.Ctx.Navigate(state.Merchants[key], merchant.Name); self:Open(nil)
+            elseif affordable then self.Ctx.Action:FireServer("Upgrade", key) end
+        end)
     elseif self.Tab == "Fusion" then
         paragraph("3 IDENTIQUES → GOLD ×3,5 → DIAMOND ×12 → MYTHIC ×45\nCombinez aussi des espèces normales. Les essais inconnus ne consomment rien. Les achats et fusions nécessitent votre habitat.", 98, C.Teal)
         for id, spec in pairs(config.Animals) do
@@ -266,9 +326,11 @@ function UI:RenderPanel()
     elseif self.Tab == "Habitat" then
         local tier = config.BaseUpgrades[state.BaseLevel]
         paragraph("VOTRE GALERIE · NIVEAU " .. state.BaseLevel .. " / " .. #config.BaseUpgrades .. "\n" .. tier.Name .. " · " .. tier.Display .. " espèces exposées · +" .. math.floor(tier.IncomeBonus * 100) .. " % de gold. Les améliorations restent acquises après un prestige.", 100, C.Gold)
+        local nextTier = config.BaseUpgrades[state.BaseLevel + 1]
+        if nextTier then paragraph("PROCHAIN NIVEAU · " .. nextTier.Name .. "\n" .. nextTier.Display .. " espèces exposées · +" .. math.floor(nextTier.IncomeBonus * 100) .. " % de gold · aquarium agrandi", 76, C.Teal) end
         local upgrade = self:Row(76)
-        local enabled = state.OwnBase and state.BaseUpgradeCost and state.Money >= state.BaseUpgradeCost
-        button(upgrade, state.BaseUpgradeCost and ("AMÉLIORER LA BASE · " .. UI.Format(state.BaseUpgradeCost) .. " GOLD") or "BASE AU NIVEAU MAXIMUM", { Position = UDim2.fromOffset(14, 16), Size = UDim2.new(1, -28, 0, 44), BackgroundColor3 = enabled and C.Gold or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 24 }, function() if enabled then self.Ctx.Action:FireServer("UpgradeBase") end end)
+        local enabled = state.OwnBase and state.NearBaseSign and state.BaseUpgradeCost and state.Money >= state.BaseUpgradeCost
+        button(upgrade, not state.NearBaseSign and "LOCALISER LA PANCARTE D’AMÉLIORATION" or state.BaseUpgradeCost and ("AMÉLIORER LA BASE · " .. UI.Format(state.BaseUpgradeCost) .. " GOLD") or "BASE AU NIVEAU MAXIMUM", { Position = UDim2.fromOffset(14, 16), Size = UDim2.new(1, -28, 0, 44), BackgroundColor3 = enabled and C.Gold or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 24 }, function() if enabled then self.Ctx.Action:FireServer("UpgradeBase") elseif not state.NearBaseSign then self.Ctx.Navigate(state.BaseSignPosition, "PANCARTE · AMÉLIORER LA BASE"); self:Open(nil) end end)
         paragraph((state.OwnBase and "ATELIER OUVERT" or "REJOIGNEZ VOTRE HABITAT POUR PERSONNALISER") .. "\nVotre galerie est sur le Néréide, près du bassin commun. Les décorations restent acquises après un prestige.", 84, C.Teal)
         for _, id in ipairs({ "lagoon", "coral", "abyss", "bubbles", "aquarium", "statue" }) do
             local spec = config.Decorations[id]; local row = self:Row(88)
@@ -290,16 +352,16 @@ function UI:RenderPanel()
         end
     elseif self.Tab == "Guide" then
         for _, text in ipairs({
-            "01  EXPLOREZ\nRejoignez le bassin central du navire et sautez : tous les plongeurs partent du même endroit. Nagez jusqu'aux nids lumineux. Chaque œuf possède un gardien : utilisez le harpon pour le combattre ou esquivez-le.",
-            "02  TRANSPORTEZ\nMaintenez E près d'un œuf. Il apparaît sur votre personnage et vous ralentit. Un simple contact avec un joueur ne vole rien.",
-            "03  INTERCEPTEZ\nÉquipez le harpon, visez avec la souris et cliquez. Sur mobile, visez au centre et utilisez TIRER. Un tir doit réellement toucher le transporteur pour faire tomber l'œuf.",
-            "04  SÉCURISEZ\nRemontez par le bassin central et rejoignez VOTRE galerie sur le navire. L'œuf est automatiquement sécurisé et ne peut plus être volé. Tous les habitats sont des zones sans combat.",
-            "05  REMPLISSEZ L'AQUARIUM\nDéposez les œufs dans votre galerie avec E ou Collection. Éclosion : Common 15 s · Rare 40 s · Epic 90 s · Legendary 3 min · Mythic 6 min · Secret 12 min. Les animaux produisent des gold pour acheter l'équipement.",
+            "01  EXPLOREZ\nRejoignez le bassin central du navire et sautez : tous les plongeurs partent du même endroit. Nagez jusqu'aux nids lumineux. Un boss géant surveille tous les œufs du palier : combattez-le ou esquivez-le.",
+            "02  REMPLISSEZ L’INVENTAIRE\nMaintenez E près d’un œuf. Il rejoint votre inventaire NON SÉCURISÉ, sans modèle dans le dos. Votre personnage brille de la couleur de sa rareté. Un seul œuf non sécurisé à la fois.",
+            "03  COMBATTEZ\nÉquipez le harpon, visez avec la souris et cliquez. Sur mobile, visez au centre et utilisez TIRER. Un tir valide fait tomber l’œuf non sécurisé du joueur touché. Récupérez-le avec E pour le voler. Les tirs blessent aussi les boss.",
+            "04  SÉCURISEZ\nRemontez par le bassin central et rejoignez VOTRE galerie sur le navire. Votre œuf est automatiquement sécurisé à l’arrivée dans votre propre galerie : il ne peut plus être volé et la surbrillance disparaît. Tous les habitats sont des zones sans combat.",
+            "05  REMPLISSEZ L'AQUARIUM\nDéposez les œufs dans votre galerie avec E ou Collection. Éclosion : Common 15 s · Rare 40 s · Epic 90 s · Legendary 3 min · Mythic 6 min · Secret 12 min. Les animaux produisent des gold pour acheter l’équipement chez les sept marchands du pont.",
             "06  DESCENDEZ À VOS RISQUES\nToutes les profondeurs sont ouvertes. Combinaisons conseillées : 10 / 20 / 35 / 50 / 75. Les gardiens géants deviennent plus rapides et plus meurtriers si vous êtes mal équipé.",
             "07  RESPIREZ\nLes stations vertes O₂, la surface et le navire rechargent votre réserve. L'oxygène se consomme plus vite en profondeur. À zéro, votre santé diminue.",
-            "08  PRENEZ DES RISQUES\nLes événements de 5, 15 et 40 minutes augmentent la rareté et le danger. Esquivez les ondes rouges annonçant les attaques des boss. Aucun retour rapide avec un œuf.",
+            "08  PRENEZ DES RISQUES\nLes événements de 5, 15 et 40 minutes augmentent la rareté et le danger. Esquivez les ondes rouges annonçant les attaques des boss. Après sa défaite, un boss réapparaît après un court répit.",
             "09  ÉVOLUEZ\nFusionnez vos animaux dans votre habitat, découvrez les recettes secrètes, personnalisez la base et recommencez avec le prestige pour obtenir des bonus permanents.",
-            "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · Shift / X manette : propulseur · clic / RT : tirer · E : interagir.",
+            "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · R / X manette : propulseur · Shift : verrouiller / libérer la caméra · clic / RT : tirer · E : interagir.",
         }) do paragraph(text, 112) end
     end
     task.defer(function() if self.List.Parent then self.List.CanvasPosition = position end end)
@@ -307,6 +369,7 @@ end
 
 function UI:Update(state)
     self.State = state; self.ReceivedAt = os.clock()
+    self.InventoryButton.Text = "🥚 INVENTAIRE · " .. #state.Eggs
     self.Money.Text = UI.Format(state.Money) .. " gold"; self.Income.Text = "+" .. UI.Format(state.Income) .. " gold / min"
     self.Oxygen.Text = math.ceil(state.Oxygen) .. " / " .. state.MaxOxygen
     self.OxygenBar.Size = UDim2.fromScale(math.clamp(state.Oxygen / state.MaxOxygen, 0, 1), 1)
@@ -314,22 +377,22 @@ function UI:Update(state)
     self.Depth.Text = state.Depth .. " m"; self.Floor.Text = (state.Depth == 0 and "SURFACE" or self.Ctx.Config.Floors[state.Floor].ShortName) .. " · COMBI " .. state.Equipment.Suit
     self.Save.Text = state.SaveStatus; self.Save.TextColor3 = state.Offline and C.Gold or C.Muted
     self.EventName.Text = state.Event.Name; self.EventName.TextColor3 = state.Event.Active and C.Gold or C.White
-    self.Objective.Text = state.Carrying and ("ŒUF " .. string.upper(state.Carrying.Rarity) .. " À BORD  →  REJOIGNEZ VOTRE HABITAT")
-        or (state.OwnBase and "HABITAT SÉCURISÉ  ·  DÉPOSEZ VOS ŒUFS DANS L'AQUARIUM · ACHETEZ L'ÉQUIPEMENT EN GOLD" or "EXPLOREZ  →  TROUVEZ UN ŒUF  →  REJOIGNEZ VOTRE HABITAT")
-    self.Objective.TextColor3 = state.Carrying and C.Gold or C.White
+    self.Objective.Text = state.Carrying and ("ŒUF " .. string.upper(state.Carrying.Rarity) .. " NON SÉCURISÉ · ÉVITEZ LES HARPONS → VOTRE BASE") or #state.Eggs > 0 and (#state.Eggs .. " ŒUF(S) DANS L’INVENTAIRE  →  DÉPOSEZ-LES DANS VOTRE AQUARIUM")
+        or (state.OwnBase and "VOTRE AQUARIUM  ·  ÉCLOSIONS & GOLD  ·  MARCHANDS SUR LE PONT" or "PLONGEZ  →  ÉVITEZ LE BOSS  →  RÉCUPÉREZ DES ŒUFS")
+    self.Objective.TextColor3 = state.Carrying and self.Ctx.Visuals.Color(self.Ctx.Config.Rarities[state.Carrying.Rarity].Color) or #state.Eggs > 0 and C.Gold or C.White
     local signature = self.Tab or ""
     if self.Tab == "Collection" or self.Tab == "Bestiaire" or self.Tab == "Fusion" then
         for id in pairs(self.Ctx.Config.Animals) do
             signature ..= id .. (state.Animals[id] or 0) .. tostring(state.Discovered[id])
             for _, grade in ipairs({ "Gold", "Diamond", "Mythic" }) do signature ..= ((state.Variants[id] or {})[grade] or 0) end
         end
-        for _, egg in ipairs(state.Eggs) do signature ..= egg.Id .. tostring(egg.ReadyAt) end
+        for _, egg in ipairs(state.Eggs) do signature ..= egg.Id .. tostring(egg.ReadyAt) .. tostring(egg.Unsecured) end
         signature ..= tostring(state.OwnBase) .. state.Prestige
     elseif self.Tab == "Équipement" then
         for _, key in ipairs(self.Ctx.Config.UpgradeOrder) do local price = self.Ctx.Rules.UpgradeCost(self.Ctx.Config, key, state.Equipment[key]); signature ..= state.Equipment[key] .. tostring(price and state.Money >= price) end
-        signature ..= tostring(state.OwnBase)
+        signature ..= tostring(state.NearMerchant)
     elseif self.Tab == "Prestige" then signature ..= state.Prestige .. tostring(state.Money >= state.PrestigeCost) .. state.Equipment.Suit .. tostring(state.OwnBase)
-    elseif self.Tab == "Habitat" then for id in pairs(self.Ctx.Config.Decorations) do signature ..= id .. tostring(state.OwnedDecor[id]) end; signature ..= state.Palette .. tostring(state.OwnBase) .. state.BaseLevel .. tostring(state.BaseUpgradeCost and state.Money >= state.BaseUpgradeCost)
+    elseif self.Tab == "Habitat" then for id in pairs(self.Ctx.Config.Decorations) do signature ..= id .. tostring(state.OwnedDecor[id]) end; signature ..= state.Palette .. tostring(state.OwnBase) .. tostring(state.NearBaseSign) .. state.BaseLevel .. tostring(state.BaseUpgradeCost and state.Money >= state.BaseUpgradeCost)
     elseif self.Tab == "Classement" then signature ..= tostring(os.clock()) end
     if self.Tab and signature ~= self.Signature then self.Signature = signature; self:RenderPanel() end
 end

@@ -3,26 +3,82 @@
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-      "Modules": { "$path": "src/shared" }
+      "Modules": {
+        "$path": "src/shared"
+      }
     },
     "ServerScriptService": {
-      "UnderwaterEgg": { "$path": "src/server" }
+      "UnderwaterEgg": {
+        "$path": "src/server"
+      }
     },
     "Players": {
-      "$properties": { "CharacterAutoLoads": true, "RespawnTime": 4 }
+      "$properties": {
+        "CharacterAutoLoads": true,
+        "RespawnTime": 4
+      }
     },
     "StarterPlayer": {
       "StarterPlayerScripts": {
-        "UnderwaterEgg": { "$path": "src/client" }
+        "UnderwaterEgg": {
+          "$path": "src/client"
+        }
       }
     },
     "Lighting": {
       "$properties": {
-        "Ambient": [0.16, 0.38, 0.46],
+        "Ambient": [
+          0.22,
+          0.29,
+          0.35
+        ],
         "Brightness": 2,
-        "ClockTime": 12,
+        "ClockTime": 15.5,
         "GlobalShadows": true,
-        "OutdoorAmbient": [0.2, 0.48, 0.56]
+        "OutdoorAmbient": [
+          0.46,
+          0.52,
+          0.56
+        ],
+        "EnvironmentDiffuseScale": 0.7,
+        "EnvironmentSpecularScale": 1,
+        "ShadowSoftness": 0.25,
+        "LightingStyle": "Realistic",
+        "ExposureCompensation": -0.1
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.24,
+          "Size": 26,
+          "Threshold": 1.7
+        }
+      },
+      "SunRays": {
+        "$className": "SunRaysEffect",
+        "$properties": {
+          "Intensity": 0.035,
+          "Spread": 0.8
+        }
+      },
+      "Atmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.24,
+          "Offset": 0.1,
+          "Color": [
+            0.69,
+            0.82,
+            0.89
+          ],
+          "Decay": [
+            0.35,
+            0.48,
+            0.57
+          ],
+          "Glare": 0.15,
+          "Haze": 1
+        }
       }
     },
     "Workspace": {
@@ -37,13 +93,29 @@
           "Anchored": true,
           "Neutral": true,
           "Duration": 0,
-          "Size": [24, 1, 24],
-          "Position": [0, 114, 0],
-          "Color": [0.12, 0.42, 0.48],
+          "Size": [
+            28,
+            1,
+            22
+          ],
+          "Position": [
+            0,
+            114,
+            80
+          ],
+          "Color": [
+            0.12,
+            0.42,
+            0.48
+          ],
           "Material": "Metal"
         }
       }
     },
-    "SoundService": { "$properties": { "RespectFilteringEnabled": true } }
+    "SoundService": {
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    }
   }
 }

@@ -1,8 +1,8 @@
 # Underwater Egg
 
-Jeu Roblox multijoueur en Luau, construit avec Rojo : exploration sous-marine et îles personnelles à la surface, chacune avec un aquarium géant. La carte, les animaux, les gardiens et les interfaces sont générés par le projet : aucun modèle payant ni pack externe n'est nécessaire.
+Jeu Roblox multijoueur en Luau, construit avec Rojo : exploration sous-marine depuis un gigantesque bateau commun, le **Néréide**, avec huit galeries personnelles et leurs aquariums géants. La carte, les animaux, les gardiens et les interfaces sont générés par le projet : aucun modèle payant ni pack externe n'est nécessaire.
 
-**Plonger → prendre un œuf gardé → échapper aux harpons → remonter sur son île → déposer dans l'aquarium → attendre l'éclosion → produire des gold → s'équiper → descendre.**
+**Plonger → prendre un œuf gardé → échapper aux harpons → remonter par le bassin commun → déposer dans l'aquarium → attendre l'éclosion → produire des gold → s'équiper → descendre.**
 
 ## Télécharger sur GitHub
 
@@ -38,8 +38,8 @@ L'archive `build/UnderwaterEgg-project.zip` regroupe les sources, les tests, la 
 | Gardiens | Géants mythologiques : Kraken, Léviathan, dragon marin, Scylla et Charybde ; vitesse croissante de 14 à 46 studs/s, rage contre les plongeurs mal équipés, poursuite prolongée et attaques meurtrières |
 | Boss | Attaques annoncées : siphon d'oxygène, onde de choc, ralentissement de vortex ; immunité complète des habitats |
 | Harpon | Fusil détaillé avec crosse, canon, sandows, moulinet, flèche et pointe à ardillons ; projectile, corde, recul, sons et collision balayée côté serveur |
-| Habitats | Huit îles protégées au-dessus de l'eau, rampes de plongée, aquarium géant inclus, dépôt des œufs, atelier et animaux qui nagent dans la cuve |
-| Incubation | Dépôt manuel sur son île ; œuf visible dans l'aquarium, compte à rebours et éclosion automatique selon rareté ; échéance sauvegardée lors d'une reconnexion |
+| Habitats | Un navire commun avec coque, pont, passerelle et hublots ; un seul bassin de plongée/remontée ; huit galeries protégées identifiées par portrait et pseudo |
+| Incubation | Dépôt manuel dans sa galerie ; œuf visible dans l'aquarium, compte à rebours et éclosion automatique selon rareté ; échéance sauvegardée lors d'une reconnexion |
 | Collection | 61 animaux d'éclosion, au moins dix par palier ; huit hybrides de fusion ; bestiaire avec modèles et espèces inconnues `???` |
 | Économie | Les animaux produisent automatiquement des gold par minute ; ces gold achètent les sept équipements, les décorations et les fusions |
 | Fusion | Trois identiques → Gold → Diamond → Mythic ; cinq recettes connues et trois recettes secrètes privées côté serveur |
@@ -49,7 +49,7 @@ L'archive `build/UnderwaterEgg-project.zip` regroupe les sources, les tests, la 
 | Classements | Six classements du serveur : argent, valeur de collection, vols, profondeur, animaux rares et fusions découvertes |
 | Persistance | Profils DataStore, bail de session, sauvegarde périodique, départ et fermeture, protection contre les profils incompatibles |
 
-Les modèles sont des créations procédurales stylisées à base de primitives Roblox. Les variantes de certaines espèces partagent une silhouette et se distinguent par leur palette, leur nom et leurs statistiques.
+La direction visuelle est stylisée : maillages colorés pour les animaux, œufs ovoïdes plus gros, créatures mythologiques sculptées, arme détaillée, aquariums en verre/laiton avec récifs et éclairage. Deux modèles CC0 de Microsoft et Kenney sont intégrés et adaptés ; leur provenance et leurs licences sont documentées dans [assets/CREDITS.md](assets/CREDITS.md). Certaines espèces partagent une silhouette et se distinguent par leur palette, leur nom et leurs statistiques.
 
 ## Commandes
 
@@ -124,7 +124,7 @@ Les recettes complètes se trouvent exclusivement dans `src/server/FusionData.lu
 
 Le profil contient argent, équipement (harpon compris), animaux normaux et variantes, bestiaire, œufs sécurisés, recettes, prestige, XP, profondeur record, statistiques et personnalisation. Le revenu est produit pendant la connexion, sans revenu hors ligne.
 
-Les œufs en cours de transport restent dans le monde : une mort ou déconnexion les fait tomber. Un œuf arrivé sur l'île de son transporteur passe dans son inventaire persistant et disparaît du monde partagé. Le joueur le dépose ensuite avec **E** au terminal devant l'aquarium, ou avec **Collection → Déposer** sur son île. Le compte à rebours commence alors et l'animal rejoint automatiquement l'aquarium à la fin. Les douze espèces possédées les plus rentables sont représentées dans la cuve ; toute la collection produit des gold. Toutes les îles protègent les visiteurs, mais seule sa propre île sécurise un œuf pour soi.
+Les œufs en cours de transport restent dans le monde : une mort ou déconnexion les fait tomber. Un œuf arrivé dans la galerie de son transporteur passe dans son inventaire persistant et disparaît du monde partagé. Le joueur le dépose ensuite avec **E** au terminal devant l'aquarium, ou avec **Collection → Déposer** dans sa galerie. Le compte à rebours commence alors et l'animal rejoint automatiquement l'aquarium à la fin. La galerie expose de quatre à douze espèces selon son niveau ; toute la collection produit des gold. Tout le pont est protégé, mais seule sa propre galerie sécurise un œuf pour soi.
 
 Les profils existants restent compatibles : le champ persistant `Money` représente désormais les gold affichés. Les échéances d'incubation sont des champs facultatifs des œufs déjà sécurisés.
 
@@ -146,3 +146,21 @@ build/        Fichiers Roblox générés, non suivis par Git
 ```
 
 Les budgets DataStore, les performances de génération de terrain, les tarifs de fin de jeu et les fréquences de butin doivent être évalués avec de vrais joueurs avant une publication publique. Aucun achat Robux, outil d'administration caché ou identifiant d'asset privé n'est nécessaire.
+
+## Néréide et galeries améliorables
+
+Tous les joueurs plongent et remontent par le bassin central, avec deux échelles. Le serveur refuse les traversées de la surface ailleurs, et le pont conserve un accès continu aux huit galeries. Au-dessus de chacune : portrait Roblox, pseudo, identifiant `@username` et niveau de base.
+
+**Base & Aquarium** dans le menu, ou **F** au terminal, affiche les améliorations :
+
+| Niveau | Coût du passage | Espèces exposées | Bonus de production |
+| --- | --- | --- | --- |
+| Explorateur | Inclus | 4 | — |
+| Océanographe | 600 gold | 6 | +10 % |
+| Sanctuaire | 2 500 gold | 8 | +20 % |
+| Atlantide | 12 500 gold | 10 | +30 % |
+| Palais des abysses | 60 000 gold | 12 | +40 % |
+
+L'aquarium grandit et reçoit de nouveaux éléments visibles : filtres, coraux, cadres et cristaux. Le niveau de base est sauvegardé et conservé après un prestige.
+
+L'art détaillé est construit côté client avec un budget et une distance d'affichage. Le rendu natif EditableMesh est utilisé s'il est disponible ; un rendu local de secours évite d'imposer des réglages API au joueur. `python3 tools/check_art.py` vérifie les sources CC0, les budgets géométriques et la forme des œufs. Blender n'est nécessaire que pour régénérer les fichiers graphiques : `blender -b -t 2 --python tools/build_art.py`. Le build normal utilise les données déjà incluses.

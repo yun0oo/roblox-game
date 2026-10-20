@@ -15,7 +15,7 @@ function Rules.NewProfile(config)
     local equipment = {}
     for key in pairs(config.Upgrades) do equipment[key] = 1 end
     return { Version = config.Version, Money = 150, Equipment = equipment, Animals = {}, Variants = {}, Discovered = {},
-        Eggs = {}, MaxDepth = 0, XP = 0, Prestige = 0, Recipes = {}, OwnedDecor = { lagoon = true }, Palette = "lagoon",
+        Eggs = {}, MaxDepth = 0, XP = 0, Prestige = 0, BaseLevel = 1, Recipes = {}, OwnedDecor = { lagoon = true }, Palette = "lagoon",
         Stats = { Steals = 0, Hits = 0, Hatches = 0, Secured = 0, Fusions = 0 } }
 end
 
@@ -26,6 +26,7 @@ function Rules.Sanitize(raw, config)
     clean.MaxDepth = integer(raw.MaxDepth, 0, 0, 10000)
     clean.XP = integer(raw.XP, 0, 0, 1e9)
     clean.Prestige = integer(raw.Prestige, 0, 0, 1e6)
+    clean.BaseLevel = integer(raw.BaseLevel, 1, 1, #config.BaseUpgrades)
     for key, spec in pairs(config.Upgrades) do
         clean.Equipment[key] = integer(type(raw.Equipment) == "table" and raw.Equipment[key], 1, 1, spec.Max)
     end
@@ -145,7 +146,26 @@ function Rules.Income(profile, config)
             for grade, amount in pairs(variants) do total += config.Animals[id].Income * amount * (config.Grades[grade] or 1) end
         end
     end
-    return total * (1 + (profile.Prestige or 0) * 0.25)
+    local base = config.BaseUpgrades[profile.BaseLevel or 1]
+    return total * (1 + (profile.Prestige or 0) * 0.25) * (1 + base.IncomeBonus)
+end
+
+function Rules.PurchaseBaseUpgrade(profile, config)
+    local nextLevel = config.BaseUpgrades[(profile.BaseLevel or 1) + 1]
+    if not nextLevel then return false, "Votre base a atteint le niveau maximum." end
+    if profile.Money < nextLevel.Cost then return false, "Pas assez de gold pour améliorer la base." end
+    profile.Money -= nextLevel.Cost
+    profile.BaseLevel = (profile.BaseLevel or 1) + 1
+    return true, "BASE AMÉLIORÉE · " .. nextLevel.Name
+end
+
+function Rules.IsDiveOpening(config, x, z)
+    return math.abs(x) < config.DiveHalfWidth - 2 and math.abs(z) < config.DiveHalfLength - 2
+end
+
+function Rules.CrossesSurfaceOutsideDive(config, previousY, x, y, z)
+    local surface = config.WaterTop + 1
+    return (previousY >= surface) ~= (y >= surface) and not Rules.IsDiveOpening(config, x, z)
 end
 
 function Rules.StartIncubation(profile, config, eggId, now)

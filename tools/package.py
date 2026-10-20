@@ -11,17 +11,19 @@ if not source.is_file() or not source.read_bytes().startswith(b'<roblox!'):
 downloads = ROOT / 'downloads'
 downloads.mkdir(exist_ok=True)
 shutil.copyfile(source, downloads / source.name)
-instructions = '''UNDERWATER EGG — ÎLES, AQUARIUMS ET GARDIENS MYTHOLOGIQUES
+instructions = '''UNDERWATER EGG — NÉRÉIDE · NAVIRE & NOUVEAUX MODÈLES
 
 1. Extraire ce ZIP dans un nouveau dossier.
 2. Ouvrir le fichier UnderwaterEgg.rbxl avec Roblox Studio sur Windows/macOS.
 3. Appuyer sur F5 (Play) pour jouer avec son personnage Roblox.
-4. Attendre le message de chargement. Le plongeur apparaît sur son île avec son
-   harpon et son aquarium géant. Marcher jusqu'à la rampe pour plonger.
-5. Explorer vers le bas et récupérer un œuf lumineux gardé par un monstre.
-6. Remonter sur son île : l'œuf est sécurisé. Le déposer au terminal devant
+4. Attendre le chargement : votre galerie est sur le navire NÉRÉIDE.
+   Retrouvez votre portrait et votre pseudo au-dessus de votre aquarium.
+5. Rejoindre le bassin central : tous les joueurs plongent et remontent ici.
+   Utiliser les échelles pour revenir sur le pont.
+6. Explorer vers le bas et récupérer un œuf lumineux gardé par un monstre.
+7. Rejoindre sa galerie : l'œuf est sécurisé. Le déposer au terminal devant
    l'aquarium avec E, ou utiliser Collection > Déposer.
-7. Attendre l'éclosion : l'animal nage dans l'aquarium et produit des gold.
+8. Attendre l'éclosion : l'animal nage dans l'aquarium et produit des gold.
    Dépenser ces gold dans l'atelier pour améliorer son équipement.
 
 Toutes les profondeurs sont ouvertes, même sans le niveau conseillé. Attention :
@@ -37,10 +39,15 @@ publiée est temporaire : sa progression ne sera pas sauvegardée.
 
 Commandes : commandes Roblox / WASD pour nager, Espace pour monter,
 Ctrl pour descendre, Shift pour accélérer, clic gauche pour tirer,
-E près d'un œuf pour le transporter et au terminal de son île pour le déposer.
+E près d'un œuf pour le transporter et au terminal de sa galerie pour le déposer. F ouvre les améliorations de la base.
 
 Pour conserver la progression : publier une expérience privée, puis autoriser
 l'accès Studio aux services API dans les paramètres de l'expérience.
+
+Nouveautés : bateau commun, portraits et pseudos, bases améliorables, nouveaux
+modèles 3D, poissons CC0 adaptés, harpon détaillé et grandes coques ovoïdes.
+Les bases ont cinq niveaux : achat dans Base & Aquarium avec vos gold.
+Les modèles sont intégrés : aucun import manuel n'est requis.
 
 Correction incluse : démarrage sans DataStore dans un fichier non publié,
 suppression d'une écriture réservée à Studio qui arrêtait la carte, apparition
@@ -52,6 +59,7 @@ Les contrôles automatisés ne remplacent pas un essai natif dans Roblox Studio.
 with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip', 'w', zipfile.ZIP_DEFLATED) as package:
     package.write(source, source.name)
     package.writestr('LIRE-MOI.txt', instructions.encode('utf-8'))
+    package.write(ROOT / 'assets/CREDITS.md', 'CREDITS-MODELES.md')
 with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip') as package:
     assert package.testzip() is None
     assert package.read(source.name) == source.read_bytes()

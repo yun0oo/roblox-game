@@ -81,6 +81,16 @@ local function start()
             self:Teleport(state, Vector3.new(math.clamp(position.X, -420, 420), math.clamp(position.Y, bottom + 6, Config.SurfaceCeiling - 5), math.clamp(position.Z, -420, 420)))
             return false
         end
+        if Rules.CrossesSurfaceOutsideDive(Config, state.LastPosition.Y, position.X, position.Y, position.Z) then
+            local destination = state.LastPosition.Y >= Config.WaterTop + 1 and self.World.DiveStart
+                or Vector3.new(position.X, Config.WaterTop - 6, position.Z)
+            self:Teleport(state, destination)
+            if now > (state.NextDiveWarning or 0) then
+                state.NextDiveWarning = now + 5
+                self:Notify(state.Player, "↓ UTILISEZ LE BASSIN CENTRAL DU NAVIRE\nC'est le point de plongée et de remontée commun.", "Warning")
+            end
+            return false
+        end
         local floor = Rules.FloorAt(Config, position.Y)
         if not Rules.IsPrepared(state.Profile, floor) and now > (state.NextGateWarning or 0) then
             state.NextGateWarning = now + 15
@@ -131,7 +141,9 @@ local function start()
             Depth = math.max(0, math.floor(Config.WaterTop - state.LastPosition.Y)), Floor = state.Floor,
             Equipment = profile.Equipment, Animals = profile.Animals, Discovered = profile.Discovered, Eggs = profile.Eggs,
             Variants = profile.Variants, Prestige = profile.Prestige, PrestigeCost = Rules.PrestigeCost(profile), Recipes = recipes,
-            OwnedDecor = profile.OwnedDecor, Palette = profile.Palette,
+            OwnedDecor = profile.OwnedDecor, Palette = profile.Palette, BaseLevel = profile.BaseLevel or 1,
+            BaseUpgradeCost = Config.BaseUpgrades[(profile.BaseLevel or 1) + 1] and Config.BaseUpgrades[(profile.BaseLevel or 1) + 1].Cost,
+            DivePosition = ctx.World.DiveStart,
             XP = profile.XP, Level = 1 + math.floor(math.sqrt(profile.XP / 30)), MaxDepth = profile.MaxDepth, Stats = profile.Stats,
             Carrying = egg and { Name = egg.Name, Rarity = egg.Rarity }, Safe = safe ~= nil,
             OwnBase = safe ~= nil and safe.OwnerId == state.Player.UserId, BasePosition = state.Base.Center,
@@ -178,11 +190,28 @@ local function start()
         player.CharacterAdded:Connect(function(character) onCharacter(state, character) end)
         -- The automatic avatar may already exist by the time the world/profile loads.
         if player.Character then task.spawn(onCharacter, state, player.Character) end
-        ctx:Notify(player, "Bienvenue sur votre île !\nTrouvez un œuf, évitez son gardien, puis déposez-le dans votre aquarium en surface.", "Success")
+        ctx:Notify(player, "Bienvenue à bord du Néréide !\nTrouvez un œuf, évitez son gardien, Plongez par le bassin central, puis rapportez vos œufs à votre aquarium.", "Success")
         if offline then ctx:Notify(player, "MODE STUDIO HORS LIGNE\nDataStore indisponible : cette session ne sera pas sauvegardée.", "Warning") end
     end
 
+    local function upgradeBase(player)
+        local state = ctx.States[player]
+        if not state or not ctx:Validate(state) or os.clock() < (state.NextBaseUpgrade or 0) then return end
+        local base = ctx.World:SafeBase(state.LastPosition)
+        if not base or base.OwnerId ~= player.UserId then ctx:Notify(player, "Rejoignez votre galerie pour l'améliorer.", "Warning"); return end
+        state.NextBaseUpgrade = os.clock() + 1
+        local success, message = Rules.PurchaseBaseUpgrade(state.Profile, Config)
+        if success then ctx.World:RefreshAnimals(state); ctx.World:RefreshIncubators(state) end
+        ctx:Notify(player, message, success and "Success" or "Warning")
+    end
+
     for _, base in ipairs(ctx.World.Bases) do
+        base.BasePrompt.Triggered:Connect(function(player)
+            local state = ctx.States[player]
+            if state and base.OwnerId == player.UserId and ctx:Validate(state) and (state.LastPosition - base.Core.Position).Magnitude <= 13 then
+                ctx.FX:FireClient(player, "OpenBase", {})
+            end
+        end)
         base.HatchPrompt.Triggered:Connect(function(player)
             local state = ctx.States[player]
             if state and base.OwnerId == player.UserId and ctx:Validate(state) and (state.LastPosition - base.Core.Position).Magnitude <= 13 then
@@ -204,7 +233,8 @@ local function start()
         state.Tokens = math.min(18, state.Tokens + (now - state.TokenTime) * 10); state.TokenTime = now
         if state.Tokens < 1 then return end
         state.Tokens -= 1
-        if action == "Fire" then ctx.Harpoons:Fire(state, payload)
+        if action == "UpgradeBase" then upgradeBase(player)
+        elseif action == "Fire" then ctx.Harpoons:Fire(state, payload)
         elseif action == "Hatch" then
             if now < (state.NextHatch or 0) then return end
             state.NextHatch = now + 0.8; ctx.Eggs:Hatch(state, payload)
@@ -312,7 +342,7 @@ local function start()
         ctx.Eggs:Drop(state, "Disconnect")
         ctx.States[player] = nil
         state.Base.OwnerId = 0; state.Base.Model:SetAttribute("OwnerId", 0)
-        state.Base.Label.Text = "ÎLE DISPONIBLE\nAQUARIUM GÉANT · ZONE SÉCURISÉE"; state.Base.Display:ClearAllChildren()
+        state.Base.Label.Text = "GALERIE DISPONIBLE"; state.Base.Avatar.Image = ""; state.Base.Display:ClearAllChildren()
         state.Base.EggDisplay:ClearAllChildren(); state.Base.Incubators = {}; state.Base.Swimmers = {}
         local custom = state.Base.Model:FindFirstChild("Personnalisation"); if custom then custom:Destroy() end
         ctx.Data:Save(player, true)

@@ -47,7 +47,7 @@ for _, recipe in ipairs(Recipes) do
     result = Rules.Fuse(p, Config, Recipes, { Kind = "Recipe", Ingredients = recipe.Ingredients })
     check(result and not result.Secret, "Repeating a secret recipe does not rediscover it")
 end
-profile = fresh(); profile.Equipment.Suit = 20
+profile = fresh(); profile.Equipment.Suit = 20; profile.BaseLevel = 3
 profile.Animals.shark = 2; profile.Variants.clownfish = { Gold = 1 }
 profile.Discovered.shark = true; profile.Recipes.nautilux = true; profile.OwnedDecor.coral = true; profile.Palette = "coral"
 profile.Eggs = { { Id = "secured", Floor = 1, Rarity = "Common", Name = "Œuf" } }
@@ -58,7 +58,8 @@ check(Rules.AnimalCount(profile) == 0 and #profile.Eggs == 0, "Prestige clears a
 check(profile.Discovered.shark and profile.Recipes.nautilux and profile.OwnedDecor.coral and profile.Palette == "coral", "Prestige keeps discoveries and cosmetics")
 check(profile.MaxDepth == 1500 and profile.Stats.Steals == 7, "Prestige keeps lifetime statistics")
 profile.Animals.clownfish = 1
-check(Rules.Income(profile, Config) == 12.5 and Rules.MaxOxygen(profile) == 105 and Rules.SwimSpeed(profile) > 20, "Permanent bonuses affect real gameplay values")
+check(math.abs(Rules.Income(profile, Config) - 15) < 1e-6 and Rules.MaxOxygen(profile) == 105 and Rules.SwimSpeed(profile) > 20, "Permanent prestige and gallery bonuses affect real gameplay values")
+check(profile.BaseLevel == 3, "Prestige retains the aquarium gallery upgrade")
 check(Rules.PrestigeCost(profile) == 2000000, "Prestige target scales")
 check(not Rules.Rebirth(profile, Config) and profile.Prestige == 1, "Repeated prestige requires new progression")
 profile = Rules.NewProfile(Config); profile.Money = Config.Decorations.coral.Cost

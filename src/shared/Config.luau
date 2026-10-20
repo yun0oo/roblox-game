@@ -6,9 +6,20 @@ Config.Version = 1
 Config.MaxPlayers = 8
 Config.Bounds = 430
 Config.WaterTop = 105
-Config.SurfaceCeiling = 210
+Config.SurfaceCeiling = 280
 Config.BaseRadius = 62
 Config.BaseHeight = 123
+Config.ShipHalfWidth = 172
+Config.ShipHalfLength = 326
+Config.DiveHalfWidth = 30
+Config.DiveHalfLength = 48
+Config.BaseUpgrades = {
+    { Name = "Explorateur", Cost = 0, Display = 4, IncomeBonus = 0 },
+    { Name = "Océanographe", Cost = 600, Display = 6, IncomeBonus = 0.1 },
+    { Name = "Sanctuaire", Cost = 2500, Display = 8, IncomeBonus = 0.2 },
+    { Name = "Atlantide", Cost = 12500, Display = 10, IncomeBonus = 0.3 },
+    { Name = "Palais des abysses", Cost = 60000, Display = 12, IncomeBonus = 0.4 },
+}
 Config.HatchTimes = { Common = 15, Rare = 40, Epic = 90, Legendary = 180, Mythic = 360, Secret = 720 }
 Config.UndergearedSpeedBonus = 0.85
 Config.UndergearedDamageBonus = 1.5
@@ -28,12 +39,12 @@ Config.DataStoreName = "UnderwaterEgg_v1"
 
 Config.RarityOrder = { "Common", "Rare", "Epic", "Legendary", "Mythic", "Secret" }
 Config.Rarities = {
-    Common = { Label = "COMMON", Color = { 183, 215, 218 }, Size = 2.8, Slow = 0.94, Power = 1 },
-    Rare = { Label = "RARE", Color = { 62, 178, 255 }, Size = 3.4, Slow = 0.89, Power = 1.2 },
-    Epic = { Label = "EPIC", Color = { 183, 117, 255 }, Size = 4, Slow = 0.82, Power = 1.5 },
-    Legendary = { Label = "LEGENDARY", Color = { 255, 195, 74 }, Size = 4.8, Slow = 0.73, Power = 1.9 },
-    Mythic = { Label = "MYTHIC", Color = { 255, 99, 141 }, Size = 5.8, Slow = 0.64, Power = 2.5 },
-    Secret = { Label = "SECRET", Color = { 119, 255, 223 }, Size = 7, Slow = 0.55, Power = 3.5 },
+    Common = { Label = "COMMON", Color = { 183, 215, 218 }, Size = 4.2, Slow = 0.94, Power = 1 },
+    Rare = { Label = "RARE", Color = { 62, 178, 255 }, Size = 5, Slow = 0.89, Power = 1.2 },
+    Epic = { Label = "EPIC", Color = { 183, 117, 255 }, Size = 6, Slow = 0.82, Power = 1.5 },
+    Legendary = { Label = "LEGENDARY", Color = { 255, 195, 74 }, Size = 7.2, Slow = 0.73, Power = 1.9 },
+    Mythic = { Label = "MYTHIC", Color = { 255, 99, 141 }, Size = 8.4, Slow = 0.64, Power = 2.5 },
+    Secret = { Label = "SECRET", Color = { 119, 255, 223 }, Size = 10, Slow = 0.55, Power = 3.5 },
 }
 
 Config.Floors = {

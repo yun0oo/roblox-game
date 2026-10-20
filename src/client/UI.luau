@@ -69,7 +69,7 @@ function UI.new(context)
     self.Floor = label(depthFrame, "RÉCIF", 11, C.Muted, { Position = UDim2.fromOffset(8, 61), Size = UDim2.new(1, -12, 0, 15) })
     local menu = make("Frame", root, { Position = UDim2.fromOffset(20, 126), Size = UDim2.fromOffset(152, 460), BackgroundTransparency = 1 })
     label(menu, "VOTRE EXPÉDITION", 10, C.Muted, { Size = UDim2.fromOffset(152, 18) })
-    for i, entry in ipairs({ { "Collection", "ŒUFS & ANIMAUX" }, { "Bestiaire", "BESTIAIRE" }, { "Équipement", "ÉQUIPEMENT" }, { "Fusion", "FUSION" }, { "Prestige", "PRESTIGE" }, { "Habitat", "PERSONNALISER" }, { "Classement", "CLASSEMENT" }, { "Guide", "COMMENT JOUER" } }) do
+    for i, entry in ipairs({ { "Collection", "ŒUFS & ANIMAUX" }, { "Bestiaire", "BESTIAIRE" }, { "Équipement", "ÉQUIPEMENT" }, { "Fusion", "FUSION" }, { "Prestige", "PRESTIGE" }, { "Habitat", "BASE & AQUARIUM" }, { "Classement", "CLASSEMENT" }, { "Guide", "COMMENT JOUER" } }) do
         button(menu, entry[2], { Position = UDim2.fromOffset(0, 26 + (i - 1) * 48), Size = UDim2.fromOffset(152, 40), BackgroundColor3 = C.Panel, TextColor3 = C.White, TextSize = 12 }, function() self:Open(entry[1]) end)
     end
     button(menu, "ÉQUIPER LE HARPON", { Position = UDim2.fromOffset(0, 416), Size = UDim2.fromOffset(152, 42), TextSize = 11 }, function() context.Equip() end)
@@ -179,7 +179,7 @@ function UI:RenderPanel()
             local variants = state.Variants[id] or {}
             label(row, "NORMAL " .. (state.Animals[id] or 0) .. " · GOLD " .. (variants.Gold or 0) .. " · DIAMOND " .. (variants.Diamond or 0) .. " · MYTHIC " .. (variants.Mythic or 0), 10, C.Gold, { Position = UDim2.fromOffset(114, 86), Size = UDim2.new(1, -130, 0, 24), ZIndex = 24 })
         end
-        if #ids == 0 and #state.Eggs == 0 then paragraph("Votre collection commence avec votre première plongée.\nCherchez un œuf lumineux au récif, puis rapportez-le dans votre île de surface.", 100) end
+        if #ids == 0 and #state.Eggs == 0 then paragraph("Votre collection commence avec votre première plongée.\nSautez dans le bassin central du Néréide, trouvez un œuf et rapportez-le dans votre galerie.", 100) end
     elseif self.Tab == "Bestiaire" then
         local ids, discovered = {}, 0
         for id in pairs(config.Animals) do table.insert(ids, id); if state.Discovered[id] then discovered += 1 end end
@@ -202,7 +202,7 @@ function UI:RenderPanel()
             end
         end
     elseif self.Tab == "Équipement" then
-        paragraph(state.OwnBase and "ATELIER OUVERT · Chaque achat est validé par le serveur." or "Rejoignez votre île pour acheter des améliorations.\nProfondeurs ouvertes : équipez-vous pour survivre aux gardiens.", 72, state.OwnBase and C.Teal or C.Gold)
+        paragraph(state.OwnBase and "ATELIER OUVERT · Chaque achat est validé par le serveur." or "Rejoignez votre galerie sur le navire pour acheter des améliorations.\nProfondeurs ouvertes : équipez-vous pour survivre aux gardiens.", 72, state.OwnBase and C.Teal or C.Gold)
         for _, key in ipairs(config.UpgradeOrder) do
             local spec, level = config.Upgrades[key], state.Equipment[key]
             local price = rules.UpgradeCost(config, key, level); local row = self:Row(104)
@@ -264,7 +264,12 @@ function UI:RenderPanel()
             self:RenderPanel()
         end)
     elseif self.Tab == "Habitat" then
-        paragraph((state.OwnBase and "ATELIER OUVERT" or "REJOIGNEZ VOTRE HABITAT POUR PERSONNALISER") .. "\nLes décorations restent acquises après un prestige. Palettes, aquarium, statue et bulles.", 84, C.Teal)
+        local tier = config.BaseUpgrades[state.BaseLevel]
+        paragraph("VOTRE GALERIE · NIVEAU " .. state.BaseLevel .. " / " .. #config.BaseUpgrades .. "\n" .. tier.Name .. " · " .. tier.Display .. " espèces exposées · +" .. math.floor(tier.IncomeBonus * 100) .. " % de gold. Les améliorations restent acquises après un prestige.", 100, C.Gold)
+        local upgrade = self:Row(76)
+        local enabled = state.OwnBase and state.BaseUpgradeCost and state.Money >= state.BaseUpgradeCost
+        button(upgrade, state.BaseUpgradeCost and ("AMÉLIORER LA BASE · " .. UI.Format(state.BaseUpgradeCost) .. " GOLD") or "BASE AU NIVEAU MAXIMUM", { Position = UDim2.fromOffset(14, 16), Size = UDim2.new(1, -28, 0, 44), BackgroundColor3 = enabled and C.Gold or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 24 }, function() if enabled then self.Ctx.Action:FireServer("UpgradeBase") end end)
+        paragraph((state.OwnBase and "ATELIER OUVERT" or "REJOIGNEZ VOTRE HABITAT POUR PERSONNALISER") .. "\nVotre galerie est sur le Néréide, près du bassin commun. Les décorations restent acquises après un prestige.", 84, C.Teal)
         for _, id in ipairs({ "lagoon", "coral", "abyss", "bubbles", "aquarium", "statue" }) do
             local spec = config.Decorations[id]; local row = self:Row(88)
             label(row, spec.Name .. "\n" .. (state.OwnedDecor[id] and "ACQUIS" or UI.Format(spec.Cost) .. " gold"), 16, C.White, { Position = UDim2.fromOffset(16, 10), Size = UDim2.new(1, -175, 1, -20), ZIndex = 24 })
@@ -285,13 +290,13 @@ function UI:RenderPanel()
         end
     elseif self.Tab == "Guide" then
         for _, text in ipairs({
-            "01  EXPLOREZ\nNagez jusqu'aux nids lumineux. Chaque œuf possède un gardien : utilisez le harpon pour le combattre ou esquivez-le.",
+            "01  EXPLOREZ\nRejoignez le bassin central du navire et sautez : tous les plongeurs partent du même endroit. Nagez jusqu'aux nids lumineux. Chaque œuf possède un gardien : utilisez le harpon pour le combattre ou esquivez-le.",
             "02  TRANSPORTEZ\nMaintenez E près d'un œuf. Il apparaît sur votre personnage et vous ralentit. Un simple contact avec un joueur ne vole rien.",
             "03  INTERCEPTEZ\nÉquipez le harpon, visez avec la souris et cliquez. Sur mobile, visez au centre et utilisez TIRER. Un tir doit réellement toucher le transporteur pour faire tomber l'œuf.",
-            "04  SÉCURISEZ\nRemontez vers VOTRE île de surface indiquée par la boussole. L'œuf est automatiquement sécurisé et ne peut plus être volé. Tous les habitats sont des zones sans combat.",
-            "05  REMPLISSEZ L'AQUARIUM\nDéposez les œufs sur votre île avec E ou Collection. Éclosion : Common 15 s · Rare 40 s · Epic 90 s · Legendary 3 min · Mythic 6 min · Secret 12 min. Les animaux produisent des gold pour acheter l'équipement.",
+            "04  SÉCURISEZ\nRemontez par le bassin central et rejoignez VOTRE galerie sur le navire. L'œuf est automatiquement sécurisé et ne peut plus être volé. Tous les habitats sont des zones sans combat.",
+            "05  REMPLISSEZ L'AQUARIUM\nDéposez les œufs dans votre galerie avec E ou Collection. Éclosion : Common 15 s · Rare 40 s · Epic 90 s · Legendary 3 min · Mythic 6 min · Secret 12 min. Les animaux produisent des gold pour acheter l'équipement.",
             "06  DESCENDEZ À VOS RISQUES\nToutes les profondeurs sont ouvertes. Combinaisons conseillées : 10 / 20 / 35 / 50 / 75. Les gardiens géants deviennent plus rapides et plus meurtriers si vous êtes mal équipé.",
-            "07  RESPIREZ\nLes stations vertes O₂, la surface et les îles rechargent votre réserve. L'oxygène se consomme plus vite en profondeur. À zéro, votre santé diminue.",
+            "07  RESPIREZ\nLes stations vertes O₂, la surface et le navire rechargent votre réserve. L'oxygène se consomme plus vite en profondeur. À zéro, votre santé diminue.",
             "08  PRENEZ DES RISQUES\nLes événements de 5, 15 et 40 minutes augmentent la rareté et le danger. Esquivez les ondes rouges annonçant les attaques des boss. Aucun retour rapide avec un œuf.",
             "09  ÉVOLUEZ\nFusionnez vos animaux dans votre habitat, découvrez les recettes secrètes, personnalisez la base et recommencez avec le prestige pour obtenir des bonus permanents.",
             "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · Shift / X manette : propulseur · clic / RT : tirer · E : interagir.",
@@ -324,7 +329,7 @@ function UI:Update(state)
         for _, key in ipairs(self.Ctx.Config.UpgradeOrder) do local price = self.Ctx.Rules.UpgradeCost(self.Ctx.Config, key, state.Equipment[key]); signature ..= state.Equipment[key] .. tostring(price and state.Money >= price) end
         signature ..= tostring(state.OwnBase)
     elseif self.Tab == "Prestige" then signature ..= state.Prestige .. tostring(state.Money >= state.PrestigeCost) .. state.Equipment.Suit .. tostring(state.OwnBase)
-    elseif self.Tab == "Habitat" then for id in pairs(self.Ctx.Config.Decorations) do signature ..= id .. tostring(state.OwnedDecor[id]) end; signature ..= state.Palette .. tostring(state.OwnBase)
+    elseif self.Tab == "Habitat" then for id in pairs(self.Ctx.Config.Decorations) do signature ..= id .. tostring(state.OwnedDecor[id]) end; signature ..= state.Palette .. tostring(state.OwnBase) .. state.BaseLevel .. tostring(state.BaseUpgradeCost and state.Money >= state.BaseUpgradeCost)
     elseif self.Tab == "Classement" then signature ..= tostring(os.clock()) end
     if self.Tab and signature ~= self.Signature then self.Signature = signature; self:RenderPanel() end
 end

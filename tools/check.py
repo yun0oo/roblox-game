@@ -33,6 +33,7 @@ run('luau-compile', '--null', *[str(p.relative_to(ROOT)) for p in sources])
 run('luau-analyze', 'src/shared/Rules.luau', 'src/shared/Config.luau', 'tests/rules.spec.luau', 'tests/progression.spec.luau')
 run('luau', 'tests/rules.spec.luau')
 run('luau', 'tests/progression.spec.luau')
+run('python3', 'tools/check_art.py')
 for suite in ('services', 'startup'):
     module_sources = []
     if suite == 'services':
@@ -81,7 +82,7 @@ for source in sources:
     assert source.read_text().strip() in bundled, f'Source missing from build: {source}'
 assert (build / 'UnderwaterEgg.rbxl').read_bytes().startswith(b'<roblox!')
 with zipfile.ZipFile(build / 'UnderwaterEgg-project.zip', 'w', zipfile.ZIP_DEFLATED) as package:
-    for entry in ('README.md', '.gitignore', 'default.project.json', 'src', 'tests', 'tools', 'docs', '.github'):
+    for entry in ('README.md', '.gitignore', 'default.project.json', 'src', 'tests', 'tools', 'assets', 'docs', '.github'):
         path = ROOT / entry
         paths = [path] if path.is_file() else sorted(path.rglob('*'))
         for source in paths:

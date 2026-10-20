@@ -1,5 +1,5 @@
 --!nonstrict
--- Original procedural models: no paid assets or external model dependencies.
+-- Built-in environment pieces and bundled CC0/derived marine art.
 local Visuals = {}
 function Visuals.Color(rgb) return Color3.fromRGB(rgb[1], rgb[2], rgb[3]) end
 
@@ -50,109 +50,32 @@ end
 
 function Visuals.Animal(parent, spec, frame, scale, title)
     scale = scale or 1
-    local model = Instance.new("Model")
-    model.Name = spec.Name
+    local modules = game:GetService("ReplicatedStorage"):WaitForChild("Modules")
+    local art = require(modules.ArtData)
+    local key = ({ hammerhead = "shark", orca = "whale", narwhal = "whale", squid = "octopus", round = "fish" })[spec.Style] or spec.Style
+    if not art[key] then key = "fish" end
     local color = Visuals.Color(spec.Color)
-    local pale = color:Lerp(Color3.new(1, 1, 1), 0.65)
-    local function part(name, size, pos, shade, shape)
-        return Visuals.Part(model, name, size * scale, CFrame.new(pos * scale), shade or color, nil, shape)
-    end
-    local myth = spec.Style
-    local style = ({ kraken = "octopus", leviathan = "eel", dragon = "shark", scylla = "octopus", charybdis = "round" })[myth] or myth
-    local bodySize = Vector3.new(2.6, 2.2, 5)
-    if style == "round" then bodySize = Vector3.new(3.6, 3.8, 3.4) end
-    if style == "whale" or style == "orca" or style == "narwhal" then bodySize = Vector3.new(3.6, 3, 6.7) end
-    if style == "eel" then bodySize = Vector3.new(1.5, 1.5, 7) end
-    if style == "ray" or style == "turtle" or style == "crab" then bodySize = Vector3.new(3.6, 1.3, 3.8) end
-    if style == "jelly" or style == "octopus" or style == "squid" then bodySize = Vector3.new(3.4, 3, 3.4) end
-    if style == "seahorse" then bodySize = Vector3.new(1.5, 4, 1.7) end
-    local body = part("Body", bodySize, Vector3.zero, color, Enum.PartType.Ball)
+    local bounds = art[key].Full.Bounds
+    local model = Instance.new("Model"); model.Name = spec.Name
+    local body = Visuals.Part(model, "Body", Vector3.new(bounds[1], bounds[2], bounds[3]) * scale, CFrame.new(), color, Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+    body.Transparency = 0.85
+    body:SetAttribute("ArtAsset", key); body:SetAttribute("ArtScale", scale)
     model.PrimaryPart = body
-    part("Belly", bodySize * Vector3.new(0.8, 0.4, 0.8), Vector3.new(0, -bodySize.Y * 0.3, -0.1), pale, Enum.PartType.Ball)
-    for _, side in ipairs({ -1, 1 }) do
-        local eye = Vector3.new(side * bodySize.X * 0.43, bodySize.Y * 0.17, -bodySize.Z * 0.27)
-        part("Eye", Vector3.new(0.6, 0.6, 0.6), eye, Color3.fromRGB(243, 253, 255), Enum.PartType.Ball)
-        part("Pupil", Vector3.new(0.33, 0.36, 0.33), eye + Vector3.new(side * 0.15, 0, -0.17), Color3.fromRGB(8, 25, 43), Enum.PartType.Ball)
+    if game:GetService("RunService"):IsClient() then
+        local renderer = require(modules.ArtRenderer)
+        local sculpture = renderer.Build(key, color, scale, false)
+        sculpture.Parent = body; body.Transparency = 1
     end
-    if style == "octopus" or style == "squid" or style == "jelly" then
-        for i = 1, 8 do
-            local angle = i * math.pi / 4
-            local a = Vector3.new(math.cos(angle), -0.6, math.sin(angle)) * scale
-            local b = Vector3.new(math.cos(angle) * 2, -3.8, math.sin(angle) * 2) * scale
-            Visuals.Rod(model, "Tentacle", a, b, 0.36 * scale, color, style == "jelly" and Enum.Material.Neon or nil)
-        end
-        if style == "jelly" then body.Material = Enum.Material.Neon; body.Transparency = 0.2 end
-    elseif style == "crab" then
-        for side = -1, 1, 2 do
-            for i = 1, 4 do
-                Visuals.Rod(model, "Leg", Vector3.new(side, -0.2, i - 2.5) * scale,
-                    Vector3.new(side * 3, -1.4, i - 2.8) * scale, 0.3 * scale, color)
-            end
-            part("Claw", Vector3.new(1.4, 0.9, 1.6), Vector3.new(side * 2.6, 0, -2.5), pale, Enum.PartType.Ball)
-        end
-    else
-        local finWidth = style == "ray" and 5.6 or (style == "turtle" and 2.4 or 1.6)
-        for side = -1, 1, 2 do
-            local fin = part("Fin", Vector3.new(finWidth, 0.3, 2.1), Vector3.new(side * (bodySize.X * 0.4 + finWidth * 0.35), -0.2, 0.5), color, Enum.PartType.Ball)
-            fin.CFrame *= CFrame.Angles(0, side * 0.35, side * -0.15)
-        end
-        part("Tail", Vector3.new(2.4, 0.4, 1.4), Vector3.new(0, 0, bodySize.Z * 0.62), pale, Enum.PartType.Ball)
-    end
-    if style == "shark" or style == "hammerhead" or style == "orca" then
-        local fin = Instance.new("WedgePart")
-        fin.Name = "DorsalFin"; fin.Size = Vector3.new(0.4, 1.8, 2) * scale
-        fin.CFrame = CFrame.new(0, bodySize.Y * scale * 0.65, 0)
-        fin.Color = color; fin.Anchored = true; fin.CanCollide = false; fin.CanQuery = false; fin.CanTouch = false
-        fin.Parent = model
-    end
-    if style == "hammerhead" then part("Hammer", Vector3.new(5, 1, 1.3), Vector3.new(0, 0, -2), color, Enum.PartType.Ball) end
-    if style == "turtle" then part("Shell", Vector3.new(3.2, 1.8, 3.2), Vector3.new(0, 0.65, 0.3), color:Lerp(Color3.new(0, 0.2, 0.05), 0.45), Enum.PartType.Ball) end
-    if style == "narwhal" then Visuals.Rod(model, "Tusk", Vector3.new(0, 0, -3) * scale, Vector3.new(0, 0.1, -6) * scale, 0.25 * scale, pale) end
-    if style == "seahorse" then part("Snout", Vector3.new(0.8, 0.8, 2), Vector3.new(0, 1, -1), pale, Enum.PartType.Ball) end
-    if myth == "kraken" or myth == "leviathan" or myth == "dragon" or myth == "scylla" or myth == "charybdis" then
-        local glow = Color3.fromRGB(255, 96, 143)
-        for _, side in ipairs({ -1, 1 }) do
-            Visuals.Rod(model, "Corne mythologique", Vector3.new(side * 0.9, 0.8, -1.7) * scale,
-                Vector3.new(side * 1.8, 3, -2.6) * scale, 0.38 * scale, pale)
-            local eye = part("Œil incandescent", Vector3.new(0.65, 0.5, 0.5), Vector3.new(side * 1.1, 0.6, -2), glow, Enum.PartType.Ball)
-            eye.Material = Enum.Material.Neon
-            for i = 1, 3 do
-                Visuals.Rod(model, "Croc", Vector3.new(side * 0.7, 0, -1.8 - i * 0.25) * scale,
-                    Vector3.new(side * 0.5, -1, -1.8 - i * 0.25) * scale, 0.18 * scale, pale)
-            end
-            if myth == "dragon" then
-                local wing = part("Nageoire draconique", Vector3.new(5, 0.35, 3.5), Vector3.new(side * 3.3, 0.5, 0.6), pale, Enum.PartType.Ball)
-                wing.CFrame *= CFrame.Angles(0, side * 0.35, side * 0.4)
-            end
-        end
-        for i = 1, 5 do
-            local rune = part("Épine runique", Vector3.new(0.45, 1.2 + i * 0.12, 0.65), Vector3.new(0, bodySize.Y * 0.55, -2.5 + i), glow)
-            rune.Material = Enum.Material.Neon
-        end
-        if myth == "scylla" then
-            for i = -1, 1 do
-                Visuals.Rod(model, "Cou de Scylla", Vector3.new(i, 0, 0) * scale, Vector3.new(i * 2, 3.5, -2) * scale, 0.7 * scale, color)
-                part("Tête de Scylla", Vector3.new(1.5, 1.2, 2), Vector3.new(i * 2, 3.5, -2), pale, Enum.PartType.Ball)
-            end
-        elseif myth == "charybdis" then
-            local maw = part("Gueule du vortex", Vector3.new(3.2, 3.2, 0.8), Vector3.new(0, 0, -1.8), Color3.fromRGB(9, 6, 25), Enum.PartType.Ball)
-            maw.Material = Enum.Material.Neon
-            for i = 1, 10 do
-                local a = i * math.pi / 5
-                part("Dent du vortex", Vector3.new(0.4, 0.65, 0.5), Vector3.new(math.cos(a) * 1.25, math.sin(a) * 1.25, -2.2), pale)
-            end
-        end
-    end
-    if title then Visuals.Label(body, title, Color3.new(1, 1, 1), 5 * scale, 85) end
-    model.Parent = parent
-    model:PivotTo(frame)
+    if title then Visuals.Label(body, title, Color3.new(1, 1, 1), bounds[2] * scale * 0.55 + 2, 110) end
+    model.Parent = parent; model:PivotTo(frame)
     return model
 end
 
 function Visuals.Egg(parent, name, rarity, frame)
     local color = Visuals.Color(rarity.Color)
-    local egg = Visuals.Part(parent, name, Vector3.new(0.8, 1, 0.8) * rarity.Size, frame, color, Enum.Material.SmoothPlastic, Enum.PartType.Ball)
-    egg.CanQuery = true
+    local egg = Visuals.Part(nil, name, Vector3.new(0.96, 1.25, 0.96) * rarity.Size, frame, color, Enum.Material.SmoothPlastic, Enum.PartType.Ball)
+    egg.CanQuery = true; egg.Transparency = 0.92
+    egg:SetAttribute("ArtAsset", "egg")
     local light = Instance.new("PointLight")
     light.Color = color; light.Brightness = 1.4; light.Range = 16; light.Parent = egg
     local particles = Instance.new("ParticleEmitter")
@@ -182,6 +105,7 @@ function Visuals.Egg(parent, name, rarity, frame)
     image.Image = "rbxasset://textures/particles/flare_main.dds"
     image.ImageColor3 = color; image.ImageTransparency = 0.4; image.Parent = halo
     egg:SetAttribute("AuraPower", power)
+    egg.Parent = parent
     return egg
 end
 
@@ -191,14 +115,15 @@ function Visuals.Harpoon(tool, level)
     local accent = level >= 3 and Color3.fromRGB(255, 196, 78) or Color3.fromRGB(44, 180, 185)
     local handle = Visuals.Part(tool, "Handle", Vector3.new(0.5, 1.2, 0.65), CFrame.new(), dark, Enum.Material.SmoothPlastic)
     handle.Anchored = false; handle.Massless = true
+    handle:SetAttribute("ArtAsset", "harpoon"); handle:SetAttribute("ArtScale", 0.9)
     local function piece(name, size, frame, color, shape)
         local p = Visuals.Part(tool, name, size, frame, color, Enum.Material.Metal, shape)
         p.Anchored = false; p.Massless = true
         local weld = Instance.new("WeldConstraint"); weld.Part0 = handle; weld.Part1 = p; weld.Parent = p
         return p
     end
-    piece("Corps du fusil", Vector3.new(0.65, 0.7, 3.5), CFrame.new(0, 0.6, -0.95), accent)
-    piece("Crosse", Vector3.new(0.8, 0.9, 1.1), CFrame.new(0, 0.65, 1.1), dark)
+    -- Imported Kenney body is rendered over this physical tool handle.
+    handle.Color = accent
     piece("Canon", Vector3.new(4.2, 0.35, 0.35), CFrame.new(0, 0.85, -1.7) * CFrame.Angles(0, math.pi / 2, 0), steel, Enum.PartType.Cylinder)
     piece("Flèche", Vector3.new(0.12, 0.12, 5), CFrame.new(0, 1.1, -2), steel)
     local tip = piece("Pointe du harpon", Vector3.new(0.7, 0.7, 1.1), CFrame.new(0, 1.1, -4.6) * CFrame.Angles(-math.pi / 2, 0, 0), steel)

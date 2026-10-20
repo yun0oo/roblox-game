@@ -26,6 +26,8 @@ function HarpoonSystem:Fire(state, direction)
 end
 
 local function crossesSafe(world, a, b)
+    local protected = world:SegmentProtected(a, b)
+    if protected ~= nil then return protected end
     local delta = b - a
     for _, base in ipairs(world.Bases) do
         local t = math.clamp((base.Center - a):Dot(delta) / math.max(delta:Dot(delta), 0.001), 0, 1)

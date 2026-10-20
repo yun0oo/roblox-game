@@ -9,6 +9,7 @@ function Engine.new()
     function V.new(x, y, z) return setmetatable({ X = x or 0, Y = y or 0, Z = z or 0 }, vectorMeta) end
     vectorMeta.__add = function(a, b) return V.new(a.X + b.X, a.Y + b.Y, a.Z + b.Z) end
     vectorMeta.__sub = function(a, b) return V.new(a.X - b.X, a.Y - b.Y, a.Z - b.Z) end
+    vectorMeta.__unm = function(a) return V.new(-a.X, -a.Y, -a.Z) end
     vectorMeta.__mul = function(a, b)
         if type(a) == "number" then a, b = b, a end
         if type(b) == "number" then return V.new(a.X * b, a.Y * b, a.Z * b) end
@@ -20,6 +21,7 @@ function Engine.new()
         if key == "Unit" then return a.Magnitude > 0 and a / a.Magnitude or V.new() end
         if key == "Lerp" then return function(b, c, t) return b + (c - b) * t end end
         if key == "Dot" then return function(b, c) return b.X * c.X + b.Y * c.Y + b.Z * c.Z end end
+        if key == "Cross" then return function(b, c) return V.new(b.Y*c.Z-b.Z*c.Y, b.Z*c.X-b.X*c.Z, b.X*c.Y-b.Y*c.X) end end
     end
     V.zero = V.new(); V.one = V.new(1, 1, 1); V.xAxis = V.new(1, 0, 0)
     e.Vector3 = V
@@ -27,6 +29,7 @@ function Engine.new()
     function CF.new(x, y, z) return setmetatable({ Position = type(x) == "table" and x or V.new(x, y, z) }, frameMeta) end
     CF.Angles = function() return CF.new() end
     CF.lookAt = function(pos) return CF.new(pos) end
+    CF.fromMatrix = function(pos) return CF.new(pos) end
     frameMeta.__mul = function(a, b) return CF.new(a.Position + b.Position) end
     e.CFrame = CF
     local colors = {}
@@ -44,7 +47,13 @@ function Engine.new()
         end
         return s
     end
+    local instance
     local methods = {}
+    function methods:Clone()
+        local copy = instance(self.ClassName)
+        for key, value in pairs(self._props) do if key ~= "Parent" then copy._props[key] = value end end
+        return copy
+    end
     function methods:GetChildren() return table.clone(self._children) end
     function methods:FindFirstChild(name)
         for _, child in ipairs(self._children) do if child.Name == name then return child end end
@@ -99,7 +108,7 @@ function Engine.new()
         end
         obj._props[key] = value
     end
-    local function instance(class)
+    instance = function(class)
         return setmetatable({ _props = { Name = class, ClassName = class, CFrame = CF.new(), Health = 100,
             Triggered = signal(), Died = signal(), CharacterAdded = signal(), PlayerAdded = signal(), PlayerRemoving = signal(),
             Heartbeat = signal(), OnServerEvent = signal(), Messages = {}, Broadcasts = {} }, _children = {}, _attributes = {} }, instanceMeta)
@@ -111,15 +120,15 @@ function Engine.new()
     e.ReplicatedStorage = instance("ReplicatedStorage")
     local modules = instance("Folder"); modules.Name = "Modules"; modules.Parent = e.ReplicatedStorage
     local server = instance("Folder")
-    for _, name in ipairs({ "Config", "Rules", "Visuals" }) do
+    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = modules
     end
-    for _, name in ipairs({ "DataSystem", "World", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do
+    for _, name in ipairs({ "DataSystem", "World", "Ship", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = server
     end
     e.Script = instance("Script"); e.Script.Parent = server
     local guid = 0
-    e.RunService = { IsStudio = function() return true end, Heartbeat = signal() }
+    e.RunService = { IsStudio = function() return true end, IsClient = function() return false end, Heartbeat = signal() }
     local services = { Workspace = e.Workspace, Players = e.Players, ReplicatedStorage = e.ReplicatedStorage,
         RunService = e.RunService, HttpService = { GenerateGUID = function() guid += 1; return "id-" .. guid end },
         DataStoreService = { GetDataStore = function() e.StoreCalls += 1; error("Unpublished Studio place") end } }

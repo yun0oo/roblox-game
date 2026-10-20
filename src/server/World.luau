@@ -145,56 +145,41 @@ function World.Build(config, visuals)
             end
         end
     end
-    -- Personal islands sit above the sea; the giant aquarium is included for everyone.
-    self.BasesFolder = self.Bases
-    self.Bases = {}
-    for i = 1, config.MaxPlayers do
-        local angle = (i - 1) / config.MaxPlayers * math.pi * 2
-        local center = Vector3.new(math.cos(angle) * 300, config.BaseHeight, math.sin(angle) * 300)
-        local model = Instance.new("Model"); model.Name = "Base_" .. i; model.Parent = self.BasesFolder
-        local deckColor = Color3.fromRGB(38, 76, 87)
-        solid(model, "Île personnelle", Vector3.new(84, 4, 84), center - Vector3.new(0, 12, 0), deckColor, Enum.Material.WoodPlanks)
-        local ramp = solid(model, "Rampe de plongée", Vector3.new(16, 2, 32), center + Vector3.new(0, -16, 49), deckColor, Enum.Material.WoodPlanks)
-        ramp.CFrame *= CFrame.Angles(math.rad(20), 0, 0)
-        for side = -1, 1, 2 do
-            solid(model, "Bordure lumineuse", Vector3.new(1, 2, 84), center + Vector3.new(side * 41, -9, 0), Color3.fromRGB(91, 229, 215), Enum.Material.Neon)
-        end
-        local tankCenter = center + Vector3.new(0, 8, -10)
-        local tank = Instance.new("Model"); tank.Name = "Aquarium géant"; tank.Parent = model
-        solid(tank, "Socle", Vector3.new(58, 5, 34), tankCenter - Vector3.new(0, 16, 0), Color3.fromRGB(19, 48, 64), Enum.Material.Metal)
-        local water = visuals.Part(tank, "Eau de l'aquarium", Vector3.new(53, 26, 29), CFrame.new(tankCenter), Color3.fromRGB(57, 185, 212), Enum.Material.Glass)
-        water.Transparency = 0.8
-        for side = -1, 1, 2 do
-            local pane = solid(tank, "Vitre latérale", Vector3.new(1, 28, 32), tankCenter + Vector3.new(side * 28, 0, 0), Color3.fromRGB(174, 235, 245), Enum.Material.Glass)
-            pane.Transparency = 0.75
-            pane = solid(tank, "Vitre panoramique", Vector3.new(56, 28, 1), tankCenter + Vector3.new(0, 0, side * 16), Color3.fromRGB(174, 235, 245), Enum.Material.Glass)
-            pane.Transparency = 0.75
-        end
-        solid(tank, "Fond de sable", Vector3.new(54, 1, 30), tankCenter - Vector3.new(0, 13, 0), Color3.fromRGB(205, 182, 126), Enum.Material.Sand)
-        local rim = solid(tank, "Couronne", Vector3.new(58, 1, 34), tankCenter + Vector3.new(0, 14, 0), Color3.fromRGB(90, 224, 218), Enum.Material.Neon)
-        rim.CanCollide = false; rim.Transparency = 0.7
-        local core = visuals.Part(model, "Dépôt des œufs", Vector3.new(8, 5, 5), CFrame.new(center + Vector3.new(0, -6, 18)), Color3.fromRGB(96, 242, 206), Enum.Material.Neon)
-        local label = visuals.Label(core, "ÎLE DISPONIBLE\nAQUARIUM GÉANT · ZONE SÉCURISÉE", Color3.fromRGB(174, 255, 230), 33, 250)
-        local prompt = Instance.new("ProximityPrompt"); prompt.ActionText = "Déposer un œuf"; prompt.ObjectText = "Aquarium · incubation"
-        prompt.HoldDuration = 0.4; prompt.MaxActivationDistance = 12; prompt.RequiresLineOfSight = false; prompt.Parent = core
-        local bench = visuals.Part(model, "Atelier", Vector3.new(10, 6, 6), CFrame.new(center + Vector3.new(-29, -7, 23)), Color3.fromRGB(78, 180, 216), Enum.Material.Metal)
-        visuals.Label(bench, "ÉQUIPEMENT\nDépensez vos gold", Color3.fromRGB(255, 215, 113), 6, 90)
-        local upgrade = Instance.new("ProximityPrompt"); upgrade.ActionText = "Équipement"; upgrade.ObjectText = "Atelier · gold"
-        upgrade.MaxActivationDistance = 12; upgrade.RequiresLineOfSight = false; upgrade.Parent = bench
-        local display = Instance.new("Folder"); display.Name = "Animaux"; display.Parent = tank
-        local eggs = Instance.new("Folder"); eggs.Name = "Œufs en incubation"; eggs.Parent = tank
-        table.insert(self.Bases, { Model = model, Center = center, Spawn = center + Vector3.new(0, -6, 29), TankCenter = tankCenter,
-            Label = label, Core = core, HatchPrompt = prompt, UpgradePrompt = upgrade, Bench = bench, Display = display,
-            EggDisplay = eggs, Swimmers = {}, Incubators = {}, OwnerId = 0 })
-    end
+    require(script.Parent.Ship).Build(self, config, visuals)
     return self
+end
+
+local function inside(position, box)
+    return position.X >= box.Min.X and position.X <= box.Max.X and position.Y >= box.Min.Y and position.Y <= box.Max.Y
+        and position.Z >= box.Min.Z and position.Z <= box.Max.Z
 end
 
 function World:SafeBase(position)
     for _, base in ipairs(self.Bases) do
-        if (position - base.Center).Magnitude <= self.Config.BaseRadius then return base end
+        if base.Min then
+            if inside(position, base) then return base end
+        elseif (position - base.Center).Magnitude <= self.Config.BaseRadius then return base end
     end
+    if self.SharedDeck and inside(position, self.SharedDeck) then return self.SharedDeck end
     return nil
+end
+
+function World:SegmentProtected(a, b)
+    if not self.SafeRegions then return nil end
+    for _, box in ipairs(self.SafeRegions) do
+        local low, high = 0, 1
+        for _, axis in ipairs({ "X", "Y", "Z" }) do
+            local delta = b[axis] - a[axis]
+            if math.abs(delta) < 0.0001 then
+                if a[axis] < box.Min[axis] or a[axis] > box.Max[axis] then high = -1; break end
+            else
+                local t1, t2 = (box.Min[axis] - a[axis]) / delta, (box.Max[axis] - a[axis]) / delta
+                low = math.max(low, math.min(t1, t2)); high = math.min(high, math.max(t1, t2))
+            end
+        end
+        if low <= high then return true end
+    end
+    return false
 end
 
 function World:AtStation(position)
@@ -208,7 +193,8 @@ function World:AssignBase(player)
         if base.OwnerId == 0 then
             base.OwnerId = player.UserId
             base.Model:SetAttribute("OwnerId", player.UserId)
-            base.Label.Text = player.DisplayName .. "\nÎLE SÉCURISÉE · AQUARIUM"
+            base.Label.Text = player.DisplayName .. "\n@" .. player.Name
+            base.Avatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. player.UserId .. "&w=150&h=150"
             return base
         end
     end
@@ -217,6 +203,11 @@ end
 
 function World:RefreshAnimals(state)
     local base = state.Base
+    local level = state.Profile.BaseLevel or 1
+    if base.Level ~= level then
+        require(script.Parent.Ship).Aquarium(base, level, self.Config, self.Visuals)
+        self:RefreshIncubators(state)
+    end
     base.Display:ClearAllChildren()
     base.Swimmers = {}
     local sorted = {}
@@ -227,7 +218,7 @@ function World:RefreshAnimals(state)
     end
     for id, count in pairs(present) do table.insert(sorted, { Id = id, Count = count }) end
     table.sort(sorted, function(a, b) return self.Config.Animals[a.Id].Income > self.Config.Animals[b.Id].Income end)
-    for i = 1, math.min(#sorted, 12) do
+    for i = 1, math.min(#sorted, self.Config.BaseUpgrades[level].Display) do
         local entry = sorted[i]; local spec = self.Config.Animals[entry.Id]
         local position = base.TankCenter + Vector3.new(((i - 1) % 4 - 1.5) * 11, 1 + math.floor((i - 1) / 4) * 3, (math.floor((i - 1) / 4) - 1) * 7)
         local grade, displaySpec = "Normal", table.clone(spec)
@@ -248,7 +239,7 @@ function World:RefreshIncubators(state)
         index += 1
         local position = base.TankCenter + Vector3.new(((index - 1) % 6 - 2.5) * 7, -9, math.floor((index - 1) / 6) * 6 - 10)
         local part = self.Visuals.Egg(base.EggDisplay, egg.Name, self.Config.Rarities[egg.Rarity], CFrame.new(position))
-        part.Size *= 0.6; part.CanQuery = false
+        part.Size *= 0.36; part.CanQuery = false
         local label = self.Visuals.Label(part, "INCUBATION", self.Visuals.Color(self.Config.Rarities[egg.Rarity].Color), 3, 100)
         table.insert(base.Incubators, { Egg = egg, Label = label })
     end
@@ -272,8 +263,16 @@ function World:ApplyCustomization(state)
     local palette = self.Config.Decorations[profile.Palette] or self.Config.Decorations.lagoon
     local color = self.Visuals.Color(palette.Color)
     base.Core.Color = color
+    local tank = base.Model:FindFirstChild("Aquarium géant")
+    local bar = tank and tank:FindFirstChild("Rampe lumineuse")
+    if bar then
+        bar.Color = color
+        local light = bar:FindFirstChildOfClass("PointLight")
+        if light then light.Color = color end
+    end
     base.Label.TextColor3 = color
-    base.Label.Text = state.Player.DisplayName .. " · PRESTIGE " .. profile.Prestige .. "\nÎLE SÉCURISÉE · AQUARIUM"
+    base.Label.Text = state.Player.DisplayName .. "\n@" .. state.Player.Name
+    base.TierLabel.Text = self.Config.BaseUpgrades[profile.BaseLevel or 1].Name:upper() .. " · NIVEAU " .. (profile.BaseLevel or 1)
     local old = base.Model:FindFirstChild("Personnalisation")
     if old then old:Destroy() end
     local folder = Instance.new("Folder"); folder.Name = "Personnalisation"; folder.Parent = base.Model

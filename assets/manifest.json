@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "file": "BarramundiFish.glb",
+      "author": "Microsoft",
+      "license": "CC0-1.0",
+      "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/BarramundiFish",
+      "sha256": "ecc3bafb6b00f2c8b810863c388e3768a7b7ea0d0335e8cb8c574c266e571f4a"
+    },
+    {
+      "file": "KenneyBlaster.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/blaster-b.glb",
+      "sha256": "7df4457ed864bc0714fc33059ac56d198304092093b1e78dc407b6c829945a4f"
+    }
+  ]
+}

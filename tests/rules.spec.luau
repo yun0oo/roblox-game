@@ -10,6 +10,22 @@ local function equal(actual, expected, message) check(actual == expected, (messa
 
 local profile = Rules.NewProfile(Config)
 local other = Rules.NewProfile(Config)
+equal(profile.BaseLevel, 1, "New players receive their first aquarium gallery")
+check(not Rules.PurchaseBaseUpgrade(profile, Config), "Unaffordable base upgrade is atomic")
+equal(profile.Money, 150); equal(profile.BaseLevel, 1)
+profile.Money = 10000
+check(Rules.PurchaseBaseUpgrade(profile, Config), "Base upgrades can be purchased with gold")
+equal(profile.BaseLevel, 2); equal(profile.Money, 9400)
+profile.Animals.clownfish = 1
+check(math.abs(Rules.Income(profile, Config) - 11) < 1e-6, "Base upgrade increases actual animal production")
+equal(Rules.Sanitize(profile, Config).BaseLevel, 2, "Base upgrade persists through sanitization")
+profile.BaseLevel = #Config.BaseUpgrades
+check(not Rules.PurchaseBaseUpgrade(profile, Config), "Maximum base upgrade does not charge again")
+profile = Rules.NewProfile(Config)
+check(Rules.CrossesSurfaceOutsideDive(Config, 120, 100, 100, 0), "Outside edge cannot be used for diving")
+check(Rules.CrossesSurfaceOutsideDive(Config, 100, 100, 120, 0), "Outside hull cannot be used for surfacing")
+check(not Rules.CrossesSurfaceOutsideDive(Config, 120, 0, 100, 0), "Every player can dive through the shared opening")
+check(not Rules.CrossesSurfaceOutsideDive(Config, 100, 0, 120, 0), "Every player can return through the shared opening")
 profile.Equipment.Suit = 2
 equal(other.Equipment.Suit, 1, "Profiles must not share equipment tables")
 profile = Rules.NewProfile(Config)

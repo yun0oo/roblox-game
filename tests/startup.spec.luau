@@ -12,6 +12,7 @@ local function run(failTerrain)
     local os = { clock = function() return e.Clock end, time = function() return 1700000000 + math.floor(e.Clock) end }
     local warn = function(...) table.insert(e.Warnings, table.concat({ ... }, " ")) end
     local UDim2 = { fromOffset = function() return {} end, fromScale = function() return {} end }
+    local UDim = { new = function() return {} end }
     local ColorSequence = { new = function() return {} end }
     local NumberSequence = { new = function() return {} end }
     local NumberRange = { new = function() return {} end }
@@ -38,6 +39,7 @@ local function run(failTerrain)
     local player = e:Player(1); e:Character(player)
     e.Task.spawn(boot)
     e:Drain()
+    if not failTerrain then loaded.ArtRenderer = require(e.ReplicatedStorage.Modules.ArtRenderer) end
     return e, player, loaded
 end
 local e, player, loaded = run(false)
@@ -52,10 +54,18 @@ check(#e.Workspace.Bases:GetChildren() == 8, "Actual World.Build creates eight h
 check(#e.Workspace.Floors:GetChildren() == 6, "Actual World.Build creates all six floors")
 check(#e.Workspace.Eggs:GetChildren() == 36, "Startup spawns six eggs per floor")
 check(#e.Workspace.Guardians:GetChildren() == 36, "Every initial egg receives a guardian")
+check(e.Workspace.Map:FindFirstChild("NÉRÉIDE · Navire d'exploration"), "All personal galleries share one research vessel")
+check(string.find(e.Workspace.Bases.Base_1["Identité du propriétaire"]["Identité"].Portrait.Image, "id=1", 1, true), "Personal gallery displays its owner's avatar portrait")
+check(string.find(e.Workspace.Bases.Base_1["Identité du propriétaire"]["Identité"].Pseudo.Text, player.DisplayName, 1, true), "Personal gallery displays its owner's large nameplate")
+for _, key in ipairs({ "egg", "fish", "harpoon", "kraken", "leviathan" }) do
+    local skin = loaded.ArtRenderer.Build(key, e.Color3.fromRGB(100, 190, 210), 1, true)
+    check(#skin:GetChildren() > 20, "Bundled sculpture renders without native Mesh APIs: " .. key)
+    skin:Destroy()
+end
 for _, base in ipairs(e.Workspace.Bases:GetChildren()) do
     check(base:FindFirstChild("Aquarium géant") ~= nil, "Every surface island includes a giant aquarium")
 end
-check(#player.Character.Harpon:GetChildren() >= 12, "Harpoon is a detailed welded weapon rather than a single block")
+check(player.Character.Harpon.Handle:GetAttribute("ArtAsset") == "harpoon" and player.Character.Harpon:FindFirstChild("Flèche"), "Harpoon combines the imported body with a welded barbed spear")
 for _, guardian in ipairs(e.Workspace.Guardians:GetChildren()) do
     check(guardian.PrimaryPart and guardian:GetAttribute("Guardian") and guardian:GetAttribute("Health") > 0,
         "Guardian model has a body and combat state")
@@ -90,6 +100,13 @@ end
 -- Collision and swimming physics remain native Studio checks.
 replacement.Humanoid.Health = 1000000
 local spawn = replacement.HumanoidRootPart.Position
+travel(player, e.Vector3.new(0, 118, 65))
+local beforeEdge = replacement.HumanoidRootPart.Position
+travel(player, e.Vector3.new(100, 110, 65))
+travel(player, e.Vector3.new(100, 100, 65))
+check(replacement.HumanoidRootPart.Position.Y >= loaded.Config.WaterTop + 1, "Server rejects diving from the ship's outside edge")
+travel(player, beforeEdge)
+travel(player, e.Vector3.new(0, 99, 0))
 travel(player, e.Vector3.new(0, -550, 0))
 check(replacement.HumanoidRootPart.Position.Y == -550 and latest(player).Floor == 3 and latest(player).Equipment.Suit == 1,
     "Starting diver crosses two depth recommendations without a level teleport")
@@ -101,6 +118,8 @@ end
 local eggId = reefEgg:GetAttribute("EggId")
 travel(player, reefEgg.Position)
 reefEgg.ProximityPrompt.Triggered:Fire(player)
+travel(player, e.Vector3.new(0, 98, 0))
+travel(player, e.Vector3.new(0, 118, 0))
 travel(player, spawn)
 check(#latest(player).Eggs == 1 and not latest(player).Eggs[1].ReadyAt, "Returning to the surface secures the egg without an instant hatch")
 remote.Action.OnServerEvent:Fire(player, "Hatch", eggId)

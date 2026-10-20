@@ -60,7 +60,7 @@ local game = { JobId = "test-job", PlaceId = 123, GetService = function(_, key) 
 --[[ MODULES ]]
 
 local function fakePart(position)
-    return { Position = position, SetAttribute = function() end, Destroy = function(self) self.Destroyed = true end, FindFirstChild = function() return nil end }
+    return { Position = position, Size = V.new(3, 4, 3), SetAttribute = function() end, Destroy = function(self) self.Destroyed = true end, FindFirstChild = function() return nil end }
 end
 local function fakeModel(name, position)
     return { Name = name, Position = position, PrimaryPart = { FindFirstChild = function() return nil end },
@@ -188,11 +188,13 @@ check(data ~= nil and store.Value.Session.Id == first.Token, "Load acquires a le
 local blocked = second:Load(p)
 check(blocked == nil, "Concurrent session cannot load or overwrite a locked profile")
 data.Money = 1234
+data.BaseLevel = 3
 data.Eggs = { { Id = "incubating", Name = "Œuf", Floor = 1, Rarity = "Common", StartedAt = os.time(), ReadyAt = os.time() + 15 } }
 check(first:Save(p, false) and store.Value.Data.Money == 1234, "Autosave persists actual profile state")
 check(first:Save(p, true) and store.Value.Session == nil, "Leaving releases the lease")
 local restored = second:Load(p)
 check(restored and restored.Money == 1234, "Reconnect restores saved progression")
+check(restored.BaseLevel == 3, "Reconnect restores the upgraded aquarium gallery")
 check(restored.Eggs[1].ReadyAt == data.Eggs[1].ReadyAt, "Reconnect preserves incubation deadline without restarting it")
 local existing = store.Value
 store.Fail = true

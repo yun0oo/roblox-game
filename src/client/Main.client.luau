@@ -104,6 +104,7 @@ end
 
 remotes.FX.OnClientEvent:Connect(function(kind, data)
     if kind == "OpenUpgrades" then ui:Open("Équipement")
+    elseif kind == "OpenBase" then ui:Open("Habitat")
     elseif kind == "Shot" then
         localSound(data.Position, "rbxasset://sounds/swordslash.wav", 0.25)
         local tool = character and character:FindFirstChild("Harpon")
@@ -166,7 +167,7 @@ RunService.RenderStepped:Connect(function(dt)
     local speed = player:GetAttribute("SwimSpeed") or 20
     local current = Vector3.new(player:GetAttribute("CurrentX") or 0, 0, player:GetAttribute("CurrentZ") or 0)
     movement = movement:Lerp(move * speed + current, 1 - math.exp(-dt * 9))
-    local underwater = root.Position.Y < Config.WaterTop + 1
+    local underwater = root.Position.Y < Config.WaterTop + 1 and humanoid:GetState() ~= Enum.HumanoidStateType.Climbing
     velocity.Enabled = underwater
     if underwater then
         velocity.VectorVelocity = movement
@@ -192,12 +193,19 @@ RunService.RenderStepped:Connect(function(dt)
         Lighting.FogColor = Color3.fromRGB(170, 221, 241)
         correction.TintColor = Color3.new(1, 1, 1)
     end
+    local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
+    if atmosphere then
+        atmosphere.Density = underwater and (0.22 + darkness * 0.4) or 0.24
+        atmosphere.Haze = underwater and (1.3 + darkness * 2) or 1
+        atmosphere.Color = underwater and Lighting.FogColor or Color3.fromRGB(176, 209, 227)
+    end
     camera.FieldOfView += ((70 + math.max(0, speed - 25) * 0.35) - camera.FieldOfView) * math.min(1, dt * 5)
     if ui.State then
-        local delta = ui.State.BasePosition - root.Position
+        local toDive = root.Position.Y > Config.WaterTop and not ui.State.Carrying and not ui.State.OwnBase
+        local delta = (toDive and ui.State.DivePosition or ui.State.BasePosition) - root.Position
         local localDirection = camera.CFrame:VectorToObjectSpace(delta)
         local arrow = math.abs(localDirection.X) > math.abs(localDirection.Z) and (localDirection.X > 0 and "→" or "←") or (localDirection.Z < 0 and "↑" or "↓")
-        ui.Compass.Text = ui.State.OwnBase and "◇ HABITAT SÉCURISÉ" or (arrow .. "  Votre habitat · " .. math.floor(delta.Magnitude) .. " studs")
+        ui.Compass.Text = ui.State.OwnBase and "◇ VOTRE GALERIE · AQUARIUM SÉCURISÉ" or (arrow .. (toDive and "  Bassin commun · " or "  Votre galerie · ") .. math.floor(delta.Magnitude) .. " studs")
     end
 end)
 context.Action:FireServer("Sync")

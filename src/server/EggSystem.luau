@@ -107,7 +107,7 @@ function EggSystem:Drop(state, reason)
         if reason == "Harpoon" or reason == "Manual" then return false end
         -- A disconnect/death in somebody else's bubble cannot create a steal inside it.
         local offset = position - base.Center
-        position = base.Center + (offset.Magnitude > 0.1 and offset.Unit or Vector3.xAxis) * (self.Ctx.Config.BaseRadius + 7)
+        position = self.Ctx.World.DiveWater or (base.Center + (offset.Magnitude > 0.1 and offset.Unit or Vector3.xAxis) * (self.Ctx.Config.BaseRadius + 7))
     end
     egg.State = "Dropped"; egg.PreviousCarrier = state.Player.UserId; egg.Carrier = nil
     egg.DropReason = reason; egg.Expires = os.clock() + self.Ctx.Config.DroppedEggLifetime
@@ -161,7 +161,8 @@ function EggSystem:Step()
             local state = self.Ctx.States[egg.Carrier]
             local root = state and self.Ctx:Root(state)
             if root then
-                egg.Part.CFrame = root.CFrame * CFrame.new(0, 1.5, 2.5)
+                local radius = math.max(egg.Part.Size.X, egg.Part.Size.Z) * 0.5
+                egg.Part.CFrame = root.CFrame * CFrame.new(0, egg.Part.Size.Y * 0.12, 2 + radius)
                 self:Secure(state)
             elseif state then self:Drop(state, "Death") else self:Remove(egg) end
         elseif now >= egg.Expires then self:Remove(egg) end

@@ -13,10 +13,12 @@ Les fichiers prêts à ouvrir sont dans [`downloads/`](downloads/) :
 
 Sur la page du fichier GitHub, cliquer sur **Download raw file** (icône de téléchargement). Extraire le ZIP, puis ouvrir `UnderwaterEgg.rbxl` dans Roblox Studio et cliquer sur **Play**.
 
+La version corrigée permet de tester un fichier non publié **sans cocher de réglage API**. Elle conserve l'apparition automatique du personnage Roblox pendant la génération de l'océan. Un message indique le chargement et signale une éventuelle erreur de démarrage.
+
 ## Ouvrir le jeu
 
 1. Ouvrir `build/UnderwaterEgg.rbxl` ou `build/UnderwaterEgg.rbxlx` dans Roblox Studio sur Windows ou macOS.
-2. Lancer **Play**. La carte apparaît au démarrage du serveur, pas en mode édition.
+2. Appuyer sur **F5** (**Play**, avec un personnage). Attendre la fin du message de chargement : la carte, les œufs et les gardiens sont générés au démarrage du serveur. Le plongeur rejoint ensuite son habitat avec son harpon.
 3. Pour tester les poursuites, utiliser l'onglet **Test**, un serveur local et **2 joueurs**.
 4. Pour tester les vraies sauvegardes, publier une expérience privée et activer **Game Settings → Security → Enable Studio Access to API Services**. Studio utilise un magasin distinct : `UnderwaterEgg_v1_Studio`.
 
@@ -88,6 +90,7 @@ Ne pas présumer qu'un serveur Rojo cloud sera accessible depuis un Studio local
 - compilation des sources Luau et analyse des modules purs ;
 - tests de probabilités, économie, équipements, inventaires, fusions, prestige et décoration ;
 - scénarios des vrais modules serveur avec primitives moteur simulées : vol, bases, collisions, gardiens, événements, verrou et reconnexion DataStore ;
+- démarrage complet avec la vraie génération de carte et des modèles, les 36 gardiens, un personnage déjà présent, un nouvel arrivant et une réapparition ; refus simulé des propriétés réservées à Studio et des accès DataStore d'un fichier non publié ;
 - construction `.rbxl` et `.rbxlx`, génération du sourcemap et vérification que toutes les sources sont incluses ;
 - analyse avec `luau-lsp` et les définitions de l'API Roblox épinglées.
 

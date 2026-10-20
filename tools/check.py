@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Offline checks for domain/services and Rojo artifacts. Does not simulate Studio."""
 from pathlib import Path
+import json
 import os
 import shutil
 import subprocess
@@ -32,18 +33,33 @@ run('luau-compile', '--null', *[str(p.relative_to(ROOT)) for p in sources])
 run('luau-analyze', 'src/shared/Rules.luau', 'src/shared/Config.luau', 'tests/rules.spec.luau', 'tests/progression.spec.luau')
 run('luau', 'tests/rules.spec.luau')
 run('luau', 'tests/progression.spec.luau')
-module_sources = []
-for name in ('World', 'EggSystem', 'HarpoonSystem', 'DataSystem', 'GuardianSystem', 'EventSystem'):
-    body = (ROOT / 'src/server' / (name + '.luau')).read_text()
-    module_sources.append(f'local {name} = (function()\n{body}\nend)()\n')
-harness = (ROOT / 'tests/services.spec.luau').read_text().replace('--[[ MODULES ]]', '\n'.join(module_sources))
-with tempfile.NamedTemporaryFile(mode='w', suffix='.luau', prefix='.runtime-', dir=ROOT / 'tests', delete=False) as generated:
-    generated.write(harness)
-    generated_path = Path(generated.name)
-try:
-    run('luau', str(generated_path.relative_to(ROOT)))
-finally:
-    generated_path.unlink()
+for suite in ('services', 'startup'):
+    module_sources = []
+    if suite == 'services':
+        for name in ('World', 'EggSystem', 'HarpoonSystem', 'DataSystem', 'GuardianSystem', 'EventSystem'):
+            body = (ROOT / 'src/server' / (name + '.luau')).read_text()
+            module_sources.append(f'local {name} = (function()\n{body}\nend)()\n')
+    else:
+        for path in sources:
+            if path.parent.name == 'client' or path.name.endswith('.server.luau'):
+                continue
+            module_sources.append(f'factories["{path.stem}"] = function()\n{path.read_text()}\nend\n')
+    harness = (ROOT / f'tests/{suite}.spec.luau').read_text().replace('--[[ MODULES ]]', '\n'.join(module_sources))
+    harness = harness.replace('--[[ MAIN ]]', (ROOT / 'src/server/Main.server.luau').read_text())
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.luau', prefix='.runtime-', dir=ROOT / 'tests', delete=False) as generated:
+        generated.write(harness)
+        generated_path = Path(generated.name)
+    try:
+        run('luau', str(generated_path.relative_to(ROOT)))
+    finally:
+        generated_path.unlink()
+
+tree = json.loads((ROOT / 'default.project.json').read_text())['tree']
+assert tree['Players']['$properties']['CharacterAutoLoads'] is True
+assert tree['Workspace']['Arrivee']['$className'] == 'SpawnLocation'
+# Runtime scripts cannot write this Studio-only property. The built place must
+# already allow avatars/eggs to reach the bottom of the deepest configured floor.
+assert tree['Workspace']['$properties']['FallenPartsDestroyHeight'] <= -2246
 
 build = ROOT / 'build'
 build.mkdir(exist_ok=True)

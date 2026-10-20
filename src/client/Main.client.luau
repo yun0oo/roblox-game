@@ -68,6 +68,7 @@ local function attach(newCharacter)
     local attachment = Instance.new("Attachment"); attachment.Name = "SwimAttachment"; attachment.Parent = root
     velocity = Instance.new("LinearVelocity")
     velocity.Name = "SwimController"; velocity.Attachment0 = attachment
+    velocity.Enabled = false
     velocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
     velocity.RelativeTo = Enum.ActuatorRelativeTo.World; velocity.ForceLimitsEnabled = false
     velocity.VectorVelocity = Vector3.zero; velocity.Parent = root
@@ -141,7 +142,7 @@ local uiTick = 0
 RunService.RenderStepped:Connect(function(dt)
     uiTick += dt
     if uiTick > 0.1 then ui:Tick(); uiTick = 0 end
-    if not root or not root.Parent or not humanoid or humanoid.Health <= 0 then
+    if not root or not root.Parent or not humanoid or humanoid.Health <= 0 or not character:GetAttribute("UnderwaterReady") then
         if velocity then velocity.Enabled = false end
         return
     end

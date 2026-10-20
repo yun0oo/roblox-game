@@ -6,8 +6,18 @@ local DataSystem = {}
 DataSystem.__index = DataSystem
 
 function DataSystem.new(config, rules)
-    local storeName = config.DataStoreName .. (RunService:IsStudio() and "_Studio" or "")
-    return setmetatable({ Config = config, Rules = rules, Store = DataStoreService:GetDataStore(storeName),
+    local studio = RunService:IsStudio()
+    local storeName = config.DataStoreName .. (studio and "_Studio" or "")
+    local store, storeError
+    -- An unpublished Studio place cannot use DataStore. GetDataStore itself can
+    -- throw, before Load's UpdateAsync protection has a chance to run.
+    if studio and game.PlaceId == 0 then
+        storeError = "Fichier Studio non publié"
+    else
+        local ok, result = pcall(function() return DataStoreService:GetDataStore(storeName) end)
+        if ok then store = result else storeError = tostring(result) end
+    end
+    return setmetatable({ Config = config, Rules = rules, Store = store, StoreError = storeError,
         Sessions = {}, Token = game.JobId .. ":" .. HttpService:GenerateGUID(false) }, DataSystem)
 end
 
@@ -21,8 +31,9 @@ local function waitForBudget()
 end
 
 function DataSystem:Load(player)
-    local result, lastError, locked, incompatible
-    for attempt = 1, 3 do
+    local result, lastError, locked, incompatible = nil, self.StoreError, false, false
+    local attempts = self.Store and (RunService:IsStudio() and 1 or 3) or 0
+    for attempt = 1, attempts do
         if not waitForBudget() then lastError = "Budget DataStore indisponible"; break end
         local ok, value = pcall(function()
             return self.Store:UpdateAsync("u_" .. player.UserId, function(old)
@@ -44,7 +55,7 @@ function DataSystem:Load(player)
         if incompatible then return nil, "Format de sauvegarde incompatible. Votre progression a été préservée." end
         if locked then return nil, "Votre progression est encore ouverte sur un autre serveur. Réessayez dans quelques instants." end
         lastError = tostring(value)
-        task.wait(attempt)
+        if attempt < attempts then task.wait(attempt) end
     end
     if result then
         local profile = self.Rules.Sanitize(result.Data, self.Config)

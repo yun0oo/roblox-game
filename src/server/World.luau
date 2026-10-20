@@ -18,11 +18,13 @@ function World.Build(config, visuals)
     local oceanBottom = lastFloor.Bottom - 16
     local oceanHeight = config.WaterTop - oceanBottom + 20
     local oceanCenter = (config.WaterTop + oceanBottom) / 2
-    Workspace.FallenPartsDestroyHeight = oceanBottom - 250
+    -- FallenPartsDestroyHeight is configured in the place file: Roblox only
+    -- allows Studio/plugins to write it, so setting it here aborts the server.
     -- Keep each terrain edit below the engine's large-region voxel limits.
     for bottom = oceanBottom, 103, 128 do
         local height = math.min(128, 104 - bottom)
         terrain:FillBlock(CFrame.new(0, bottom + height / 2, 0), Vector3.new(960, height, 960), Enum.Material.Water)
+        task.wait()
     end
     local function solid(parent, name, size, pos, color, material)
         local part = visuals.Part(parent, name, size, CFrame.new(pos), color, material or Enum.Material.Slate)
@@ -38,6 +40,8 @@ function World.Build(config, visuals)
     local rng = Random.new(41871)
     for _, floor in ipairs(config.Floors) do
         if floor.Id > config.ActiveFloors then continue end
+        Workspace:SetAttribute("UnderwaterBootMessage", "Construction : " .. floor.Name)
+        task.wait()
         local folder = Instance.new("Folder"); folder.Name = floor.Id .. "_" .. floor.ShortName; folder.Parent = self.Floors
         local color = visuals.Color(floor.Color)
         -- The central 150-stud shaft stays open between the active floors.

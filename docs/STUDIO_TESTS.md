@@ -6,6 +6,8 @@ Utiliser d'abord une expérience privée et deux joueurs locaux. Tester le MVP a
 
 ## Démarrage et déplacement
 
+- Commencer avec le fichier `.rbxl` non publié, sans changer les réglages API, puis appuyer sur **F5 / Play**. Vérifier le personnage Roblox pendant le chargement, puis son arrivée dans son habitat ; l'interface doit indiquer la session Studio non sauvegardée.
+- Refaire le test dans une expérience privée publiée avec accès API désactivé : le démarrage doit également réussir en session temporaire.
 - Ouvrir le fichier construit, lancer le serveur et vérifier l'absence d'erreurs dans Output côté serveur et clients.
 - Vérifier la génération de l'eau, des huit bulles et des paliers actifs ; les passages du puits central doivent rester traversables.
 - Vérifier que chacun apparaît dans son propre habitat avec son harpon et une réserve d'oxygène pleine.

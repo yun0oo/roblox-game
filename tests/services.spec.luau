@@ -30,7 +30,7 @@ local Instance = { new = function() return { Triggered = { Connect = function() 
 local function typeof(value) return getmetatable(value) == vectorMeta and "Vector3" or type(value) end
 local function warn(...) end
 local task = { wait = function() return 0 end }
-local hitResult, studio, guid = nil, false, 0
+local hitResult, studio, guid, rejectStore, getStoreCalls = nil, false, 0, false, 0
 local store = { Value = nil, Fail = false, Calls = 0 }
 function store:UpdateAsync(_, callback)
     self.Calls += 1
@@ -45,10 +45,14 @@ local services = {
     Workspace = workspace,
     Players = { GetPlayerFromCharacter = function(_, model) return byCharacter[model] end },
     HttpService = { GenerateGUID = function() guid += 1; return "guid-" .. guid end },
-    DataStoreService = { GetDataStore = function() return store end, GetRequestBudgetForRequestType = function() return 1 end },
+    DataStoreService = { GetDataStore = function()
+        getStoreCalls += 1
+        if rejectStore then error("You must publish this place to access DataStore") end
+        return store
+    end, GetRequestBudgetForRequestType = function() return 1 end },
     RunService = { IsStudio = function() return studio end },
 }
-local game = { JobId = "test-job", GetService = function(_, key) return services[key] end }
+local game = { JobId = "test-job", PlaceId = 123, GetService = function(_, key) return services[key] end }
 
 --[[ MODULES ]]
 
@@ -188,6 +192,21 @@ local calls = store.Calls
 temporary.Money = 999999
 check(offline:Save(guest, true) and store.Calls == calls, "Offline fallback never writes temporary defaults")
 check(store.Value == existing, "Original saved progression remains intact")
+game.PlaceId = 0
+calls = getStoreCalls
+local unpublished, visitor = DataSystem.new(Config, Rules), player(104)
+local fresh, _, localOnly = unpublished:Load(visitor)
+check(fresh and localOnly and getStoreCalls == calls, "Unpublished Studio starts without requesting DataStore")
+calls = store.Calls
+check(unpublished:Save(visitor, true) and store.Calls == calls, "Unpublished play cannot save temporary data")
+game.PlaceId = 123; rejectStore = true
+local unavailable, visitor2 = DataSystem.new(Config, Rules), player(105)
+check(select(3, unavailable:Load(visitor2)), "GetDataStore throwing does not abort Studio startup")
+studio = false
+local unavailableLive = DataSystem.new(Config, Rules)
+check(unavailableLive:Load(player(106)) == nil, "GetDataStore failure never creates a live default profile")
+check(store.Value == existing, "Constructor failures preserve the stored profile")
+rejectStore = false
 store.Fail = false; studio = false
 store.Value.Session = { Id = "other-session", Expires = os.time() + 300 }
 check(not second:Save(p, false) and p.Kicked, "Lost lease blocks a write and disconnects stale session")

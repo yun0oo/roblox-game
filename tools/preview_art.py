@@ -6,7 +6,11 @@ from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[1]
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 palette={}
-for key,location,scale in [('fish',(-9,3,0),1),('harpoon',(0,3,0),1),('egg',(9,3,0),3.5),('leviathan',(-9,-6,0),1),('kraken',(0,-6,0),1),('scylla',(9,-6,0),1)]:
+gallery = [('fish',(-9,3,0),1),('harpoon',(0,3,0),1),('egg',(9,3,0),3.5),('leviathan',(-9,-6,0),1),('kraken',(0,-6,0),1),('scylla',(9,-6,0),1)]
+if '--marine' in sys.argv:
+    keys = ['q_clownfish', 'q_butterflyfish', 'q_puffer', 'q_sunfish', 'q_shark', 'q_manta_ray', 'q_dolphin', 'q_whale', 'q_piranha', 'q_goblinshark', 'q_anglerfish', 'q_leviathan']
+    gallery = [(key, ((i % 4 - 1.5) * 9, (1 - i // 4) * 8, 0), 1) for i, key in enumerate(keys)]
+for key,location,scale in gallery:
     data=json.loads((ROOT/'assets/generated'/(key+'.json')).read_text())['Lod' if LOD else 'Full']
     mesh=bpy.data.meshes.new(key)
     mesh.from_pydata([(v[0]*scale,-v[2]*scale,v[1]*scale+3) for v in data['Vertices']],[],[[i-1 for i in f] for f in data['Faces']])
@@ -29,8 +33,8 @@ scene.render.resolution_x=1440;scene.render.resolution_y=1000;scene.render.resol
 scene.world.color=(.18,.18,.18)
 for location,power,size in [((0,5,18),2400,12),((-14,4,10),1400,10),((12,-8,9),1800,9)]:
     bpy.ops.object.light_add(type='AREA',location=location);bpy.context.object.data.energy=power;bpy.context.object.data.shape='DISK';bpy.context.object.data.size=size
-bpy.ops.object.camera_add(location=(18,-26,28));camera=bpy.context.object
+bpy.ops.object.camera_add(location=(22,32,27) if '--marine' in sys.argv else (18,-26,28));camera=bpy.context.object
 camera.rotation_euler=(Vector((0,-1,2))-camera.location).to_track_quat('-Z','Y').to_euler()
-camera.data.type='ORTHO';camera.data.ortho_scale=33;scene.camera=camera
-output=ROOT/'build'/('art-preview-lod.png' if LOD else 'art-preview.png');output.parent.mkdir(exist_ok=True)
+camera.data.type='ORTHO';camera.data.ortho_scale=43 if '--marine' in sys.argv else 33;scene.camera=camera
+output=ROOT/'build'/('marine-preview.png' if '--marine' in sys.argv else ('art-preview-lod.png' if LOD else 'art-preview.png'));output.parent.mkdir(exist_ok=True)
 scene.render.filepath=str(output);bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'build/art-preview.blend'));bpy.ops.render.render(write_still=True)

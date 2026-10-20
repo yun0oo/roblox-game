@@ -52,7 +52,7 @@ function Visuals.Animal(parent, spec, frame, scale, title)
     scale = scale or 1
     local modules = game:GetService("ReplicatedStorage"):WaitForChild("Modules")
     local art = require(modules.ArtData)
-    local key = ({ hammerhead = "shark", orca = "whale", narwhal = "whale", squid = "octopus", round = "fish" })[spec.Style] or spec.Style
+    local key = spec.Art or ({ hammerhead = "shark", orca = "whale", narwhal = "whale", squid = "octopus", round = "fish" })[spec.Style] or spec.Style
     if not art[key] then key = "fish" end
     local color = Visuals.Color(spec.Color)
     local bounds = art[key].Full.Bounds

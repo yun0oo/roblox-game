@@ -52,7 +52,7 @@ function Merchants.Build(world, config, visuals)
         visuals.Label(badge, spec.Icon .. "\nACHETER / AMÉLIORER", Color3.new(1, 1, 1), 0.6, 65)
         local prompt = Instance.new("ProximityPrompt"); prompt.ActionText = "Voir la boutique"; prompt.ObjectText = spec.Name .. " · " .. config.Upgrades[key].Name
         prompt.MaxActivationDistance = config.MerchantDistance; prompt.RequiresLineOfSight = false; prompt.HoldDuration = 0; prompt.Parent = sign
-        world.Merchants[key] = { Model = stall, Position = sign.Position, Prompt = prompt, Key = key }
+        world.Merchants[key] = { Model = stall, Arrival = (frame * CFrame.new(0, 3.5, -10)).Position, Position = sign.Position, Prompt = prompt, Key = key }
     end
 end
 

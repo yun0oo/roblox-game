@@ -31,6 +31,11 @@ function Engine.new()
     CF.lookAt = function(pos) return CF.new(pos) end
     CF.fromMatrix = function(pos) return CF.new(pos) end
     frameMeta.__mul = function(a, b) return CF.new(a.Position + b.Position) end
+    frameMeta.__index = function(value, key)
+        if key == "Rotation" then return CF.new() end
+        if key == "Lerp" then return function(_, other, t) return CF.new(value.Position:Lerp(other.Position, t)) end end
+        if key == "Inverse" then return function() return CF.new(-value.Position) end end
+    end
     e.CFrame = CF
     local colors = {}
     function colors:Lerp() return self end
@@ -54,6 +59,7 @@ function Engine.new()
         for key, value in pairs(self._props) do if key ~= "Parent" then copy._props[key] = value end end
         return copy
     end
+    function methods:IsA(class) return self.ClassName == class or (class == "BasePart" and (self.ClassName == "Part" or self.ClassName == "WedgePart")) end
     function methods:GetChildren() return table.clone(self._children) end
     function methods:GetDescendants()
         local result = {}
@@ -128,10 +134,10 @@ function Engine.new()
     e.ReplicatedStorage = instance("ReplicatedStorage")
     local modules = instance("Folder"); modules.Name = "Modules"; modules.Parent = e.ReplicatedStorage
     local server = instance("Folder")
-    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer", "EquipmentVisuals" }) do
+    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer", "EquipmentVisuals", "Reef" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = modules
     end
-    for _, name in ipairs({ "DataSystem", "World", "Ship", "Merchants", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do
+    for _, name in ipairs({ "DataSystem", "World", "Ship", "Merchants", "Laboratory", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = server
     end
     e.Script = instance("Script"); e.Script.Parent = server

@@ -75,3 +75,14 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 - Mesurer FPS/mémoire avec huit joueurs, aquariums pleins, six boss et 36 œufs. Vérifier la distance d'affichage, le chargement progressif et la destruction des modèles devenus lointains.
 
 N'annoncer le gameplay natif et la qualité graphique validés qu'après ces essais. Ajuster l'économie et les performances à partir de sessions réelles avant une publication publique.
+
+## Récif, cuves et ordinateurs — nouvelle version
+
+- Au premier palier, vérifier la suppression des dalles et du cadre carré, les terrasses ovales, les trois formes de corail et le passage libre. Contrôler les collisions en nageant entre les récifs.
+- Comparer les modèles Quaternius : poisson-clown rayé, papillon, globe, lune, raie, espadon, dauphin, baleine et six boss. Vérifier leur orientation, leurs yeux et leurs dents, dans le rendu natif et dans le secours sans API de maillage.
+- Déposer les 24 œufs de plusieurs raretés : ils restent dans la cuve d'incubation séparée sans dépasser les vitres. Les poissons ne doivent apparaître que dans l'aquarium principal, après l'échéance.
+- E à son ordinateur : menu des sept destinations, téléportation devant le bon marchand et ouverture de sa spécialité. Contrôler l'absence de débit, la collision à l'arrivée et l'acceptation par le contrôle de déplacement serveur.
+- Refuser le même transfert depuis l'exploration, depuis l'ordinateur d'un autre joueur, avec des coordonnées envoyées à la place d'une clé et pendant le cooldown.
+- R6 et R15 : nager horizontalement, monter/descendre, rester immobile, viser au harpon et tourner en Shift. La nage ne doit plus redémarrer à chaque image. Observer aussi le deuxième joueur.
+- Osciller près de la surface : pas d'alternance rapide des poses. Remonter l'échelle, marcher sur le pont, mourir et réapparaître : vérifier la restauration de la marche et des joints.
+- Tester huit clients avec aquariums pleins, cuves pleines et coraux visibles ; mesurer FPS/mémoire et vérifier le budget de détails. Ces essais natifs restent nécessaires avant publication.

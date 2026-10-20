@@ -35,6 +35,7 @@ function World.Build(config, visuals)
     for _, x in ipairs({ -445, 445 }) do solid(self.Map, "Falaise", Vector3.new(25, oceanHeight, 920), Vector3.new(x, oceanCenter, 0), rock) end
     for _, z in ipairs({ -445, 445 }) do solid(self.Map, "Falaise", Vector3.new(920, oceanHeight, 25), Vector3.new(0, oceanCenter, z), rock) end
     solid(self.Map, "Fond", Vector3.new(920, 20, 920), Vector3.new(0, oceanBottom, 0), rock)
+    local reef = require(game:GetService("ReplicatedStorage").Modules.Reef)
     local rng = Random.new(41871)
     for _, floor in ipairs(config.Floors) do
         if floor.Id > config.ActiveFloors then continue end
@@ -43,15 +44,26 @@ function World.Build(config, visuals)
         local folder = Instance.new("Folder"); folder.Name = floor.Id .. "_" .. floor.ShortName; folder.Parent = self.Floors
         local color = visuals.Color(floor.Color)
         -- The central 150-stud shaft stays open between the active floors.
-        if floor.Id < config.ActiveFloors then
+        if floor.Id > 1 and floor.Id < config.ActiveFloors then
             solid(folder, "Plateau ouest", Vector3.new(355, 12, 860), Vector3.new(-252.5, floor.Bottom, 0), rock)
             solid(folder, "Plateau est", Vector3.new(355, 12, 860), Vector3.new(252.5, floor.Bottom, 0), rock)
             solid(folder, "Plateau nord", Vector3.new(150, 12, 355), Vector3.new(0, floor.Bottom, -252.5), rock)
             solid(folder, "Plateau sud", Vector3.new(150, 12, 355), Vector3.new(0, floor.Bottom, 252.5), rock)
         end
-        for side = -1, 1, 2 do
-            visuals.Part(folder, "Guide de descente", Vector3.new(2, 2, 150), CFrame.new(side * 75, floor.Bottom + 8, 0), color, Enum.Material.Neon)
-            visuals.Part(folder, "Guide de descente", Vector3.new(150, 2, 2), CFrame.new(0, floor.Bottom + 8, side * 75), color, Enum.Material.Neon)
+        if floor.Id == 1 then
+            -- Organic sand/rock terraces replace the large rectangular slab and
+            -- neon square. A clear 170-stud central passage remains open.
+            for i = 1, 14 do
+                local angle = i * math.pi * 2 / 14
+                local radius = 210 + math.sin(i * 2.7) * 55
+                local shelf = visuals.Part(folder, "Récif de sable naturel", Vector3.new(125, 25 + i % 3 * 6, 102), CFrame.new(math.cos(angle) * radius, floor.Bottom - 4, math.sin(angle) * radius) * CFrame.Angles(0, angle, 0.05), Color3.fromRGB(229, 208, 158), Enum.Material.Sand, Enum.PartType.Ball)
+                shelf.CanCollide = true; shelf.CanQuery = true
+            end
+        end
+        for i = 1, 8 do
+            local angle = i * math.pi / 4
+            local p = Vector3.new(math.cos(angle) * 85, floor.Bottom + 18, math.sin(angle) * 85)
+            visuals.Part(folder, "Balise de descente", Vector3.new(1.5, 4, 1.5), CFrame.new(p), color, Enum.Material.Neon, Enum.PartType.Ball)
         end
         local title = visuals.Part(folder, "Signal", Vector3.new(1, 1, 1), CFrame.new(0, floor.Top - 45, -82), color)
         title.Transparency = 1
@@ -72,18 +84,13 @@ function World.Build(config, visuals)
         table.insert(self.Stations, stationPos)
         for _ = 1, 36 do
             local angle = rng:NextNumber(0, math.pi * 2)
-            local radius = rng:NextNumber(100, 410)
+            local radius = rng:NextNumber(floor.Id == 1 and 150 or 100, floor.Id == 1 and 310 or 410)
             local pos = Vector3.new(math.cos(angle) * radius, floor.Bottom + 13, math.sin(angle) * radius)
             local stone = visuals.Part(folder, "Roche", Vector3.new(rng:NextNumber(8, 28), rng:NextNumber(9, 24), rng:NextNumber(8, 25)), CFrame.new(pos), rock:Lerp(color, 0.18), Enum.Material.Rock, Enum.PartType.Ball)
             stone.CanCollide = true; stone.CanQuery = true
             if floor.Id == 1 then
-                local coralColor = rng:NextNumber() < 0.5 and Color3.fromRGB(249, 124, 143) or Color3.fromRGB(244, 192, 110)
-                for branch = 1, 3 do
-                    local a = pos + Vector3.new(branch * 2 - 4, 6, 0)
-                    local b = a + Vector3.new(rng:NextNumber(-5, 5), rng:NextNumber(8, 18), rng:NextNumber(-4, 4))
-                    visuals.Rod(folder, "Corail", a, b, 2, coralColor)
-                    visuals.Part(folder, "Corail", Vector3.new(5, 5, 5), CFrame.new(b), coralColor, nil, Enum.PartType.Ball)
-                end
+                reef.Coral(folder, pos + Vector3.new(0, 6, 0), rng:NextNumber(1.6, 3), rng:NextInteger(1, 6), visuals)
+                reef.Grass(folder, pos + Vector3.new(8, 0, 3), rng:NextNumber(1.3, 2.4), visuals)
             elseif floor.Id >= 3 then
                 visuals.Part(folder, "Cristal", Vector3.new(3, 16, 3), CFrame.new(pos + Vector3.new(0, 14, 0)) * CFrame.Angles(0.15, 0, 0.3), color, Enum.Material.Neon)
                 if floor.Id == 4 then
@@ -224,7 +231,7 @@ function World:RefreshAnimals(state)
         local grade, displaySpec = "Normal", table.clone(spec)
         for _, variant in ipairs({ "Gold", "Diamond", "Mythic" }) do if ((state.Profile.Variants[entry.Id] or {})[variant] or 0) > 0 then grade = variant end end
         if grade == "Gold" then displaySpec.Color = { 255, 204, 81 } elseif grade == "Diamond" then displaySpec.Color = { 166, 244, 255 } elseif grade == "Mythic" then displaySpec.Color = { 239, 133, 255 } end
-        local model = self.Visuals.Animal(base.Display, displaySpec, CFrame.new(position), 1.2, spec.Name .. " ×" .. entry.Count .. "\n" .. string.upper(grade) .. " · " .. spec.Income .. " gold/min")
+        local model = self.Visuals.Animal(base.Display, displaySpec, CFrame.new(position) * CFrame.Angles(0, math.pi, 0), 1.2, spec.Name .. " ×" .. entry.Count .. "\n" .. string.upper(grade) .. " · " .. spec.Income .. " gold/min")
         table.insert(base.Swimmers, { Model = model, Origin = position, Phase = i * 1.7 })
     end
     self:ApplyCustomization(state)
@@ -237,9 +244,9 @@ function World:RefreshIncubators(state)
     for _, egg in ipairs(state.Profile.Eggs) do
         if not egg.ReadyAt then continue end
         index += 1
-        local position = base.TankCenter + Vector3.new(((index - 1) % 6 - 2.5) * 7, -9, math.floor((index - 1) / 6) * 6 - 10)
+        local position = base.IncubationCenter + Vector3.new(((index - 1) % 4 - 1.5) * 6, -2.5 + math.floor((index - 1) / 12) * 3.5, (math.floor((index - 1) / 4) % 3 - 1) * 3.6)
         local part = self.Visuals.Egg(base.EggDisplay, egg.Name, self.Config.Rarities[egg.Rarity], CFrame.new(position))
-        part.Size *= math.min(0.36, 4 / part.Size.Y); part.CanQuery = false
+        part.Size *= math.min(0.36, 2.8 / part.Size.Y); part.CanQuery = false
         local label = self.Visuals.Label(part, "INCUBATION", self.Visuals.Color(self.Config.Rarities[egg.Rarity].Color), 3, 100)
         table.insert(base.Incubators, { Egg = egg, Label = label })
     end
@@ -249,7 +256,7 @@ function World:StepAquariums(now)
     for _, base in ipairs(self.Bases) do
         for _, swimmer in ipairs(base.Swimmers) do
             local phase = now * 0.4 + swimmer.Phase
-            swimmer.Model:PivotTo(CFrame.new(swimmer.Origin + Vector3.new(math.sin(phase) * 2.5, math.cos(phase) * 0.7, math.cos(phase) * 1.5)) * CFrame.Angles(0, math.cos(phase) * 0.4, 0))
+            swimmer.Model:PivotTo(CFrame.new(swimmer.Origin + Vector3.new(math.sin(phase) * 2.5, math.cos(phase) * 0.7, math.cos(phase) * 1.5)) * CFrame.Angles(0, math.pi + math.cos(phase) * 0.4, 0))
         end
         for _, item in ipairs(base.Incubators) do
             local remaining = math.max(0, item.Egg.ReadyAt - os.time())
@@ -273,6 +280,8 @@ function World:ApplyCustomization(state)
     base.Label.TextColor3 = color
     base.Label.Text = state.Player.DisplayName .. "\n@" .. state.Player.Name
     base.TierLabel.Text = self.Config.BaseUpgrades[profile.BaseLevel or 1].Name:upper() .. " · NIVEAU " .. (profile.BaseLevel or 1)
+    local nextTier = self.Config.BaseUpgrades[(profile.BaseLevel or 1) + 1]
+    if base.UpgradeStatus then base.UpgradeStatus.Text = "GALERIE · NIVEAU " .. (profile.BaseLevel or 1) .. "\n" .. (nextTier and (nextTier.Cost .. " GOLD · [F] AMÉLIORER") or "NIVEAU MAXIMUM") end
     local old = base.Model:FindFirstChild("Personnalisation")
     if old then old:Destroy() end
     local folder = Instance.new("Folder"); folder.Name = "Personnalisation"; folder.Parent = base.Model

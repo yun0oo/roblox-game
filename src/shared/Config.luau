@@ -253,4 +253,24 @@ for index, floor in ipairs(Config.Floors) do
     floor.AttackRange = 17 + index * 3
     floor.AttackCooldown = 1.6 - index * 0.1
 end
+-- Distinct, bundled Quaternius sculpts. These are CC0 models, not scripts.
+local marineArt = {
+    clownfish = "clownfish", butterflyfish = "butterflyfish", pufferfish = "puffer", sunfish = "sunfish",
+    shark = "shark", barracuda = "bluetang", swordfish = "swordfish", manta = "manta_ray", stingray = "manta_ray",
+    hammerhead = "goblinshark", tiger_shark = "shark", great_white = "shark", marlin = "swordfish", grouper = "coralgrouper",
+    beluga = "whale", sperm_whale = "whale", orca = "whale", narwhal = "dolphin",
+}
+for id, spec in pairs(Config.Animals) do
+    if marineArt[id] then spec.Art = "q_" .. marineArt[id]
+    elseif spec.Style == "fish" then spec.Art = "q_bluetang"
+    elseif spec.Style == "shark" then spec.Art = "q_goblinshark"
+    elseif spec.Style == "round" then spec.Art = "q_anglerfish"
+    elseif spec.Style == "whale" or spec.Style == "orca" then spec.Art = "q_whale"
+    elseif spec.Style == "dragon" or spec.Style == "leviathan" then spec.Art = "q_leviathan"
+    elseif spec.Style == "ray" then spec.Art = "q_manta_ray" end
+end
+for index, floor in ipairs(Config.Floors) do
+    floor.BossStyle = ({ "q_piranha", "q_goblinshark", "q_manta_ray", "q_anglerfish", "q_shark", "q_leviathan" })[index]
+    floor.BossName = ({ "TYRAN DU RÉCIF", "REQUIN GOBELIN GÉANT", "RAIE TITAN D’ATLANTIS", "BAUDROIE DES ABYSSES", "MÉGALODON ANCESTRAL", "LÉVIATHAN PRIMORDIAL" })[index]
+end
 return Config

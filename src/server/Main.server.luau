@@ -146,7 +146,7 @@ local function start()
             merchants[key] = merchant.Position
             if Merchants.Near(ctx.World, Config, key, state.LastPosition) then nearMerchant = key end
         end
-        return { NearMerchant = nearMerchant, Merchants = merchants, NearBaseSign = (state.LastPosition - state.Base.BaseSign.Position).Magnitude <= 13, BaseSignPosition = state.Base.BaseSign.Position, Money = math.floor(profile.Money), Gold = math.floor(profile.Money), ServerTime = os.time(), Income = Rules.Income(profile, Config), Oxygen = state.Oxygen,
+        return { ConsolePosition = state.Base.Bench.Position, NearConsole = (state.LastPosition - state.Base.Bench.Position).Magnitude <= 13, NearMerchant = nearMerchant, Merchants = merchants, NearBaseSign = (state.LastPosition - state.Base.BaseSign.Position).Magnitude <= 13, BaseSignPosition = state.Base.BaseSign.Position, Money = math.floor(profile.Money), Gold = math.floor(profile.Money), ServerTime = os.time(), Income = Rules.Income(profile, Config), Oxygen = state.Oxygen,
             MaxOxygen = Rules.MaxOxygen(profile), Health = select(2, ctx:Root(state)) and select(2, ctx:Root(state)).Health or 0,
             Depth = math.max(0, math.floor(Config.WaterTop - state.LastPosition.Y)), Floor = state.Floor,
             Equipment = profile.Equipment, Animals = profile.Animals, Discovered = profile.Discovered, Eggs = inventory, Carrying = egg and { Id = egg.Id, Name = egg.Name, Rarity = egg.Rarity },
@@ -233,7 +233,7 @@ local function start()
         end)
         base.UpgradePrompt.Triggered:Connect(function(player)
             local state = ctx.States[player]
-            if state and base.OwnerId == player.UserId and ctx:Validate(state) and (state.LastPosition - base.Bench.Position).Magnitude <= 13 then ctx.FX:FireClient(player, "OpenUpgrades", {}) end
+            if state and base.OwnerId == player.UserId and ctx:Validate(state) and (state.LastPosition - base.Bench.Position).Magnitude <= 13 then ctx.FX:FireClient(player, "OpenTerminal", {}) end
         end)
     end
 
@@ -251,7 +251,19 @@ local function start()
         state.Tokens = math.min(18, state.Tokens + (now - state.TokenTime) * 10); state.TokenTime = now
         if state.Tokens < 1 then return end
         state.Tokens -= 1
-        if action == "UpgradeBase" then upgradeBase(player)
+        if action == "TeleportMerchant" then
+            if type(payload) ~= "string" or not ctx.World.Merchants[payload] or not ctx:Validate(state) then return end
+            local base = ctx.World:SafeBase(state.LastPosition)
+            if not base or base.OwnerId ~= player.UserId or (state.LastPosition - state.Base.Bench.Position).Magnitude > 13 then
+                ctx:Notify(player, "Utilisez l’ordinateur dans votre propre galerie.", "Warning"); return
+            end
+            if now < (state.NextMerchantTeleport or 0) then return end
+            if state.Carrying and not ctx.Eggs:Secure(state) then return end
+            state.NextMerchantTeleport = now + 4
+            ctx:Teleport(state, ctx.World.Merchants[payload].Arrival)
+            ctx.Snapshot:FireClient(player, makeSnapshot(state))
+            ctx.FX:FireClient(player, "OpenShop", { Key = payload })
+        elseif action == "UpgradeBase" then upgradeBase(player)
         elseif action == "Fire" then ctx.Harpoons:Fire(state, payload)
         elseif action == "Hatch" then
             if now < (state.NextHatch or 0) then return end

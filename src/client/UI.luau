@@ -233,6 +233,19 @@ function UI:RenderPanel()
                 label(row, description, 10, C.Teal, { Position = UDim2.fromOffset(114, 98), Size = UDim2.new(1, -130, 0, 32), ZIndex = 24 })
             end
         end
+    elseif self.Tab == "Téléportation" then
+        self.Title.Text = "ORDINATEUR · TÉLÉPORTATION"
+        paragraph("Choisissez votre marchand. Le transfert depuis votre ordinateur est gratuit et vous dépose devant son stand.", 74, C.Teal)
+        for _, key in ipairs(config.UpgradeOrder) do
+            local merchant = config.Merchants[key]
+            local row = self:Row(96)
+            label(row, merchant.Icon .. " " .. merchant.Name .. "\n" .. config.Upgrades[key].Name, 17, C.White, { Position = UDim2.fromOffset(18, 10), Size = UDim2.new(1, -220, 1, -20), ZIndex = 24 })
+            local enabled = state.OwnBase and state.NearConsole
+            button(row, enabled and "SE TÉLÉPORTER" or "REJOINDRE LE PC", { Position = UDim2.new(1, -192, 0, 25), Size = UDim2.fromOffset(172, 44), BackgroundColor3 = self.Ctx.Visuals.Color(merchant.Color), ZIndex = 24 }, function()
+                if enabled then self.Ctx.Action:FireServer("TeleportMerchant", key)
+                else self.Ctx.Navigate(state.ConsolePosition, "ORDINATEUR DE VOTRE GALERIE"); self:Open(nil) end
+            end)
+        end
     elseif self.Tab == "Équipement" then
         self.Title.Text = "LE MARCHÉ DES PLONGEURS"
         paragraph("7 marchands sur le pont · Choisissez un équipement.\nL’achat se fait auprès du spécialiste. Votre équipement apparaît sur votre personnage dès l’amélioration.", 76, C.White)
@@ -391,6 +404,7 @@ function UI:Update(state)
     elseif self.Tab == "Équipement" then
         for _, key in ipairs(self.Ctx.Config.UpgradeOrder) do local price = self.Ctx.Rules.UpgradeCost(self.Ctx.Config, key, state.Equipment[key]); signature ..= state.Equipment[key] .. tostring(price and state.Money >= price) end
         signature ..= tostring(state.NearMerchant)
+    elseif self.Tab == "Téléportation" then signature ..= tostring(state.NearConsole) .. tostring(state.OwnBase)
     elseif self.Tab == "Prestige" then signature ..= state.Prestige .. tostring(state.Money >= state.PrestigeCost) .. state.Equipment.Suit .. tostring(state.OwnBase)
     elseif self.Tab == "Habitat" then for id in pairs(self.Ctx.Config.Decorations) do signature ..= id .. tostring(state.OwnedDecor[id]) end; signature ..= state.Palette .. tostring(state.OwnBase) .. tostring(state.NearBaseSign) .. state.BaseLevel .. tostring(state.BaseUpgradeCost and state.Money >= state.BaseUpgradeCost)
     elseif self.Tab == "Classement" then signature ..= tostring(os.clock()) end

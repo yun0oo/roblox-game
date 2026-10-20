@@ -13,6 +13,126 @@
       "license": "CC0-1.0",
       "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/blaster-b.glb",
       "sha256": "7df4457ed864bc0714fc33059ac56d198304092093b1e78dc407b6c829945a4f"
+    },
+    {
+      "file": "Quaternius_Clownfish.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Clownfish.glb",
+      "sha256": "d1d0b1f83848337299ef163b7ec5b207b5c34e3933da1367000e1dcd6d856bf1",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_ButterflyFish.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/ButterflyFish.glb",
+      "sha256": "d43e7f55ae3fff23dd48c09661382836b1498f773c561f486d9a0277d0590853",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Puffer.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Puffer.glb",
+      "sha256": "6495c2e5197323838449587677b0a29f1301677c259d875efb968701f0eeded7",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Sunfish.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Sunfish.glb",
+      "sha256": "b5d2b005dd2dd2c6d3c9f544cbafc700b18818a84f75be871ef41c2556f92530",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Swordfish.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Swordfish.glb",
+      "sha256": "db7771638680c54c012fda0de84e2ab264bcb5a50e06d8b811ffcc30b75c19fa",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_GoblinShark.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/GoblinShark.glb",
+      "sha256": "9a734db6ca0a262e661944ad5f3fc1aad7c71d8d0da3fbe4a92c0bb648a9cbe0",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Anglerfish.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Anglerfish.glb",
+      "sha256": "cf839231b3e84a88ca9b57163c9e67183ba8ff12ef3823638137ddfda37434c0",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Piranha.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Piranha.glb",
+      "sha256": "bca92fec1795ca802faa66c381d897e03005b738b7337f9e7b1d7c1d02551bce",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_CoralGrouper.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/CoralGrouper.glb",
+      "sha256": "b569df4b15d5a7444888b57718a653ada9f5c5e00c80f8879ec7669d2adf8c60",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_BlueTang.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/BlueTang.glb",
+      "sha256": "c1572e188ffa73ed61b2512acf1ee2231b83dc18b7f4d8b326edac320dfcbd93",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Lionfish.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Lionfish.glb",
+      "sha256": "a5f3a720efcec68d34afd1677b6e30a7d7577aeb020ace127f561ad3527ab2e2",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Shark.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/cute_fish_pack/Shark.glb",
+      "sha256": "c6a8b6e3baefd2a8e324e11c449366ca14d1be152c65643d2347baf50e243ba6",
+      "pack": "cute_fish_pack"
+    },
+    {
+      "file": "Quaternius_Whale.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/fish_pack/Whale.glb",
+      "sha256": "153d6814c67039378fce22d4c347ed35d7febf2bedac866de91cf9b5dd7945f2",
+      "pack": "fish_pack"
+    },
+    {
+      "file": "Quaternius_Manta_ray.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/fish_pack/Manta_ray.glb",
+      "sha256": "32597a7752bac30dfceec15d2702e1fe4065f1f5cccc7ddd8e8196cb6fc2d51b",
+      "pack": "fish_pack"
+    },
+    {
+      "file": "Quaternius_Dolphin.glb",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/fish_pack/Dolphin.glb",
+      "sha256": "3c8bdc0440b5585c15c753a6b6a07f57a80ce3f33f58333c804069c714dd9993",
+      "pack": "fish_pack"
     }
   ]
 }

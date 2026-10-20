@@ -22,6 +22,9 @@ function GuardianSystem:Spawn(egg, floor)
         { Name = floor.BossName, Style = floor.BossStyle, Color = floor.Color },
         CFrame.new(home), floor.GuardianSize, floor.BossName)
     model.PrimaryPart.CanQuery = true
+    if floor.BossStyle == "q_anglerfish" then
+        local glow = Instance.new("PointLight"); glow.Color = Color3.fromRGB(73, 234, 255); glow.Brightness = 1.4; glow.Range = 45; glow.Parent = model.PrimaryPart
+    end
     model:SetAttribute("Guardian", true); model:SetAttribute("FloorId", floor.Id)
     model:SetAttribute("MythicSkin", floor.BossStyle); model:SetAttribute("BaseSpeed", floor.GuardianSpeed)
     local record = { Model = model, Home = home, Floor = floor, Health = floor.BossHealth,

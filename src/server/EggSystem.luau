@@ -149,7 +149,7 @@ function EggSystem:FinishIncubation(state, id)
     if not animalId then return false end
     self.Ctx.World:RefreshAnimals(state)
     self.Ctx.World:RefreshIncubators(state)
-    self.Ctx.FX:FireClient(state.Player, "Hatch", { AnimalId = animalId, Position = state.Base.TankCenter })
+    self.Ctx.FX:FireClient(state.Player, "Hatch", { AnimalId = animalId, Position = state.Base.IncubationCenter or state.Base.TankCenter })
     self.Ctx:Notify(state.Player, "🎉 NOUVEL ANIMAL DANS L'AQUARIUM !\n" .. self.Ctx.Config.Animals[animalId].Name .. " produit des gold !", "Success")
     return true
 end

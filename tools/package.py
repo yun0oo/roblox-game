@@ -11,7 +11,7 @@ if not source.is_file() or not source.read_bytes().startswith(b'<roblox!'):
 downloads = ROOT / 'downloads'
 downloads.mkdir(exist_ok=True)
 shutil.copyfile(source, downloads / source.name)
-instructions = '''UNDERWATER EGG — NÉRÉIDE · MARCHANDS, BOSS & INVENTAIRE
+instructions = '''UNDERWATER EGG — NÉRÉIDE · RÉCIFS, CUVE & MODÈLES MARINS
 
 1. Extraire ce ZIP dans un nouveau dossier.
 2. Ouvrir le fichier UnderwaterEgg.rbxl avec Roblox Studio sur Windows/macOS.
@@ -26,11 +26,13 @@ instructions = '''UNDERWATER EGG — NÉRÉIDE · MARCHANDS, BOSS & INVENTAIRE
    Un harpon peut faire tomber cet œuf pour permettre son vol.
 7. Rejoindre sa propre galerie sécurise définitivement l’œuf.
    Déposer ensuite l’œuf de l’inventaire au terminal devant
-   l'aquarium avec E, ou utiliser Collection > Déposer.
+   la cuve vitrée avec E, ou utiliser Collection > Déposer.
+   Les œufs incubent dans leur cuve ; les animaux rejoignent le grand aquarium.
 8. Attendre l'éclosion : l'animal nage dans l'aquarium et produit des gold.
    Dépenser ces gold chez les 7 marchands spécialisés sur le pont.
    E à un stand ouvre sa boutique : prix et effets avant achat.
-   Le menu Équipement peut vous guider jusqu’au bon marchand.
+   E à votre ordinateur ouvre les destinations : choisissez un marchand
+   pour être téléporté devant son stand. Le transfert est gratuit.
 9. F à la pancarte dorée de sa galerie améliore la base et l’aquarium.
    Cette pancarte est séparée du dépôt des œufs.
 
@@ -54,7 +56,10 @@ ou chez un marchand pour sa boutique. F à la pancarte améliore la base.
 Pour conserver la progression : publier une expérience privée, puis autoriser
 l'accès Studio aux services API dans les paramètres de l'expérience.
 
-Nouveautés : 7 marchands, boutique avec aperçu 3D et comparaison des niveaux,
+Nouveautés : 15 modèles marins Quaternius CC0 intégrés, nouveaux boss,
+coraux ramifiés/gorgones/plateaux, récif sans la dalle ni le carré central,
+cuve à œufs séparée, ordinateur de téléportation et nage R6/R15 retravaillée.
+7 marchands, boutique avec aperçu 3D et comparaison des niveaux,
 pancarte de base séparée, équipements visibles sur le personnage, style Roblox
 plus coloré, aquariums lumineux, œufs géants et un seul boss par profondeur.
 Le harpon vole les œufs NON SÉCURISÉS : le tir les fait tomber, puis E les

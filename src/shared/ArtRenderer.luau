@@ -5,9 +5,14 @@ local data = require(game:GetService("ReplicatedStorage"):WaitForChild("Modules"
 local ArtRenderer = {}
 local templates = {}
 local nativeAvailable = true
+local variantTints = { Color3.fromRGB(255, 204, 81), Color3.fromRGB(166, 244, 255), Color3.fromRGB(239, 133, 255) }
 
 local function color(rgb, tint, kind)
     local base = Color3.fromRGB(rgb[1], rgb[2], rgb[3])
+    if kind == "licensed" then
+        for _, variant in ipairs(variantTints) do if tint == variant then return base:Lerp(tint, 0.65) end end
+        return base
+    end
     if kind == "weapon" then
         if rgb[1] > rgb[2] * 1.15 and rgb[2] > rgb[3] * 1.1 then return Color3.fromRGB(36, 165, 207) end
         return base

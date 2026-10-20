@@ -59,6 +59,12 @@ check(#sent == 2 and sent[2][1] == "UpgradeBase", "Base upgrade button submits i
 state.OwnBase = false
 shop:RenderPanel(); click("AMÉLIORER LA BASE · 600 GOLD")
 check(#sent == 2, "Visiting another base does not enable base purchases")
+state.OwnBase = true; state.NearConsole = true; state.ConsolePosition = Vector3.new(1, 117, 32)
+shop:Open("Téléportation"); click("SE TÉLÉPORTER")
+check(sent[#sent][1] == "TeleportMerchant" and type(sent[#sent][2]) == "string", "The computer sends a merchant key rather than client-selected coordinates")
+local before = #sent
+state.NearConsole = false; shop:RenderPanel(); click("REJOINDRE LE PC")
+check(#sent == before and navigation.Position == state.ConsolePosition, "Remote computer browsing gives directions without teleporting")
 local input = { MouseBehavior = "camera-right-click", MouseIconEnabled = true }
 local aim = factories.AimController().new(input)
 local humanoid = { GetState = function() return "Swimming" end }

@@ -14,6 +14,8 @@ local Config = require(modules.Config)
 local Rules = require(modules.Rules)
 local Visuals = require(modules.Visuals)
 local UI = require(script.Parent.UI)
+local SwimController = require(script.Parent.SwimController)
+local swimmer
 local aim = require(script.Parent.AimController).new(UserInputService)
 local controls
 task.spawn(function()
@@ -64,6 +66,7 @@ remotes.Snapshot.OnClientEvent:Connect(function(state) ui:Update(state) end)
 remotes.Notice.OnClientEvent:Connect(function(message, tone) ui:Toast(message, tone) end)
 
 local function attach(newCharacter)
+    if velocity then velocity.Enabled = false end
     character = newCharacter
     root = newCharacter:WaitForChild("HumanoidRootPart")
     humanoid = newCharacter:WaitForChild("Humanoid")
@@ -75,6 +78,7 @@ local function attach(newCharacter)
     velocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
     velocity.RelativeTo = Enum.ActuatorRelativeTo.World; velocity.ForceLimitsEnabled = false
     velocity.VectorVelocity = Vector3.zero; velocity.Parent = root
+    swimmer = SwimController.new(humanoid, velocity, Config.WaterTop)
     lampAttachment = Instance.new("Attachment"); lampAttachment.Name = "DivingLamp"; lampAttachment.Parent = root
     light = Instance.new("SpotLight"); light.Color = Color3.fromRGB(194, 246, 238)
     light.Angle = 85; light.Brightness = 2.4; light.Range = 24; light.Shadows = true; light.Parent = lampAttachment
@@ -108,7 +112,8 @@ local function localSound(position, soundId, volume)
 end
 
 remotes.FX.OnClientEvent:Connect(function(kind, data)
-    if kind == "OpenShop" then ui:OpenShop(data.Key)
+    if kind == "OpenTerminal" then ui:Open("Téléportation")
+    elseif kind == "OpenShop" then ui:OpenShop(data.Key)
     elseif kind == "OpenUpgrades" then ui:Open("Équipement")
     elseif kind == "OpenBase" then ui:Open("Habitat")
     elseif kind == "Shot" then
@@ -181,14 +186,8 @@ RunService.RenderStepped:Connect(function(dt)
     local speed = player:GetAttribute("SwimSpeed") or 20
     local current = Vector3.new(player:GetAttribute("CurrentX") or 0, 0, player:GetAttribute("CurrentZ") or 0)
     movement = movement:Lerp(move * speed + current, 1 - math.exp(-dt * 9))
-    local underwater = root.Position.Y < Config.WaterTop + 1 and humanoid:GetState() ~= Enum.HumanoidStateType.Climbing
-    velocity.Enabled = underwater
-    if underwater then
-        velocity.VectorVelocity = movement
-        humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
-    else
-        movement = Vector3.zero
-    end
+    local underwater = swimmer:Step(root.Position.Y, movement, humanoid.Health > 0)
+    if not underwater then movement = Vector3.zero end
     light.Enabled = underwater
     lampAttachment.CFrame = root.CFrame:ToObjectSpace(CFrame.lookAt(root.Position, root.Position + camera.CFrame.LookVector))
     local lampLevel = player:GetAttribute("LampLevel") or 1

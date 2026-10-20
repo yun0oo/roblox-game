@@ -107,19 +107,14 @@ function Ship.Build(world, config, visuals)
         for side = -1, 1, 2 do
             visuals.Part(model, "Filet de laiton", Vector3.new(88, 0.15, 0.3), CFrame.new(center + Vector3.new(0, -9.5, side * 49)), brass, Enum.Material.Metal)
         end
-        local core = visuals.Part(model, "Dépôt des œufs", Vector3.new(9, 5, 5), CFrame.new(center + Vector3.new(0, -6, 22)), navy, Enum.Material.Metal)
-        visuals.Part(model, "Écran du dépôt", Vector3.new(7, 0.2, 3), core.CFrame * CFrame.new(0, 2.6, 0), teal, Enum.Material.Neon)
-        local prompt = Instance.new("ProximityPrompt"); prompt.ActionText = "Déposer un œuf"; prompt.ObjectText = "Aquarium personnel"
-        prompt.HoldDuration = 0.4; prompt.MaxActivationDistance = 12; prompt.RequiresLineOfSight = false; prompt.Parent = core
-        local bench = visuals.Part(model, "Guide du marché", Vector3.new(9, 3, 4), CFrame.new(center + Vector3.new(-29, -7, 31)), teal)
-        visuals.Label(bench, "← MARCHÉ DU PONT →\n7 MARCHANDS SPÉCIALISÉS", ivory, 4, 110)
-        local upgrade = Instance.new("ProximityPrompt"); upgrade.ActionText = "Trouver un marchand"; upgrade.ObjectText = "Marché des plongeurs"
-        upgrade.MaxActivationDistance = 12; upgrade.RequiresLineOfSight = false; upgrade.Parent = bench
+        local lab = require(script.Parent.Laboratory).Build(model, center, visuals)
+        local core, bench, prompt, upgrade = lab.Deposit, lab.Terminal, lab.HatchPrompt, lab.TerminalPrompt
         -- A separate, unmistakable upgrade board, away from the egg deposit.
         local signPos = center + Vector3.new(29, -3, 31)
         solid(visuals, model, "Pied de pancarte", Vector3.new(0.8, 7, 0.8), CFrame.new(signPos - Vector3.new(0, 3, 0)), teak)
         local baseSign = visuals.Part(model, "Pancarte amélioration", Vector3.new(14, 6, 0.65), CFrame.new(signPos), brass)
         visuals.Label(baseSign, "⬆ AMÉLIORER LA BASE\nAQUARIUM · REVENUS · DÉCORS", ivory, 2, 110)
+        local upgradeStatus = require(script.Parent.Laboratory).UpgradeBoard(model, baseSign, center, visuals)
         local upgradeBase = Instance.new("ProximityPrompt"); upgradeBase.ActionText = "Améliorer ma base"; upgradeBase.ObjectText = "Pancarte d’amélioration"
         upgradeBase.KeyboardKeyCode = Enum.KeyCode.F; upgradeBase.MaxActivationDistance = 12; upgradeBase.RequiresLineOfSight = false; upgradeBase.Parent = baseSign
         for side = -1, 1, 2 do
@@ -144,7 +139,7 @@ function Ship.Build(world, config, visuals)
         local tier = label:Clone(); tier.Name = "Niveau"; tier.Position = UDim2.fromScale(0, 0.86); tier.Size = UDim2.fromScale(1, 0.14)
         tier.TextSize = 19; tier.TextColor3 = brass; tier.Text = "AQUARIUM · NIVEAU 1"; tier.Parent = gui
         local base = { Model = model, Center = center, Spawn = center + Vector3.new(0, -6, 37), TankCenter = center + Vector3.new(0, 8, -10),
-            Core = core, Bench = bench, BaseSign = baseSign, HatchPrompt = prompt, UpgradePrompt = upgrade, BasePrompt = upgradeBase, Label = label, Avatar = portrait, TierLabel = tier,
+            UpgradeStatus = upgradeStatus, Lab = lab, IncubationCenter = lab.Center, Core = core, Bench = bench, BaseSign = baseSign, HatchPrompt = prompt, UpgradePrompt = upgrade, BasePrompt = upgradeBase, Label = label, Avatar = portrait, TierLabel = tier,
             Min = center + Vector3.new(-44, -16, -50), Max = center + Vector3.new(44, 80, 50),
             OwnerId = 0, Swimmers = {}, Incubators = {}, Level = 0 }
         table.insert(world.Bases, base)
@@ -182,12 +177,7 @@ function Ship.Aquarium(base, level, config, visuals)
     for side = -1, 1, 2 do
         local rockPos = center + Vector3.new(side * (width / 2 - 8), -height / 2 + 3, -depth / 2 + 5)
         visuals.Part(tank, "Roche de récif", Vector3.new(9, 5, 7), CFrame.new(rockPos), Color3.fromRGB(77, 154, 184), Enum.Material.Rock, Enum.PartType.Ball)
-        for branch = 1, 3 + level do
-            local start = rockPos + Vector3.new(branch - 3, 2, 0)
-            local top = start + Vector3.new(math.sin(branch) * 2, 3 + branch * 0.65, math.cos(branch) * 2)
-            visuals.Rod(tank, "Corail vivant", start, top, 0.5, side > 0 and Color3.fromRGB(255, 117, 156) or Color3.fromRGB(148, 106, 255))
-            visuals.Part(tank, "Polype", Vector3.one * 1.2, CFrame.new(top), Color3.fromRGB(233, 184, 163), nil, Enum.PartType.Ball)
-        end
+        require(game:GetService("ReplicatedStorage").Modules.Reef).Coral(tank, rockPos + Vector3.new(0, 2, 0), 0.65 + level * 0.035, side > 0 and 1 or 2, visuals)
     end
     for side = -1, 1, 2 do
         local air = visuals.Part(tank, "Diffuseur de bulles", Vector3.new(1, 0.3, depth - 4), CFrame.new(center + Vector3.new(side * (width / 2 - 3), -height / 2 + 1.6, 0)), ivory)
@@ -207,7 +197,7 @@ function Ship.Aquarium(base, level, config, visuals)
         end
     end
     base.Display = Instance.new("Folder"); base.Display.Name = "Animaux"; base.Display.Parent = tank
-    base.EggDisplay = Instance.new("Folder"); base.EggDisplay.Name = "Œufs en incubation"; base.EggDisplay.Parent = tank
+    base.EggDisplay = base.Lab.Display
     base.Level = level; base.Swimmers = {}; base.Incubators = {}
     base.TierLabel.Text = config.BaseUpgrades[level].Name:upper() .. " · NIVEAU " .. level
     tank:SetAttribute("BaseLevel", level)

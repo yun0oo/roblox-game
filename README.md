@@ -55,7 +55,7 @@ Un harpon valide fait tomber cet œuf : il réapparaît dans le monde et le prem
 
 L'arrivée dans **sa propre galerie** sécurise automatiquement l'œuf dans l'inventaire persistant et retire la surbrillance. Il devient définitivement protégé. Toute la zone du navire est sans interception ; visiter une autre galerie ne donne pas la propriété permanente de l'œuf. L'inventaire a 24 places ; s'il est plein, le ramassage laisse l'œuf dans le monde.
 
-**Un seul boss géant par profondeur** surveille tous les nids de sa zone : Tyran du récif, Kraken de l'épave, Scylla des ruines, Dragon des abysses, Charybde et Léviathan primordial. Il patrouille, repère les plongeurs dans tout le palier, poursuit et attaque. Sa santé, sa taille, ses dégâts et sa vitesse augmentent avec la profondeur. Ramasser, expirer ou renouveler un œuf ne supprime jamais le boss partagé. Un boss vaincu laisse un répit de 50 à 75 secondes avant de réapparaître.
+**Un seul boss géant par profondeur** surveille tous les nids de sa zone : Tyran du récif, Requin gobelin géant, Raie titan d’Atlantis, Baudroie des abysses, Mégalodon ancestral et Léviathan primordial. Il patrouille, repère les plongeurs dans tout le palier, poursuit et attaque. Sa santé, sa taille, ses dégâts et sa vitesse augmentent avec la profondeur. Ramasser, expirer ou renouveler un œuf ne supprime jamais le boss partagé. Un boss vaincu laisse un répit de 50 à 75 secondes avant de réapparaître.
 
 Le harpon tire un vrai projectile, avec corde, recul, sons, collision balayée, portée et cooldown validés côté serveur. Il combat les boss et permet de voler les œufs non sécurisés des autres joueurs, sans leur infliger de dégâts. Les œufs sécurisés restent toujours protégés. Le navire entier est une zone sans combat.
 
@@ -63,7 +63,7 @@ Tous les paliers restent accessibles sans niveau minimum bloquant. Les combinais
 
 ## Aquarium, collection et progression
 
-Déposer un œuf avec **E** au terminal devant son aquarium, ou **Inventaire → Déposer** dans sa galerie, lance l'incubation. L'œuf devient visible dans la cuve, puis l'animal apparaît automatiquement, même si le propriétaire explore ailleurs.
+Déposer un œuf avec **E** devant sa cuve d’incubation vitrée, séparée de l’aquarium des animaux, ou **Inventaire → Déposer** dans sa galerie, lance l'incubation. L'œuf devient visible dans la cuve à œufs, puis l’animal apparaît automatiquement dans l’aquarium, même si le propriétaire explore ailleurs.
 
 | Rareté | Incubation après dépôt | Aura |
 | --- | --- | --- |
@@ -83,7 +83,7 @@ Les échéances sont sauvegardées avec les œufs : une reconnexion ne remet pas
 - Prestige avec bonus permanents ; décorations et palettes de galerie ; six classements du serveur.
 - DataStore avec bail de session, sauvegarde périodique, départ et fermeture ; validation des actions et déplacements côté serveur.
 
-La direction graphique suit un style Roblox coloré : sols de galerie à tenons, clôtures en bois, silhouettes lisibles, yeux expressifs, navire bleu/blanc/or, stands rayés et aquariums lumineux. Certaines espèces partagent une silhouette et se distinguent par leur palette et leurs statistiques. Deux modèles CC0 de Microsoft et Kenney sont intégrés et adaptés ; les autres silhouettes et les accessoires sont originaux. Voir [les crédits](assets/CREDITS.md).
+La direction graphique suit un style Roblox coloré : sols de galerie à tenons, clôtures en bois, silhouettes lisibles, yeux expressifs, navire bleu/blanc/or, stands rayés et aquariums lumineux. Certaines espèces partagent une silhouette et se distinguent par leur palette et leurs statistiques. Dix-sept modèles sources CC0 de Microsoft, Kenney et Quaternius sont intégrés et adaptés ; quinze nouveaux modèles Quaternius donnent de véritables silhouettes distinctes aux poissons et aux boss. Les palettes sont adaptées au jeu ; certaines espèces partagent encore une silhouette. Les coraux, cuves et accessoires sont originaux. Voir [les crédits](assets/CREDITS.md).
 
 ## Commandes
 
@@ -127,3 +127,15 @@ Pour synchroniser localement avec le plugin Rojo de Studio : `.tools/bin/rojo se
 Le profil contient gold (champ historique `Money`), équipement, œufs sécurisés et échéances, animaux/variantes, bestiaire, recettes, prestige, XP, profondeur record, statistiques et personnalisation. Les sauvegardes existantes restent compatibles.
 
 Le prestige réinitialise les éléments annoncés dans l'interface après confirmation ; base, bestiaire découvert, recettes, statistiques, record et cosmétiques restent acquis. Aucun achat Robux ni outil d'administration distant n'est nécessaire. L'équilibrage économique et les performances à huit joueurs doivent être évalués dans Studio avant une publication publique.
+
+## Récif, laboratoire et nage
+
+La première profondeur utilise des terrasses de sable ovales, des coraux ramifiés, des gorgones, des coraux en plateaux et des algues. Les grandes dalles rectangulaires et le cadre lumineux carré ont été retirés de ce palier ; la descente centrale reste libre.
+
+Chaque galerie possède une **cuve d'incubation vitrée séparée** de l'aquarium : liquide, éclairage, coupelles, filtration et jusqu'à 24 œufs en incubation. Le résultat rejoint automatiquement l'aquarium. Le poste d'amélioration affiche son niveau et le prochain prix.
+
+**E à l'ordinateur** de sa galerie ouvre sept destinations. Choisir un marchand téléporte gratuitement devant son stand et ouvre sa boutique. Le serveur impose la proximité de son propre ordinateur, contrôle la destination dans sa liste et applique un délai entre transferts. Une requête distante en exploration ne permet pas de fuir avec un œuf ; un œuf déjà arrivé dans sa galerie est sécurisé avant transfert.
+
+Le contrôleur de nage ne relance plus l'état Swimming à chaque image. Une tolérance à la surface évite les transitions répétées. Les poses de nage R6/R15 remplacent temporairement la marche, adaptent l'inclinaison aux déplacements, maintiennent le harpon et sont calculées par chaque client pour tous les joueurs. Le retour sur le pont ou l'escalade restaure le comportement natif. Les tests de transitions et de restauration restent distincts d'une validation visuelle et physique dans Studio.
+
+Pour inspecter les nouveaux modèles hors ligne : `blender -b -t 2 --python tools/preview_art.py -- --lod --marine`. Le rendu produit n'est pas une capture Roblox. Le build courant utilise les données incluses et ne nécessite pas Blender.

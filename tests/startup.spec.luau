@@ -57,7 +57,7 @@ check(#e.Workspace.Guardians:GetChildren() == 6, "Every depth has exactly one sh
 check(e.Workspace.Map:FindFirstChild("NÉRÉIDE · Navire d'exploration"), "All personal galleries share one research vessel")
 check(string.find(e.Workspace.Bases.Base_1["Identité du propriétaire"]["Identité"].Portrait.Image, "id=1", 1, true), "Personal gallery displays its owner's avatar portrait")
 check(string.find(e.Workspace.Bases.Base_1["Identité du propriétaire"]["Identité"].Pseudo.Text, player.DisplayName, 1, true), "Personal gallery displays its owner's large nameplate")
-for _, key in ipairs({ "egg", "fish", "harpoon", "kraken", "leviathan" }) do
+for _, key in ipairs({ "egg", "fish", "harpoon", "kraken", "leviathan", "q_clownfish", "q_anglerfish" }) do
     local skin = loaded.ArtRenderer.Build(key, e.Color3.fromRGB(100, 190, 210), 1, true)
     check(#skin:GetChildren() > 20, "Bundled sculpture renders without native Mesh APIs: " .. key)
     skin:Destroy()
@@ -75,6 +75,9 @@ for _, key in ipairs(loaded.Config.UpgradeOrder) do
     check(e.Workspace.NPCs:FindFirstChild("Marchand_" .. key), "Each equipment type has its own merchant: " .. key)
 end
 check(e.Workspace.Bases.Base_1["Pancarte amélioration"].ProximityPrompt ~= nil, "Base upgrade has a separate physical sign")
+for id, spec in pairs(loaded.Config.Animals) do
+    if spec.Art then check(loaded.ArtData[spec.Art] ~= nil, "Catalog animal has its actual bundled sculpture: " .. id) end
+end
 local remote = e.ReplicatedStorage.RemoteEvents
 check(remote.Snapshot.Messages[player][1][1].Offline, "Offline session is visible in the first UI snapshot")
 local second = e:Player(2)
@@ -120,12 +123,18 @@ for _, egg in ipairs(e.Workspace.Eggs:GetChildren()) do
     check(egg:FindFirstChild("Aura de rareté") and egg:GetAttribute("AuraPower"), "Every wild egg has its rarity aura")
     if egg.Position.Y > loaded.Config.Floors[1].Bottom then reefEgg = egg end
 end
+local reef = e.Workspace.Floors["1_RÉCIF"] or e.Workspace.Floors:GetChildren()[1]
+check(not reef:FindFirstChild("Plateau ouest") and not reef:FindFirstChild("Guide de descente"), "First floor has no rectangular slab or neon square")
+check(reef:FindFirstChild("Récif de sable naturel"), "The first floor uses organic reef terraces")
 local eggId = reefEgg:GetAttribute("EggId")
 travel(player, reefEgg.Position)
 reefEgg.ProximityPrompt.Triggered:Fire(player)
 remote.Action.OnServerEvent:Fire(player, "Sync")
 check(#latest(player).Eggs == 1 and latest(player).Eggs[1].Unsecured and reefEgg.Destroyed, "Collected egg immediately appears as unsecured inventory, without an attached model")
 check(player.Character:FindFirstChild("Transport · " .. latest(player).Eggs[1].Rarity), "Carrier has the rarity highlight visible to other clients")
+local pendingPosition = player.Character.HumanoidRootPart.Position
+remote.Action.OnServerEvent:Fire(player, "TeleportMerchant", "Oxygen")
+check((player.Character.HumanoidRootPart.Position - pendingPosition).Magnitude == 0, "A pending egg cannot escape through a forged merchant teleport from exploration")
 travel(player, e.Vector3.new(0, 98, 0))
 travel(player, e.Vector3.new(0, 118, 0))
 travel(player, spawn)
@@ -138,7 +147,8 @@ remote.Action.OnServerEvent:Fire(player, "Hatch", eggId)
 local readyAt = latest(player).Eggs[1].ReadyAt
 check(readyAt ~= nil, "Deposit remote creates a server incubation deadline")
 local tank = e.Workspace.Bases.Base_1["Aquarium géant"]
-check(#tank["Œufs en incubation"]:GetChildren() == 1 and #tank.Animaux:GetChildren() == 0, "Deposited egg is physically displayed inside the aquarium")
+local incubator = e.Workspace.Bases.Base_1["Laboratoire d’incubation"]
+check(#incubator["Œufs en incubation"]:GetChildren() == 1 and #tank.Animaux:GetChildren() == 0, "Deposited egg is physically displayed inside a separate glass incubation tank")
 remote.Action.OnServerEvent:Fire(player, "Hatch", { Id = eggId, ReadyAt = 0 })
 check(#latest(player).Eggs == 1 and latest(player).Eggs[1].ReadyAt == readyAt, "Client cannot submit a shorter incubation deadline")
 travel(player, spawn + e.Vector3.new(80, 0, 0))
@@ -167,6 +177,27 @@ check(latest(player).Equipment.Oxygen == 2 and latest(player).Money < goldBefore
 check(replacement["Équipement de plongée"]["Bouteille d’oxygène"]:GetAttribute("EquipmentLevel") == 2, "Purchase immediately updates equipment worn by the avatar")
 remote.Action.OnServerEvent:Fire(player, "Upgrade", { Oxygen = 75 })
 check(latest(player).Equipment.Oxygen == 2, "Malformed upgrade payload cannot modify equipment")
+
+local beforeTeleport = replacement.HumanoidRootPart.Position
+remote.Action.OnServerEvent:Fire(player, "TeleportMerchant", "Suit")
+check((replacement.HumanoidRootPart.Position - beforeTeleport).Magnitude == 0, "Merchant teleport is unavailable away from the owner's computer")
+local foreign = e.Workspace.Bases.Base_2["Laboratoire d’incubation"]["Console marchands"]
+travel(player, foreign.Position + e.Vector3.new(0, 0, 1))
+local foreignPosition = replacement.HumanoidRootPart.Position
+remote.Action.OnServerEvent:Fire(player, "TeleportMerchant", "Oxygen")
+check((replacement.HumanoidRootPart.Position - foreignPosition).Magnitude == 0, "Another player's computer cannot authorize a merchant transfer")
+local terminal = e.Workspace.Bases.Base_1["Laboratoire d’incubation"]["Console marchands"]
+travel(player, terminal.Position + e.Vector3.new(0, 0, 1))
+terminal.ProximityPrompt.Triggered:Fire(player)
+messages = remote.FX.Messages[player]
+check(messages[#messages][1] == "OpenTerminal", "The physical computer opens the destination menu")
+remote.Action.OnServerEvent:Fire(player, "TeleportMerchant", { X = 999 })
+check((replacement.HumanoidRootPart.Position - terminal.Position).Magnitude < 3, "Client coordinates cannot become teleport destinations")
+local goldAtConsole = latest(player).Money
+remote.Action.OnServerEvent:Fire(player, "TeleportMerchant", "Oxygen")
+check(latest(player).NearMerchant == "Oxygen" and latest(player).Money == goldAtConsole, "The console teleports to the selected merchant without charging gold")
+e.Clock += 1; e.RunService.Heartbeat:Fire(0.8)
+check((replacement.HumanoidRootPart.Position - merchant.Position).Magnitude < 15, "The server movement validator accepts its own merchant teleport")
 
 local failed = run(true)
 check(failed.Workspace:GetAttribute("UnderwaterBootState") == "Failed", "Boot exceptions become a visible failure state")

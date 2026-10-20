@@ -34,7 +34,7 @@ run('luau-analyze', 'src/shared/Rules.luau', 'src/shared/Config.luau', 'tests/ru
 run('luau', 'tests/rules.spec.luau')
 run('luau', 'tests/progression.spec.luau')
 run('python3', 'tools/check_art.py')
-for suite in ('services', 'startup', 'ui'):
+for suite in ('services', 'startup', 'ui', 'swimming'):
     module_sources = []
     if suite == 'services':
         for name in ('World', 'EggSystem', 'HarpoonSystem', 'DataSystem', 'GuardianSystem', 'EventSystem'):
@@ -42,7 +42,7 @@ for suite in ('services', 'startup', 'ui'):
             module_sources.append(f'local {name} = (function()\n{body}\nend)()\n')
     else:
         for path in sources:
-            if (path.parent.name == 'client' and not (suite == 'ui' and path.name in ('UI.luau', 'AimController.luau'))) or path.name.endswith('.server.luau'):
+            if (path.parent.name == 'client' and not ((suite == 'ui' and path.name in ('UI.luau', 'AimController.luau')) or (suite == 'swimming' and path.name in ('SwimController.luau', 'SwimAnimation.luau')))) or path.name.endswith('.server.luau'):
                 continue
             module_sources.append(f'factories["{path.stem}"] = function()\n{path.read_text()}\nend\n')
     harness = (ROOT / f'tests/{suite}.spec.luau').read_text().replace('--[[ MODULES ]]', '\n'.join(module_sources))

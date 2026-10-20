@@ -1,8 +1,13 @@
 --!nonstrict
--- Shift toggles a shoulder camera lock; menus temporarily release the pointer.
+-- M toggles a shoulder camera lock; menus temporarily release the pointer.
 local Aim = {}
 Aim.__index = Aim
 function Aim.new(input) return setmetatable({ Input = input, Locked = false, Focused = true }, Aim) end
+function Aim.InputAction(key)
+    if key == Enum.KeyCode.M then return "Camera" end
+    if key == Enum.KeyCode.LeftShift or key == Enum.KeyCode.RightShift or key == Enum.KeyCode.ButtonX then return "Boost" end
+    return nil
+end
 function Aim:Toggle() self.Locked = not self.Locked end
 function Aim:Centered(kind)
     return self.Locked or kind == Enum.UserInputType.Touch or string.find(kind.Name, "Gamepad") ~= nil

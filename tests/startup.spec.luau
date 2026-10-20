@@ -125,7 +125,47 @@ for _, egg in ipairs(e.Workspace.Eggs:GetChildren()) do
 end
 local reef = e.Workspace.Floors["1_RÉCIF"] or e.Workspace.Floors:GetChildren()[1]
 check(not reef:FindFirstChild("Plateau ouest") and not reef:FindFirstChild("Guide de descente"), "First floor has no rectangular slab or neon square")
-check(reef:FindFirstChild("Récif de sable naturel"), "The first floor uses organic reef terraces")
+check(reef:FindFirstChild("Fond continu"), "The first floor has a restored continuous seafloor")
+local worldParts = 0
+for _, descendant in ipairs(e.Workspace:GetDescendants()) do if descendant:IsA("BasePart") then worldParts += 1 end end
+check(worldParts < 35000, "Dense world scenery stays within the static part budget: " .. worldParts)
+local biomes = loaded.Reef.Biomes
+for index, region in ipairs(e.Workspace.Floors:GetChildren()) do
+    local floor = loaded.Config.Floors[index]
+    check(region:GetAttribute("SeafloorY") == floor.Bottom, "Each biome has a precise floor depth")
+    local ground = region["Fond continu"]:GetChildren()
+    local function supported(x, z)
+        for _, p in ipairs(ground) do
+            if p.CanCollide and math.abs(p.Position.X - x) <= p.Size.X / 2 + 0.001 and math.abs(p.Position.Z - z) <= p.Size.Z / 2 + 0.001 then return true end
+        end
+        return false
+    end
+    for x = -426, 426, 71 do
+        for z = -426, 426, 71 do
+            if index == 6 or math.sqrt(x*x + z*z) > 124 then check(supported(x, z), "Seafloor has no unexplained gaps at depth " .. index) end
+        end
+    end
+    if index < 6 then
+        for x = -60, 60, 30 do for z = -60, 60, 30 do check(not supported(x, z), "The central descent shaft stays clear") end end
+        check(region["Panneau de profondeur"], "Every descent has a visible next-depth sign")
+    end
+    for _, p in ipairs(ground) do check(p.Position.Y + p.Size.Y / 2 == floor.Bottom, "Physical sand surface matches the configured boundary") end
+    local cliffs = region["Parois du biome"]
+    for side = 1, 4 do
+        local wall = cliffs["Paroi habillée " .. side]
+        check(wall and wall.Size.Y == floor.Top - floor.Bottom, "All four sides are clad throughout the biome height")
+    end
+    check(#region["Jardins de tout le palier"]:GetChildren() >= 64, "Every depth has distributed floor gardens and jellyfish")
+    check(biomes[index].Sand[1] >= 140 and biomes[index].Wall[3] >= 140, "Deep sand and cliff palettes retain readable midtones")
+end
+local roles = {}
+for _, key in ipairs(loaded.Config.UpgradeOrder) do
+    local npc = e.Workspace.NPCs["Marchand_" .. key][loaded.Config.Merchants[key].Name]
+    local role = npc:GetAttribute("MerchantRole")
+    check(role and not roles[role], "Each merchant has a distinct visual profession")
+    roles[role] = true
+    check(npc["Cœur océanique"] and npc["Épaulière royale"] and npc["Mèche sculptée"], "Merchant wears detailed gold and gemstone armour")
+end
 local eggId = reefEgg:GetAttribute("EggId")
 travel(player, reefEgg.Position)
 reefEgg.ProximityPrompt.Triggered:Fire(player)

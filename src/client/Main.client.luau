@@ -88,8 +88,9 @@ if player.Character then task.spawn(attach, player.Character) end
 
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed or UserInputService:GetFocusedTextBox() then return end
-    if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then aim:Toggle()
-    elseif input.KeyCode == Enum.KeyCode.R or input.KeyCode == Enum.KeyCode.ButtonX then context.Action:FireServer("Boost")
+    local action = aim.InputAction(input.KeyCode)
+    if action == "Camera" then aim:Toggle()
+    elseif action == "Boost" then context.Action:FireServer("Boost")
     elseif input.KeyCode == Enum.KeyCode.ButtonL1 then padUp = true
     elseif input.KeyCode == Enum.KeyCode.ButtonR1 then padDown = true
     elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.KeyCode == Enum.KeyCode.ButtonR2 then context.Fire()
@@ -170,7 +171,7 @@ RunService.RenderStepped:Connect(function(dt)
     local inset = GuiService:GetGuiInset()
     local aimPoint = aim:Centered(lastInput) and camera.ViewportSize / 2 or UserInputService:GetMouseLocation()
     ui.Reticle.Position = UDim2.fromOffset((aimPoint.X - inset.X) / ui.Scale.Scale, (aimPoint.Y - inset.Y) / ui.Scale.Scale)
-    ui.CameraHint.Text = aim.Locked and "SHIFT · CAMÉRA VERROUILLÉE" or "SHIFT · VERROUILLER LA CAMÉRA"
+    ui.CameraHint.Text = aim.Locked and "M · CAMÉRA VERROUILLÉE" or "M · VERROUILLER LA CAMÉRA"
     local move = Vector3.zero
     if not UserInputService:GetFocusedTextBox() and not ui.Tab then
         if controls then move = controls:GetMoveVector() else
@@ -195,10 +196,10 @@ RunService.RenderStepped:Connect(function(dt)
     local floor = Rules.FloorAt(Config, root.Position.Y)
     local event = ui.State and ui.State.Event.Active
     local darkness = (floor.Id - 1) / math.max(1, #Config.Floors - 1) * 0.78 + (event and 0.12 or 0)
-    Lighting.Brightness = 2.4 - darkness * 1.8
-    Lighting.Ambient = Color3.fromRGB(78, 146, 166):Lerp(Color3.fromRGB(9, 18, 43), darkness)
-    Lighting.FogColor = Color3.fromRGB(35, 120, 145):Lerp(Color3.fromRGB(12, 24, 52), darkness)
-    Lighting.FogStart = 25; Lighting.FogEnd = 210 - darkness * 170 + lampLevel * 4
+    Lighting.Brightness = 3 - darkness * 1.3
+    Lighting.Ambient = Color3.fromRGB(142, 190, 201):Lerp(Color3.fromRGB(77, 98, 151), darkness)
+    Lighting.FogColor = Color3.fromRGB(54, 167, 199):Lerp(Color3.fromRGB(57, 70, 121), darkness)
+    Lighting.FogStart = 55; Lighting.FogEnd = 340 - darkness * 120 + lampLevel * 6
     correction.TintColor = Color3.fromRGB(207, 246, 255):Lerp(Color3.fromRGB(139, 172, 225), darkness * 0.5)
     if not underwater then
         Lighting.Brightness = 3; Lighting.Ambient = Color3.fromRGB(155, 179, 204)
@@ -208,8 +209,8 @@ RunService.RenderStepped:Connect(function(dt)
     end
     local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
     if atmosphere then
-        atmosphere.Density = underwater and (0.22 + darkness * 0.4) or 0.18
-        atmosphere.Haze = underwater and (1.3 + darkness * 2) or 0.6
+        atmosphere.Density = underwater and (0.16 + darkness * 0.16) or 0.18
+        atmosphere.Haze = underwater and (0.6 + darkness * 1.1) or 0.6
         atmosphere.Color = underwater and Lighting.FogColor or Color3.fromRGB(176, 209, 227)
     end
     camera.FieldOfView += ((70 + math.max(0, speed - 25) * 0.35) - camera.FieldOfView) * math.min(1, dt * 5)

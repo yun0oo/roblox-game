@@ -16,7 +16,7 @@ L'œuf ovoïde, les silhouettes animales procédurales, les tentacules, les corn
 
 `blender -b -t 2 --python tools/build_art.py` régénère les maillages, les couleurs et une version légère. Le jeu utilise le rendu natif EditableMesh lorsqu'il est disponible, et un rendu géométrique local de secours sinon. Aucun téléversement de modèle ni activation d'API n'est nécessaire pour ce secours. Les détails sont créés côté client, dans un rayon de 420 studs pour les boss, 270 pour les autres modèles, pour limiter la réplication et le nombre d'objets affichés.
 
-La refonte colorée ajoute des yeux expressifs, des crocs, des couleurs plus franches et un maillage de secours plus détaillé. Les marchands, stands rayés et accessoires de plongée sont originaux. La forme du visage souriant des marchands utilise la texture intégrée à Roblox `rbxasset://textures/face.png`.
+La refonte colorée ajoute des yeux expressifs, des crocs, des couleurs plus franches et un maillage de secours plus détaillé. Les marchands, stands rayés et accessoires de plongée sont originaux. Les marchands portent désormais des armures originales à gemmes et bordures dorées, avec coiffures et visages assemblés en primitives Roblox, inspirées de la direction artistique des images fournies par le joueur.
 
 ## Nouveaux modèles marins
 
@@ -25,3 +25,5 @@ Quinze fichiers Quaternius préexistants sont intégrés depuis le miroir [quate
 Les palettes sont adaptées au style Roblox, les yeux et dents sont préservés et les objets techniques sans matériau sont retirés à l'import. L'orientation de chaque modèle est normalisée pour regarder vers -Z dans Roblox. Les sculptures importées servent directement à la collection et aux boss ; le Léviathan primordial dérive du requin gobelin, avec nageoires et cornes originales. Aucun fichier d'un jeu propriétaire ni script de modèle n'est utilisé.
 
 Le récif ramifié, les gorgones, les coraux en plateaux, l'incubateur vitré, le bureau d'ordinateur et le poste d'amélioration sont originaux. Les poses de nage R6/R15 sont procédurales et affichées sur chaque client pour tous les plongeurs ; aucun téléchargement d'animation n'est requis.
+
+Les herbiers rubanés, éponges tubulaires ouvertes, plateaux à polypes, reliefs des parois, armures des marchands et cartes hexagonales de l’interface sont originaux et intégrés au code. Les images de référence n’ont pas été extraites d’un autre jeu ni redistribuées dans le fichier Studio.

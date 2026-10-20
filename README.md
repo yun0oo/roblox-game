@@ -91,13 +91,13 @@ La direction graphique suit un style Roblox coloré : sols de galerie à tenons,
 | --- | --- | --- | --- |
 | Nager | WASD / commandes Roblox | Stick gauche | Joystick |
 | Monter / descendre | Espace / Ctrl | LB / RB | ↑ / ↓ |
-| Propulseur | R | X | BOOST |
-| Verrouillage caméra | Shift (bascule) | Visée centrée | Visée centrée |
+| Propulseur | Maj gauche / droite | X | BOOST |
+| Verrouillage caméra | M (bascule) | Visée centrée | Visée centrée |
 | Harpon | Viser et clic | Réticule et RT | Réticule et TIRER |
 | Œuf / aquarium / marchand | E | Interaction Roblox | Bouton contextuel |
 | Pancarte de base | F | Interaction Roblox | Bouton contextuel |
 
-Le viseur est visible avec le harpon équipé : il suit la souris en mode libre et reste centré avec Shift, sur manette et sur mobile. Shift active une caméra à l’épaule, avec orientation du personnage dans la direction de visée ; une seconde pression rétablit la caméra libre. Les menus et la perte de focus libèrent le curseur. Le retour rapide prend quatre secondes et exige de ne pas transporter d’œuf non sécurisé, y compris à la fin du délai.
+Le viseur est visible avec le harpon équipé : il suit la souris en mode libre et reste centré avec M, sur manette et sur mobile. M active une caméra à l’épaule, avec orientation du personnage dans la direction de visée ; une seconde pression rétablit la caméra libre. Les menus et la perte de focus libèrent le curseur. Le retour rapide prend quatre secondes et exige de ne pas transporter d’œuf non sécurisé, y compris à la fin du délai.
 
 ## Développer et vérifier
 
@@ -130,7 +130,13 @@ Le prestige réinitialise les éléments annoncés dans l'interface après confi
 
 ## Récif, laboratoire et nage
 
-La première profondeur utilise des terrasses de sable ovales, des coraux ramifiés, des gorgones, des coraux en plateaux et des algues. Les grandes dalles rectangulaires et le cadre lumineux carré ont été retirés de ce palier ; la descente centrale reste libre.
+Chaque profondeur possède désormais un **fond sableux continu de 864 × 864 studs**, à la limite exacte du palier. Au récif, le fond est à **325 m**. Les cinq passages centraux dégagés ont un rayon minimum de 92 studs, un rebord rocheux naturel et une pancarte vers le palier suivant. Aucun grand carré flottant ni cadre néon ne traverse le passage. La dernière profondeur a un fond fermé.
+
+Les quatre parois sont habillées sur toute leur hauteur : grès coloré, reliefs arrondis, corniches et coraux. Plus de 60 jardins répartis par profondeur associent coraux ramifiés, gorgones, grands plateaux à polypes, **éponges bleues réellement creuses**, dunes, herbiers rubanés et groupes de méduses. Épave, colonnes d’Atlantis, forêt lumineuse, géodes et arches de la fosse distinguent les six zones. Les palettes et l’éclairage ambiant restent lisibles en profondeur ; la lampe conserve son utilité.
+
+Les sept marchands portent des **armures originales à gemmes et bordures dorées**, des coiffures sculptées et des visages visibles. Leurs silhouettes et accessoires diffèrent : bicorne et manteau, bouteilles nacrées, palmes, bouclier, bâton lumineux, réacteurs ou trident. Ils sont construits avec des primitives Roblox intégrées, à partir de la direction artistique des références fournies ; aucun téléchargement de skin n’est nécessaire.
+
+L’interface reprend la palette bleu/cyan de la référence : onglets **Animaux / Œufs / Bestiaire**, cartes hexagonales colorées par rareté, sélection en surbrillance, grand aperçu 3D et fiche à droite. Les petites fenêtres empilent la fiche sous la grille. La pagination limite les aperçus à douze par page ; les espèces inconnues restent `???`. La fiche d’un œuf conserve le statut volable/sécurisé, l’échéance d’incubation et le dépôt dans sa cuve. Les achats d’équipement et l’amélioration de base restent contrôlés par le serveur.
 
 Chaque galerie possède une **cuve d'incubation vitrée séparée** de l'aquarium : liquide, éclairage, coupelles, filtration et jusqu'à 24 œufs en incubation. Le résultat rejoint automatiquement l'aquarium. Le poste d'amélioration affiche son niveau et le prochain prix.
 

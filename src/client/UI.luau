@@ -3,15 +3,15 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local UI = {}
 UI.__index = UI
-local C = { Navy = Color3.fromRGB(17, 41, 80), Panel = Color3.fromRGB(31, 72, 127), White = Color3.fromRGB(249, 253, 255),
-    Muted = Color3.fromRGB(190, 218, 247), Teal = Color3.fromRGB(61, 240, 173), Gold = Color3.fromRGB(255, 214, 63), Red = Color3.fromRGB(255, 122, 139) }
+local C = { Navy = Color3.fromRGB(22, 31, 75), Panel = Color3.fromRGB(29, 82, 141), White = Color3.fromRGB(249, 253, 255),
+    Muted = Color3.fromRGB(190, 218, 247), Teal = Color3.fromRGB(0, 223, 244), Gold = Color3.fromRGB(255, 214, 63), Red = Color3.fromRGB(255, 122, 139) }
 local function make(class, parent, props)
     local item = Instance.new(class)
     for key, value in pairs(props or {}) do item[key] = value end
     item.Parent = parent
     return item
 end
-local function round(item, radius) make("UICorner", item, { CornerRadius = UDim.new(0, radius or 12) }) end
+local function round(item, radius) make("UICorner", item, { CornerRadius = UDim.new(0, radius or 5) }) end
 local function label(parent, text, size, color, props)
     local item = make("TextLabel", parent, { BackgroundTransparency = 1, Font = Enum.Font.Gotham,
         Text = text, TextSize = size or 15, TextColor3 = color or C.White, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true })
@@ -22,18 +22,40 @@ local function button(parent, text, props, callback)
     local item = make("TextButton", parent, { Text = text, Font = Enum.Font.GothamBold, TextSize = 14,
         TextColor3 = C.Navy, BackgroundColor3 = C.Teal, BorderSizePixel = 0, AutoButtonColor = true })
     for key, value in pairs(props or {}) do item[key] = value end
-    round(item, 12)
+    round(item, 5)
     make("UIStroke", item, { Color = C.Navy, Transparency = 0.2, Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
     if callback then item.Activated:Connect(callback) end
     return item
 end
 local function panel(parent, props)
-    local item = make("Frame", parent, { BackgroundColor3 = C.Panel, BackgroundTransparency = 0.08, BorderSizePixel = 0 })
+    local item = make("Frame", parent, { BackgroundColor3 = C.Panel, BackgroundTransparency = 0, BorderSizePixel = 0 })
     for key, value in pairs(props or {}) do item[key] = value end
     round(item)
     make("UIStroke", item, { Color = Color3.fromRGB(87, 146, 214), Transparency = 0.15, Thickness = 2 })
     return item
 end
+-- A native GUI hexagon: four gradient-clipped triangles and a central band.
+-- It scales cleanly and does not depend on an externally uploaded image.
+local function hexagon(parent, size, tint, selected)
+    local frame = make("Frame", parent, { Position = UDim2.fromOffset(7, 7), Size = UDim2.fromOffset(size, size), BackgroundTransparency = 1, ZIndex = 25 })
+    make("Frame", frame, { Position = UDim2.fromScale(0, 0.25), Size = UDim2.fromScale(1, 0.5), BackgroundColor3 = tint, BorderSizePixel = 0, ZIndex = 25 })
+    local function triangle(x, y, rotation, inverted)
+        local piece = make("Frame", frame, { Position = UDim2.fromScale(x, y), Size = UDim2.fromScale(0.5, 0.25), BackgroundColor3 = tint, BorderSizePixel = 0, ZIndex = 25 })
+        make("UIGradient", piece, { Rotation = rotation, Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, inverted and 0 or 1), NumberSequenceKeypoint.new(0.499, inverted and 0 or 1),
+            NumberSequenceKeypoint.new(0.501, inverted and 1 or 0), NumberSequenceKeypoint.new(1, inverted and 1 or 0) }) })
+    end
+    triangle(0, 0, 63.435, false); triangle(0.5, 0, 116.565, false)
+    triangle(0, 0.75, 116.565, true); triangle(0.5, 0.75, 63.435, true)
+    local points = { { 0.5, 0 }, { 1, 0.25 }, { 1, 0.75 }, { 0.5, 1 }, { 0, 0.75 }, { 0, 0.25 } }
+    for i, a in ipairs(points) do
+        local b = points[i % 6 + 1]
+        local dx, dy = (b[1] - a[1]) * size, (b[2] - a[2]) * size
+        make("Frame", frame, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromOffset((a[1] + b[1]) * size / 2, (a[2] + b[2]) * size / 2), Size = UDim2.fromOffset(math.sqrt(dx*dx + dy*dy), selected and 3 or 1), Rotation = math.deg(math.atan2(dy, dx)), BackgroundColor3 = selected and C.White or tint:Lerp(C.White, 0.35), BorderSizePixel = 0, ZIndex = 27 })
+    end
+    return frame
+end
+
 function UI.Format(value)
     if value >= 1e9 then return string.format("%.1f Md", value / 1e9) end
     if value >= 1e6 then return string.format("%.1f M", value / 1e6) end
@@ -50,8 +72,17 @@ function UI.new(context)
     self.Scale = make("UIScale", root, { Scale = 1 })
     local function resize()
         local size = workspace.CurrentCamera.ViewportSize
-        local scale = math.clamp(size.Y / 900, 0.72, 1.1)
+        local scale = math.clamp(math.min(size.Y / 850, size.X / 1200), 0.6, 1.1)
         self.Scale.Scale = scale; root.Size = UDim2.fromScale(1 / scale, 1 / scale)
+        self.Compact = size.X / scale < 900
+        if self.MenuItems then
+            for _, entry in ipairs(self.MenuItems) do
+                entry.Button.Size = UDim2.fromOffset(self.Compact and 58 or 152, 40)
+                entry.Button.Text = self.Compact and entry.Icon or entry.Text
+            end
+            self.MenuHeading.Visible = not self.Compact
+        end
+        if self.State and (self.Tab == "Collection" or self.Tab == "Bestiaire") then self:RenderPanel() end
     end
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(resize); resize()
     local top = panel(root, { Position = UDim2.fromOffset(20, 18), Size = UDim2.new(1, -40, 0, 84) })
@@ -69,9 +100,12 @@ function UI.new(context)
     local depthFrame; depthFrame, self.Depth = stat(0.75, "PROFONDEUR")
     self.Floor = label(depthFrame, "RÉCIF", 11, C.Muted, { Position = UDim2.fromOffset(8, 61), Size = UDim2.new(1, -12, 0, 15) })
     local menu = make("Frame", root, { Position = UDim2.fromOffset(20, 126), Size = UDim2.fromOffset(152, 460), BackgroundTransparency = 1 })
-    label(menu, "VOTRE EXPÉDITION", 10, C.Muted, { Size = UDim2.fromOffset(152, 18) })
+    self.MenuItems = {}
+    self.MenuHeading = label(menu, "VOTRE EXPÉDITION", 10, C.Muted, { Size = UDim2.fromOffset(152, 18) })
     for i, entry in ipairs({ { "Collection", "ŒUFS & ANIMAUX" }, { "Bestiaire", "BESTIAIRE" }, { "Équipement", "ÉQUIPEMENT" }, { "Fusion", "FUSION" }, { "Prestige", "PRESTIGE" }, { "Habitat", "BASE & AQUARIUM" }, { "Classement", "CLASSEMENT" }, { "Guide", "COMMENT JOUER" } }) do
         local item = button(menu, entry[2], { Position = UDim2.fromOffset(0, 26 + (i - 1) * 48), Size = UDim2.fromOffset(152, 40), BackgroundColor3 = C.Panel, TextColor3 = C.White, TextSize = 12 }, function() self:Open(entry[1]) end)
+        local icons = { "🥚", "🐋", "🤿", "🧬", "⭐", "🏠", "🏆", "?" }
+        table.insert(self.MenuItems, { Button = item, Text = entry[2], Icon = icons[i] })
         if entry[1] == "Collection" then self.InventoryButton = item end
     end
     button(menu, "ÉQUIPER LE HARPON", { Position = UDim2.fromOffset(0, 416), Size = UDim2.fromOffset(152, 42), TextSize = 11 }, function() context.Equip() end)
@@ -84,7 +118,7 @@ function UI.new(context)
     make("UIListLayout", self.ToastBox, { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder })
     self.Objective = label(root, "TROUVEZ UN ŒUF  →  ÉVITEZ SON GARDIEN  →  REVENEZ À VOTRE HABITAT", 12, C.White,
         { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -46), Size = UDim2.new(1, -50, 0, 28), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold })
-    self.Help = label(root, "WASD · NAGER    ESPACE / CTRL · MONTER / DESCENDRE    R · PROPULSEUR    SHIFT · CAMÉRA    CLIC · HARPON", 10, C.Muted,
+    self.Help = label(root, "WASD · NAGER    ESPACE / CTRL · MONTER / DESCENDRE    MAJ · BOOST    M · CAMÉRA    CLIC · HARPON", 10, C.Muted,
         { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -15), Size = UDim2.new(1, -40, 0, 24), TextXAlignment = Enum.TextXAlignment.Center })
     self.Compass = label(root, "Votre habitat", 12, C.Teal, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 106), Size = UDim2.new(0.5, -24, 0, 18), TextXAlignment = Enum.TextXAlignment.Right })
     self.Save = label(root, "CONNEXION AU SERVEUR…", 10, C.Muted, { Position = UDim2.fromOffset(22, 106), Size = UDim2.new(0.5, -24, 0, 16) })
@@ -94,13 +128,30 @@ function UI.new(context)
         local line = make("Frame", self.Reticle, { Position = UDim2.fromOffset(segment[1], segment[2]), Size = UDim2.fromOffset(segment[3], segment[4]), BackgroundColor3 = C.White, BorderSizePixel = 0, ZIndex = 2 })
         round(line, 2); make("UIStroke", line, { Color = C.Navy, Thickness = 1.2 })
     end
-    self.CameraHint = label(root, "SHIFT · VERROUILLER LA CAMÉRA", 10, C.Muted, { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -106), Size = UDim2.fromOffset(320, 18), TextXAlignment = Enum.TextXAlignment.Center })
+    self.CameraHint = label(root, "M · VERROUILLER LA CAMÉRA", 10, C.Muted, { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -106), Size = UDim2.fromOffset(320, 18), TextXAlignment = Enum.TextXAlignment.Center })
     self.Dimmer = make("TextButton", root, { Size = UDim2.fromScale(1, 1), Text = "", BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.4, Visible = false, ZIndex = 20 })
     self.Dimmer.Activated:Connect(function() self:Open(nil) end)
-    self.Modal = panel(root, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.new(0.88, 0, 0.76, 0), Visible = false, ZIndex = 21 })
+    self.Modal = panel(root, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.new(0.94, 0, 0.90, 0), Visible = false, ZIndex = 21 })
+    make("UIStroke", self.Modal, { Thickness = 7, Color = C.Navy })
+    self.CollectionTabs = make("Frame", self.Modal, { Position = UDim2.fromOffset(18, 15), Size = UDim2.new(1, -100, 0, 54), BackgroundTransparency = 1, Visible = false, ZIndex = 24 })
+    for index, mode in ipairs({ "Animaux", "Œufs", "Bestiaire" }) do
+        local tab = button(self.CollectionTabs, string.upper(mode), { Position = UDim2.new((index - 1) / 3, 0, 0, 0), Size = UDim2.new(1 / 3, -12, 1, 0), TextSize = 18, BackgroundColor3 = C.Panel, TextColor3 = C.White, ZIndex = 25 }, function()
+            self.CollectionMode = mode; self.SelectedCard = nil; self.CollectionPage = 1
+            self:Open(mode == "Bestiaire" and "Bestiaire" or "Collection")
+        end)
+        tab:SetAttribute("CollectionMode", mode)
+    end
+    local footer = panel(self.Modal, { Position = UDim2.new(0, 16, 1, -60), Size = UDim2.new(1, -32, 0, 44), BackgroundColor3 = Color3.fromRGB(224, 245, 255), ZIndex = 24 })
+    self.Footer = label(footer, "EXPÉDITION NÉRÉIDE · VOTRE COLLECTION MARINE", 12, C.Navy, { Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -130, 1, 0), Font = Enum.Font.GothamBold, ZIndex = 25 })
+    local function changePage(delta)
+        self.CollectionPage = math.clamp((self.CollectionPage or 1) + delta, 1, self.BrowserPages or 1)
+        self.SelectedCard = nil; self:RenderPanel()
+    end
+    self.PreviousPage = button(footer, "‹", { Position = UDim2.new(1, -102, 0, 4), Size = UDim2.fromOffset(42, 36), TextSize = 24, Visible = false, ZIndex = 25 }, function() changePage(-1) end)
+    self.NextPage = button(footer, "›", { Position = UDim2.new(1, -52, 0, 4), Size = UDim2.fromOffset(42, 36), TextSize = 24, Visible = false, ZIndex = 25 }, function() changePage(1) end)
     self.Title = label(self.Modal, "", 27, C.White, { Position = UDim2.fromOffset(24, 18), Size = UDim2.new(1, -90, 0, 44), Font = Enum.Font.GothamBold, ZIndex = 22 })
-    button(self.Modal, "×", { Position = UDim2.new(1, -54, 0, 20), Size = UDim2.fromOffset(32, 32), BackgroundColor3 = C.Navy, TextColor3 = C.White, TextSize = 24, ZIndex = 22 }, function() self:Open(nil) end)
-    self.List = make("ScrollingFrame", self.Modal, { Position = UDim2.fromOffset(24, 78), Size = UDim2.new(1, -48, 1, -100), BackgroundTransparency = 1, BorderSizePixel = 0,
+    button(self.Modal, "×", { Position = UDim2.new(1, -68, 0, 14), Size = UDim2.fromOffset(50, 54), BackgroundColor3 = C.Teal, TextColor3 = C.Navy, TextSize = 32, ZIndex = 25 }, function() self:Open(nil) end)
+    self.List = make("ScrollingFrame", self.Modal, { Position = UDim2.fromOffset(24, 78), Size = UDim2.new(1, -48, 1, -154), BackgroundTransparency = 1, BorderSizePixel = 0,
         ScrollBarThickness = 4, ScrollBarImageColor3 = C.Teal, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 22 })
     self.CameraHint.Visible = not UserInputService.TouchEnabled
     if UserInputService.TouchEnabled then
@@ -115,6 +166,7 @@ function UI.new(context)
         button(root, "TIRER", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -24, 1, -194), Size = UDim2.fromOffset(152, 58) }, context.Fire)
         self.BoostButton = button(root, "BOOST", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -24, 1, -262), Size = UDim2.fromOffset(152, 48), BackgroundColor3 = C.Gold }, function() context.Action:FireServer("Boost") end)
     end
+    resize()
     return self
 end
 
@@ -136,6 +188,7 @@ function UI:Open(tab)
     if tab ~= "Prestige" then self.PrestigeArmedAt = nil end
     self.Tab = tab; self.Signature = ""
     self.Modal.Visible = tab ~= nil; self.Dimmer.Visible = tab ~= nil
+    if tab == "Collection" and self.State and self.State.Carrying then self.CollectionMode = "Œufs" end
     if tab then self:RenderPanel() end
 end
 
@@ -168,10 +221,126 @@ function UI:Viewport(parent, spec)
     self.Ctx.Visuals.Animal(world, spec, CFrame.new(), 1)
     local camera = make("Camera", viewport, { CFrame = CFrame.lookAt(Vector3.new(7, 3, -10), Vector3.new(0, -0.5, 0)), FieldOfView = 42 })
     viewport.CurrentCamera = camera
+    return viewport
 end
 
 function UI:Row(height)
     return panel(self.List, { Size = UDim2.new(1, -8, 0, height or 100), BackgroundColor3 = C.Navy, ZIndex = 23 })
+end
+
+-- Responsive collection view: paged rarity cards and a separate detail panel.
+function UI.BrowserLayout(width, height)
+    local stacked = width < 700
+    local details = stacked and width or math.clamp(width * 0.31, 250, 340)
+    local gridWidth = stacked and width or width - details - 18
+    local columns = math.clamp(math.floor(gridWidth / 145), 2, 4)
+    return { Stacked = stacked, GridWidth = gridWidth, DetailsWidth = details, Columns = columns,
+        CellWidth = math.floor((gridWidth - 20 - (columns - 1) * 10) / columns), GridHeight = stacked and math.min(350, height * 0.56) or height }
+end
+function UI:BrowserPreview(parent, entry, known)
+    if not known then
+        label(parent, "?", 56, C.Muted, { Size = UDim2.fromScale(1, 1), Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 26 })
+        return
+    end
+    if entry.Kind == "Egg" then
+        local view = make("ViewportFrame", parent, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Ambient = Color3.fromRGB(210, 236, 255), LightColor = Color3.new(1, 1, 1), ZIndex = 26 })
+        local world = make("WorldModel", view)
+        local skin = require(game:GetService("ReplicatedStorage").Modules.ArtRenderer).Build("egg", self.Ctx.Visuals.Color(self.Ctx.Config.Rarities[entry.Spec.Rarity].Color), 1, true)
+        skin.Parent = world
+        local camera = make("Camera", view, { CFrame = CFrame.lookAt(Vector3.new(1.8, 0.6, -2.6), Vector3.zero), FieldOfView = 40 }); view.CurrentCamera = camera
+    else
+        local view = self:Viewport(parent, entry.Spec)
+        view.Position = UDim2.fromScale(0, 0); view.Size = UDim2.fromScale(1, 1); view.ZIndex = 26
+    end
+end
+function UI:RenderBrowser()
+    local config, state, rules = self.Ctx.Config, self.State, self.Ctx.Rules
+    local mode = self.Tab == "Bestiaire" and "Bestiaire" or self.CollectionMode or "Œufs"
+    self.List.Visible = false; self.Title.Visible = false
+    if not self.Browser then
+        self.Browser = make("ScrollingFrame", self.Modal, { Position = UDim2.fromOffset(20, 86), Size = UDim2.new(1, -40, 1, -155), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 5, ScrollBarImageColor3 = C.Teal, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 22 })
+    end
+    self.Browser.Visible = true; self.Browser:ClearAllChildren()
+    local entries, discovered = {}, 0
+    if mode == "Œufs" then
+        for _, egg in ipairs(state.Eggs) do table.insert(entries, { Id = egg.Id, Kind = "Egg", Spec = egg, Known = true }) end
+    else
+        for id, spec in pairs(config.Animals) do
+            local count = rules.SpeciesCount(state, id)
+            if state.Discovered[id] then discovered += 1 end
+            if mode == "Bestiaire" or count > 0 then table.insert(entries, { Id = id, Spec = spec, Count = count, Known = mode ~= "Bestiaire" or state.Discovered[id] == true }) end
+        end
+        table.sort(entries, function(a, b) return a.Spec.Floor == b.Spec.Floor and a.Spec.Income > b.Spec.Income or a.Spec.Floor < b.Spec.Floor end)
+    end
+    local pages = math.max(1, math.ceil(#entries / 12))
+    self.CollectionPage = math.clamp(self.CollectionPage or 1, 1, pages)
+    if self.CollectionTabs then
+        self.CollectionTabs.Visible = true
+        for _, tab in ipairs(self.CollectionTabs:GetChildren()) do
+            if tab:IsA("TextButton") then
+                local selected = tab:GetAttribute("CollectionMode") == mode
+                tab.BackgroundColor3 = selected and C.Teal or C.Panel
+                tab.TextColor3 = selected and C.Navy or C.Muted
+            end
+        end
+    end
+    local width = self.Modal.AbsoluteSize and self.Modal.AbsoluteSize.X or 1000
+    local height = self.Modal.AbsoluteSize and self.Modal.AbsoluteSize.Y or 650
+    local scale = self.Scale and self.Scale.Scale or 1
+    local layout = UI.BrowserLayout(width / scale - 40, height / scale - 155)
+    local grid = make("ScrollingFrame", self.Browser, { Name = "Grille de collection", Size = UDim2.fromOffset(layout.GridWidth, layout.GridHeight), CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, ScrollBarImageColor3 = C.Teal, BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 23 })
+    local cellHeight = layout.CellWidth + 72
+    make("UIGridLayout", grid, { CellSize = UDim2.fromOffset(layout.CellWidth, cellHeight), CellPadding = UDim2.fromOffset(10, 12), SortOrder = Enum.SortOrder.LayoutOrder })
+    local chosen
+    for _, entry in ipairs(entries) do if entry.Id == self.SelectedCard then chosen = entry end end
+    chosen = chosen or entries[(self.CollectionPage - 1) * 12 + 1]
+    for index = (self.CollectionPage - 1) * 12 + 1, math.min(#entries, self.CollectionPage * 12) do
+        local entry = entries[index]
+        local tint = self.Ctx.Visuals.Color(config.Rarities[entry.Spec.Rarity].Color)
+        local card = button(grid, "", { Name = "Carte " .. entry.Id, BackgroundColor3 = C.Panel, BackgroundTransparency = 1, ZIndex = 24, LayoutOrder = index }, function() self.SelectedCard = entry.Id; self:RenderPanel() end)
+        card:FindFirstChildOfClass("UIStroke").Transparency = 1
+        local medallion = hexagon(card, layout.CellWidth - 14, entry.Known and tint:Lerp(C.Panel, 0.28) or C.Navy, chosen == entry)
+        self:BrowserPreview(medallion, entry, entry.Known)
+        label(card, entry.Known and entry.Spec.Name or "???", 12, C.White, { Position = UDim2.fromOffset(5, layout.CellWidth), Size = UDim2.new(1, -10, 0, 30), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold, ZIndex = 26 })
+        local caption = entry.Kind == "Egg" and (entry.Spec.Unsecured and "⚠ VOLABLE" or entry.Spec.ReadyAt and "INCUBATION" or "SÉCURISÉ") or entry.Known and ("+" .. UI.Format(entry.Spec.Income) .. " / min  ·  ×" .. entry.Count) or "À DÉCOUVRIR"
+        label(card, caption, 11, entry.Known and tint or C.Muted, { Position = UDim2.fromOffset(4, layout.CellWidth + 33), Size = UDim2.new(1, -8, 0, 25), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold, ZIndex = 26 })
+    end
+    local detail = panel(self.Browser, { Name = "Détail sélection", Position = layout.Stacked and UDim2.fromOffset(0, layout.GridHeight + 16) or UDim2.fromOffset(layout.GridWidth + 18, 0), Size = UDim2.fromOffset(layout.DetailsWidth, math.max(480, layout.Stacked and 510 or layout.GridHeight)), BackgroundColor3 = Color3.fromRGB(32, 99, 169), ZIndex = 23 })
+    if chosen then
+        local spec, known = chosen.Spec, chosen.Known
+        local tint = self.Ctx.Visuals.Color(config.Rarities[spec.Rarity].Color)
+        label(detail, known and spec.Name or "ESPÈCE INCONNUE", 20, C.White, { Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -32, 0, 52), Font = Enum.Font.GothamBlack, ZIndex = 24 })
+        local preview = make("Frame", detail, { Position = UDim2.fromOffset(12, 64), Size = UDim2.new(1, -24, 0, 170), BackgroundTransparency = 1, ZIndex = 24 })
+        self:BrowserPreview(preview, chosen, known)
+        label(detail, known and string.upper(spec.Rarity) or "???", 17, known and tint or C.Muted, { Position = UDim2.fromOffset(18, 236), Size = UDim2.new(1, -36, 0, 26), Font = Enum.Font.GothamBold, ZIndex = 26 })
+        if chosen.Kind == "Egg" then
+            local timer = label(detail, "", 13, C.White, { Position = UDim2.fromOffset(18, 274), Size = UDim2.new(1, -36, 0, 88), ZIndex = 26 })
+            if spec.ReadyAt then table.insert(self.HatchTimers, { Egg = spec, Label = timer })
+            elseif spec.Unsecured then timer.Text = "NON SÉCURISÉ\nLe harpon peut vous le faire perdre. Rejoignez votre galerie."
+            else timer.Text = "DÉFINITIVEMENT SÉCURISÉ\nÉclosion : " .. config.HatchTimes[spec.Rarity] .. " s après dépôt dans la cuve." end
+            local enabled = state.OwnBase and not spec.Unsecured and not spec.ReadyAt
+            button(detail, spec.Unsecured and "À SÉCURISER" or spec.ReadyAt and "EN INCUBATION" or state.OwnBase and "DÉPOSER DANS LA CUVE" or "REJOINDRE MA CUVE", { Position = UDim2.fromOffset(16, 382), Size = UDim2.new(1, -32, 0, 54), BackgroundColor3 = enabled and C.Teal or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 26 }, function()
+                if enabled then self.Ctx.Action:FireServer("Hatch", spec.Id)
+                elseif not state.OwnBase and not spec.Unsecured and not spec.ReadyAt then self.Ctx.Navigate(state.BasePosition, "VOTRE CUVE À ŒUFS"); self:Open(nil) end
+            end)
+        else
+            local variants = state.Variants[chosen.Id] or {}
+            local text = known and ("PALIER " .. spec.Floor .. "  ·  ×" .. chosen.Count .. " POSSÉDÉS\n+" .. UI.Format(spec.Income) .. " GOLD / MIN\nValeur : " .. UI.Format(spec.Income * 60) .. " gold\n\nNormal " .. (state.Animals[chosen.Id] or 0) .. " · Gold " .. (variants.Gold or 0) .. "\nDiamond " .. (variants.Diamond or 0) .. " · Mythic " .. (variants.Mythic or 0)) or ("PALIER " .. spec.Floor .. "\n\nRapportez et faites éclore des œufs de cette profondeur pour découvrir cet animal.")
+            label(detail, text, 13, C.White, { Position = UDim2.fromOffset(18, 275), Size = UDim2.new(1, -36, 0, 142), ZIndex = 26 })
+            local recipe = "Fusion : Gold ×3,5 · Diamond ×12 · Mythic ×45"
+            for _, item in ipairs(state.Recipes or {}) do
+                if item.Output == chosen.Id then local names = {}; for _, id in ipairs(item.Ingredients) do table.insert(names, config.Animals[id].Name) end; recipe = "RECETTE : " .. table.concat(names, " + ") end
+            end
+            label(detail, known and recipe or "???", 11, C.Teal, { Position = UDim2.fromOffset(18, 428), Size = UDim2.new(1, -36, 0, 52), ZIndex = 26 })
+        end
+    else
+        label(detail, mode == "Œufs" and "VOTRE PREMIER ŒUF\n\nPlongez par le bassin central. Évitez le boss, ramassez un œuf avec E puis rapportez-le dans votre galerie." or "VOTRE COLLECTION\n\nFaites éclore vos œufs dans la cuve pour remplir votre aquarium.", 18, C.White, { Position = UDim2.fromOffset(22, 40), Size = UDim2.new(1, -44, 0, 300), ZIndex = 24 })
+    end
+    if self.Footer then
+        self.Footer.Text = mode == "Bestiaire" and (discovered .. " ESPÈCES DÉCOUVERTES  ·  PAGE " .. self.CollectionPage .. " / " .. pages) or (#entries .. (mode == "Œufs" and " ŒUFS" or " ESPÈCES") .. "  ·  +" .. UI.Format(state.Income) .. " GOLD / MIN  ·  " .. self.CollectionPage .. " / " .. pages)
+        self.PreviousPage.Visible = true; self.NextPage.Visible = true
+        self.BrowserPages = pages
+    end
 end
 
 function UI:RenderPanel()
@@ -182,57 +351,20 @@ function UI:RenderPanel()
     self.List:ClearAllChildren()
     make("UIListLayout", self.List, { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder })
     self.Title.Text = self.Tab
+    self.Title.Visible = true; self.List.Visible = true
+    if self.Browser then self.Browser.Visible = false end
+    if self.CollectionTabs then self.CollectionTabs.Visible = false end
+    if self.Footer then
+        self.Footer.Text = "NÉRÉIDE · " .. self.Tab:upper() .. "  ·  " .. UI.Format(state.Money) .. " GOLD"
+        self.PreviousPage.Visible = false; self.NextPage.Visible = false
+    end
     local function paragraph(text, height, color)
         local row = self:Row(height or 72)
         label(row, text, 14, color or C.Muted, { Position = UDim2.fromOffset(16, 10), Size = UDim2.new(1, -32, 1, -20), ZIndex = 24 })
     end
     self.HatchTimers = {}
-    if self.Tab == "Collection" then
-        paragraph(string.format("%d œuf(s) dans l’inventaire  ·  %d animaux  ·  +%s gold / min\nDéposez les œufs dans l'aquarium : les animaux produisent des gold pendant votre connexion.", #state.Eggs, rules.AnimalCount(state), UI.Format(state.Income)), 70, C.Teal)
-        for _, egg in ipairs(state.Eggs) do
-            local row = self:Row(112)
-            local color = self.Ctx.Visuals.Color(config.Rarities[egg.Rarity].Color)
-            label(row, (egg.Unsecured and "⚠ VOLABLE AU HARPON / " or "ŒUF SÉCURISÉ / ") .. string.upper(egg.Rarity), 11, color, { Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -180, 0, 20), ZIndex = 24 })
-            label(row, egg.Name, 18, C.White, { Position = UDim2.fromOffset(16, 38), Size = UDim2.new(1, -180, 0, 32), Font = Enum.Font.GothamBold, ZIndex = 24 })
-            local timer = label(row, "", 12, color, { Position = UDim2.fromOffset(16, 76), Size = UDim2.new(1, -32, 0, 24), ZIndex = 24 })
-            if egg.ReadyAt then table.insert(self.HatchTimers, { Egg = egg, Label = timer })
-            elseif egg.Unsecured then timer.Text = "Ramenez-le à votre base · transporteur en surbrillance"
-            else timer.Text = "Durée : " .. config.HatchTimes[egg.Rarity] .. " s après dépôt" end
-            local enabled = state.OwnBase and not egg.ReadyAt and not egg.Unsecured
-            button(row, egg.Unsecured and "À SÉCURISER" or egg.ReadyAt and "EN INCUBATION" or state.OwnBase and "DÉPOSER" or "À VOTRE AQUARIUM", { Position = UDim2.new(1, -160, 0, 26), Size = UDim2.fromOffset(144, 38), TextSize = 12, BackgroundColor3 = enabled and C.Teal or C.Panel, TextColor3 = enabled and C.Navy or C.Muted, ZIndex = 24 }, function() if enabled then self.Ctx.Action:FireServer("Hatch", egg.Id) end end)
-        end
-        local ids = {}; for id in pairs(config.Animals) do if rules.SpeciesCount(state, id) > 0 then table.insert(ids, id) end end
-        table.sort(ids, function(a, b) return config.Animals[a].Income > config.Animals[b].Income end)
-        for _, id in ipairs(ids) do
-            local spec = config.Animals[id]; local row = self:Row(118)
-            self:Viewport(row, spec)
-            label(row, spec.Name .. "  ×" .. rules.SpeciesCount(state, id), 18, C.White, { Position = UDim2.fromOffset(114, 18), Size = UDim2.new(1, -130, 0, 28), Font = Enum.Font.GothamBold, ZIndex = 24 })
-            label(row, string.upper(spec.Rarity) .. "  ·  PALIER " .. spec.Floor .. "  ·  " .. UI.Format(spec.Income) .. " gold / min chacun", 12, self.Ctx.Visuals.Color(config.Rarities[spec.Rarity].Color), { Position = UDim2.fromOffset(114, 52), Size = UDim2.new(1, -130, 0, 32), ZIndex = 24 })
-            local variants = state.Variants[id] or {}
-            label(row, "NORMAL " .. (state.Animals[id] or 0) .. " · GOLD " .. (variants.Gold or 0) .. " · DIAMOND " .. (variants.Diamond or 0) .. " · MYTHIC " .. (variants.Mythic or 0), 10, C.Gold, { Position = UDim2.fromOffset(114, 86), Size = UDim2.new(1, -130, 0, 24), ZIndex = 24 })
-        end
-        if #ids == 0 and #state.Eggs == 0 then paragraph("Votre collection commence avec votre première plongée.\nSautez dans le bassin central du Néréide, trouvez un œuf et rapportez-le dans votre galerie.", 100) end
-    elseif self.Tab == "Bestiaire" then
-        local ids, discovered = {}, 0
-        for id in pairs(config.Animals) do table.insert(ids, id); if state.Discovered[id] then discovered += 1 end end
-        table.sort(ids, function(a, b) local x, y = config.Animals[a], config.Animals[b]; return x.Floor == y.Floor and x.Income < y.Income or x.Floor < y.Floor end)
-        paragraph(discovered .. " / " .. #ids .. " espèces découvertes · Les espèces inconnues restent mystérieuses.", 60, C.Teal)
-        for _, id in ipairs(ids) do
-            local spec = config.Animals[id]; local known = state.Discovered[id]; local row = self:Row(138)
-            if known then self:Viewport(row, spec) else label(row, "?", 48, C.Muted, { Position = UDim2.fromOffset(26, 18), Size = UDim2.fromOffset(60, 64), Font = Enum.Font.GothamBlack, ZIndex = 24 }) end
-            label(row, known and spec.Name or "???", 18, C.White, { Position = UDim2.fromOffset(114, 18), Size = UDim2.new(1, -130, 0, 28), Font = Enum.Font.GothamBold, ZIndex = 24 })
-            label(row, "PALIER " .. spec.Floor .. "  ·  " .. (known and (string.upper(spec.Rarity) .. " · " .. UI.Format(spec.Income) .. " gold/min · VALEUR " .. UI.Format(spec.Income * 60) .. " gold · POSSÉDÉS : " .. rules.SpeciesCount(state, id)) or "À DÉCOUVRIR"), 12, C.Muted, { Position = UDim2.fromOffset(114, 50), Size = UDim2.new(1, -130, 0, 42), ZIndex = 24 })
-            if known then
-                local description = "GOLD ×3,5 · DIAMOND ×12 · MYTHIC ×45"
-                for _, recipe in ipairs(state.Recipes) do
-                    if recipe.Output == id then
-                        local names = {}; for _, ingredient in ipairs(recipe.Ingredients) do table.insert(names, config.Animals[ingredient].Name) end
-                        description = "RECETTE : " .. table.concat(names, " + ")
-                    end
-                end
-                label(row, description, 10, C.Teal, { Position = UDim2.fromOffset(114, 98), Size = UDim2.new(1, -130, 0, 32), ZIndex = 24 })
-            end
-        end
+    if self.Tab == "Collection" or self.Tab == "Bestiaire" then
+        self:RenderBrowser()
     elseif self.Tab == "Téléportation" then
         self.Title.Text = "ORDINATEUR · TÉLÉPORTATION"
         paragraph("Choisissez votre marchand. Le transfert depuis votre ordinateur est gratuit et vous dépose devant son stand.", 74, C.Teal)
@@ -374,7 +506,7 @@ function UI:RenderPanel()
             "07  RESPIREZ\nLes stations vertes O₂, la surface et le navire rechargent votre réserve. L'oxygène se consomme plus vite en profondeur. À zéro, votre santé diminue.",
             "08  PRENEZ DES RISQUES\nLes événements de 5, 15 et 40 minutes augmentent la rareté et le danger. Esquivez les ondes rouges annonçant les attaques des boss. Après sa défaite, un boss réapparaît après un court répit.",
             "09  ÉVOLUEZ\nFusionnez vos animaux dans votre habitat, découvrez les recettes secrètes, personnalisez la base et recommencez avec le prestige pour obtenir des bonus permanents.",
-            "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · R / X manette : propulseur · Shift : verrouiller / libérer la caméra · clic / RT : tirer · E : interagir.",
+            "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · Maj / X manette : propulseur · M : verrouiller / libérer la caméra · clic / RT : tirer · E : interagir.",
         }) do paragraph(text, 112) end
     end
     task.defer(function() if self.List.Parent then self.List.CanvasPosition = position end end)
@@ -382,7 +514,7 @@ end
 
 function UI:Update(state)
     self.State = state; self.ReceivedAt = os.clock()
-    self.InventoryButton.Text = "🥚 INVENTAIRE · " .. #state.Eggs
+    self.InventoryButton.Text = self.Compact and ("🥚 " .. #state.Eggs) or ("🥚 INVENTAIRE · " .. #state.Eggs)
     self.Money.Text = UI.Format(state.Money) .. " gold"; self.Income.Text = "+" .. UI.Format(state.Income) .. " gold / min"
     self.Oxygen.Text = math.ceil(state.Oxygen) .. " / " .. state.MaxOxygen
     self.OxygenBar.Size = UDim2.fromScale(math.clamp(state.Oxygen / state.MaxOxygen, 0, 1), 1)

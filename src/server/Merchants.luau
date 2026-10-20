@@ -19,34 +19,22 @@ function Merchants.Build(world, config, visuals)
         end
         local platform = piece("Estrade", Vector3.new(15, 0.5, 13), Vector3.new(0, 0.25, 0), tint)
         platform.TopSurface = Enum.SurfaceType.Studs
-        piece("Comptoir", Vector3.new(12, 3, 3), Vector3.new(0, 1.5, -3.3), Color3.fromRGB(244, 247, 255))
+        piece("Comptoir", Vector3.new(12, 3, 3), Vector3.new(0, 1.5, -3.3), Color3.fromRGB(26, 63, 114))
         piece("Façade colorée", Vector3.new(11.3, 2.3, 0.15), Vector3.new(0, 1.6, -4.85), tint)
         for side = -1, 1, 2 do
-            piece("Poteau", Vector3.new(0.55, 12, 0.55), Vector3.new(side * 6.5, 6, 2.8), Color3.fromRGB(241, 246, 255))
+            piece("Poteau", Vector3.new(0.55, 12, 0.55), Vector3.new(side * 6.5, 6, 2.8), Color3.fromRGB(236, 187, 84))
         end
         piece("Auvent", Vector3.new(15, 0.8, 13), Vector3.new(0, 11.5, 0), tint)
-        for x = -6, 6, 4 do piece("Rayure de l’auvent", Vector3.new(1.7, 0.12, 13), Vector3.new(x, 11.96, 0), Color3.fromRGB(248, 252, 255)) end
+        for x = -6, 6, 4 do piece("Rayure de l’auvent", Vector3.new(1.7, 0.12, 13), Vector3.new(x, 11.96, 0), Color3.fromRGB(240, 192, 88)) end
         local sign = piece("Enseigne", Vector3.new(13, 2.8, 0.4), Vector3.new(0, 10, -6), tint)
         visuals.Label(sign, spec.Icon .. " " .. config.Upgrades[key].Name:upper() .. "\n" .. spec.Name, Color3.new(1, 1, 1), 2, 160)
-        -- Friendly classic Roblox NPC. No imported scripts or account API needed.
-        local npc = Instance.new("Model"); npc.Name = spec.Name; npc.Parent = stall
-        local function body(name, size, offset, color, shape)
-            return visuals.Part(npc, name, size, frame * CFrame.new(offset - Vector3.new(0, 1.3, 0)), color, nil, shape)
-        end
-        local skin = Color3.fromRGB(255, 216, 166)
-        local torso = body("Torso", Vector3.new(2, 2, 1), Vector3.new(0, 4.8, 1.5), tint)
-        body("Head", Vector3.new(1.5, 1.5, 1.5), Vector3.new(0, 6.55, 1.5), skin, Enum.PartType.Ball)
-        local face = Instance.new("Decal"); face.Name = "Sourire"; face.Texture = "rbxasset://textures/face.png"; face.Face = Enum.NormalId.Front; face.Parent = npc.Head
+        require(game:GetService("ReplicatedStorage").Modules.MerchantVisuals).Build(stall, key, spec, frame * CFrame.new(0, 0.5, 1.8), visuals)
+        piece("Socle du comptoir", Vector3.new(12.3, 0.22, 3.3), Vector3.new(0, 3.15, -3.3), Color3.fromRGB(240, 192, 88))
         for side = -1, 1, 2 do
-            body(side < 0 and "Left Arm" or "Right Arm", Vector3.new(0.9, 2, 1), Vector3.new(side * 1.5, 4.8, 1.5), skin)
-            body(side < 0 and "Left Leg" or "Right Leg", Vector3.new(0.9, 2, 1), Vector3.new(side * 0.52, 2.8, 1.5), Color3.fromRGB(30, 66, 110))
+            local plinth = piece("Présentoir de cristal", Vector3.new(1.9, 0.5, 1.9), Vector3.new(side * 4.4, 3.5, -3.3), Color3.fromRGB(27, 57, 101))
+            piece("Cristal de la boutique", Vector3.new(0.65, 1.1, 0.65), Vector3.new(side * 4.4, 4.3, -3.3), tint).Material = Enum.Material.Neon
+            plinth.CastShadow = false
         end
-        body("Casquette", Vector3.new(1.7, 0.35, 1.7), Vector3.new(0, 7.32, 1.5), tint)
-        body("Visière", Vector3.new(1.8, 0.15, 0.8), Vector3.new(0, 7.22, 0.55), Color3.fromRGB(247, 253, 255))
-        local humanoid = Instance.new("Humanoid"); humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None; humanoid.Parent = npc
-        npc.PrimaryPart = torso
-        local gear = require(game:GetService("ReplicatedStorage").Modules.EquipmentVisuals)
-        gear.Apply(npc, { Suit = 10, Oxygen = 4, Swim = 4, Shield = 4, Lamp = 4, Thruster = 4 }, visuals, true)
         local badge = piece("Emblème", Vector3.one, Vector3.new(0, 5, -3.3), tint)
         badge.Transparency = 1
         visuals.Label(badge, spec.Icon .. "\nACHETER / AMÉLIORER", Color3.new(1, 1, 1), 0.6, 65)

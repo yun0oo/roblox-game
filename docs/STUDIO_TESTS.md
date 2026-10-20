@@ -43,13 +43,13 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 - Vaincre un boss : il disparaît une fois et les œufs restent. Il réapparaît seul après 50 à 75 secondes selon le palier, même sans nouvelle apparition d'œuf.
 - Aux profondeurs avancées, esquiver les zones annoncées de siphon, choc et vortex. Le pont et toutes les galeries sont immunisés.
 
-## Viseur et caméra Shift
+## Viseur et caméra M
 
 - Équiper le harpon : viseur visible au curseur sur PC, au centre sur mobile/manette. Sans harpon ou avec un menu ouvert, il disparaît. Comparer son point avec le rayon de visée et l’impact du projectile.
-- Appuyer sur Shift : curseur bloqué au centre, caméra à l’épaule, personnage orienté avec la caméra. Marcher, nager et viser en haut/en bas ; les déplacements restent valides côté serveur.
+- Appuyer sur M : curseur bloqué au centre, caméra à l’épaule, personnage orienté avec la caméra. Marcher, nager et viser en haut/en bas ; les déplacements restent valides côté serveur.
 - Appuyer une seconde fois : retour à la caméra libre, sans décalage résiduel. La rotation avec clic droit doit continuer à fonctionner en mode libre.
 - Ouvrir une boutique en mode verrouillé : curseur libre pour acheter et fermer ; le verrouillage reprend à la fermeture. Alt-Tab libère aussi le pointeur. Tester mort/réapparition, saisie dans un champ texte et escalade des échelles.
-- R déclenche le propulseur sur PC ; Shift ne déclenche aucun boost.
+- Maj gauche et droite déclenchent le propulseur sur PC ; M bascule uniquement la caméra. R est libre. Vérifier qu’aucun verrouillage natif Shift ne se superpose.
 
 ## Oxygène et progression
 
@@ -78,11 +78,15 @@ N'annoncer le gameplay natif et la qualité graphique validés qu'après ces ess
 
 ## Récif, cuves et ordinateurs — nouvelle version
 
-- Au premier palier, vérifier la suppression des dalles et du cadre carré, les terrasses ovales, les trois formes de corail et le passage libre. Contrôler les collisions en nageant entre les récifs.
+- Au premier palier, descendre à 325 m : le sable doit être continu hors du passage central, sans ancien carré flottant. Parcourir toute la largeur et les quatre côtés, puis traverser l’ouverture ronde : elle doit rester libre. Répéter aux cinq autres profondeurs ; le dernier fond est fermé.
+- Vérifier les parois sur toute leur hauteur, les corniches habillées, les herbiers rubanés, les grandes éponges creuses, les plateaux roses à polypes et les trois silhouettes de corail. Les quatre angles et le dessous des plateaux ne doivent pas donner sur un vide noir. Tester la lisibilité avec la lampe niveau 1 et pendant les événements.
+- Observer les sept marchands de face et de côté : peau/coiffure, plastron, gemmes, épaulières, bottes et accessoires de métier. Vérifier les positions par rapport au comptoir, à l’enseigne et au point d’arrivée depuis l’ordinateur.
+- Ouvrir les onglets Animaux / Œufs / Bestiaire : cartes hexagonales, sélection, aperçu 3D, nombre possédé, revenus, variantes, recette connue et espèces `???`. Parcourir toutes les pages, puis déposer un œuf sécurisé depuis sa fiche. Un œuf volable ne peut pas être incubé.
+- Vérifier 1920×1080, 1280×720, portrait mobile et rotation : fiche à droite ou sous la grille, défilement et pagination accessibles, navigation compacte sur petit écran. Fermer/réouvrir les boutiques et tester M/Maj avec un menu ouvert.
 - Comparer les modèles Quaternius : poisson-clown rayé, papillon, globe, lune, raie, espadon, dauphin, baleine et six boss. Vérifier leur orientation, leurs yeux et leurs dents, dans le rendu natif et dans le secours sans API de maillage.
 - Déposer les 24 œufs de plusieurs raretés : ils restent dans la cuve d'incubation séparée sans dépasser les vitres. Les poissons ne doivent apparaître que dans l'aquarium principal, après l'échéance.
 - E à son ordinateur : menu des sept destinations, téléportation devant le bon marchand et ouverture de sa spécialité. Contrôler l'absence de débit, la collision à l'arrivée et l'acceptation par le contrôle de déplacement serveur.
 - Refuser le même transfert depuis l'exploration, depuis l'ordinateur d'un autre joueur, avec des coordonnées envoyées à la place d'une clé et pendant le cooldown.
-- R6 et R15 : nager horizontalement, monter/descendre, rester immobile, viser au harpon et tourner en Shift. La nage ne doit plus redémarrer à chaque image. Observer aussi le deuxième joueur.
+- R6 et R15 : nager horizontalement, monter/descendre, rester immobile, viser au harpon et tourner en mode caméra M. La nage ne doit plus redémarrer à chaque image. Observer aussi le deuxième joueur.
 - Osciller près de la surface : pas d'alternance rapide des poses. Remonter l'échelle, marcher sur le pont, mourir et réapparaître : vérifier la restauration de la marche et des joints.
 - Tester huit clients avec aquariums pleins, cuves pleines et coraux visibles ; mesurer FPS/mémoire et vérifier le budget de détails. Ces essais natifs restent nécessaires avant publication.

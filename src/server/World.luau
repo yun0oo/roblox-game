@@ -43,31 +43,10 @@ function World.Build(config, visuals)
         task.wait()
         local folder = Instance.new("Folder"); folder.Name = floor.Id .. "_" .. floor.ShortName; folder.Parent = self.Floors
         local color = visuals.Color(floor.Color)
-        -- The central 150-stud shaft stays open between the active floors.
-        if floor.Id > 1 and floor.Id < config.ActiveFloors then
-            solid(folder, "Plateau ouest", Vector3.new(355, 12, 860), Vector3.new(-252.5, floor.Bottom, 0), rock)
-            solid(folder, "Plateau est", Vector3.new(355, 12, 860), Vector3.new(252.5, floor.Bottom, 0), rock)
-            solid(folder, "Plateau nord", Vector3.new(150, 12, 355), Vector3.new(0, floor.Bottom, -252.5), rock)
-            solid(folder, "Plateau sud", Vector3.new(150, 12, 355), Vector3.new(0, floor.Bottom, 252.5), rock)
-        end
-        if floor.Id == 1 then
-            -- Organic sand/rock terraces replace the large rectangular slab and
-            -- neon square. A clear 170-stud central passage remains open.
-            for i = 1, 14 do
-                local angle = i * math.pi * 2 / 14
-                local radius = 210 + math.sin(i * 2.7) * 55
-                local shelf = visuals.Part(folder, "Récif de sable naturel", Vector3.new(125, 25 + i % 3 * 6, 102), CFrame.new(math.cos(angle) * radius, floor.Bottom - 4, math.sin(angle) * radius) * CFrame.Angles(0, angle, 0.05), Color3.fromRGB(229, 208, 158), Enum.Material.Sand, Enum.PartType.Ball)
-                shelf.CanCollide = true; shelf.CanQuery = true
-            end
-        end
-        for i = 1, 8 do
-            local angle = i * math.pi / 4
-            local p = Vector3.new(math.cos(angle) * 85, floor.Bottom + 18, math.sin(angle) * 85)
-            visuals.Part(folder, "Balise de descente", Vector3.new(1.5, 4, 1.5), CFrame.new(p), color, Enum.Material.Neon, Enum.PartType.Ball)
-        end
+        reef.Floor(folder, floor, config, visuals, rng)
         local title = visuals.Part(folder, "Signal", Vector3.new(1, 1, 1), CFrame.new(0, floor.Top - 45, -82), color)
         title.Transparency = 1
-        visuals.Label(title, string.format("%02d  /  %s\nCOMBINAISON CONSEILLÉE %d", floor.Id, string.upper(floor.Name), floor.MinLevel), color, 0, 240)
+        visuals.Label(title, string.format("%02d  /  %s\n%d–%d m · COMBI CONSEILLÉE %d", floor.Id, string.upper(floor.Name), config.WaterTop - floor.Top, config.WaterTop - floor.Bottom, floor.MinLevel), color, 0, 240)
         self.Spawns[floor.Id] = {}
         for i = 1, 16 do
             local angle = i / 16 * math.pi * 2
@@ -82,29 +61,6 @@ function World.Build(config, visuals)
         station.Transparency = 0.35
         visuals.Label(station, "O₂  RECHARGE\nApprochez-vous pour respirer", Color3.fromRGB(174, 255, 228), 10, 150)
         table.insert(self.Stations, stationPos)
-        for _ = 1, 36 do
-            local angle = rng:NextNumber(0, math.pi * 2)
-            local radius = rng:NextNumber(floor.Id == 1 and 150 or 100, floor.Id == 1 and 310 or 410)
-            local pos = Vector3.new(math.cos(angle) * radius, floor.Bottom + 13, math.sin(angle) * radius)
-            local stone = visuals.Part(folder, "Roche", Vector3.new(rng:NextNumber(8, 28), rng:NextNumber(9, 24), rng:NextNumber(8, 25)), CFrame.new(pos), rock:Lerp(color, 0.18), Enum.Material.Rock, Enum.PartType.Ball)
-            stone.CanCollide = true; stone.CanQuery = true
-            if floor.Id == 1 then
-                reef.Coral(folder, pos + Vector3.new(0, 6, 0), rng:NextNumber(1.6, 3), rng:NextInteger(1, 6), visuals)
-                reef.Grass(folder, pos + Vector3.new(8, 0, 3), rng:NextNumber(1.3, 2.4), visuals)
-            elseif floor.Id >= 3 then
-                visuals.Part(folder, "Cristal", Vector3.new(3, 16, 3), CFrame.new(pos + Vector3.new(0, 14, 0)) * CFrame.Angles(0.15, 0, 0.3), color, Enum.Material.Neon)
-                if floor.Id == 4 then
-                    local top = pos + Vector3.new(rng:NextNumber(-12, 12), rng:NextNumber(35, 80), rng:NextNumber(-12, 12))
-                    visuals.Rod(folder, "Arbre bioluminescent", pos, top, 2.5, Color3.fromRGB(60, 136, 140))
-                    visuals.Part(folder, "Couronne abyssale", Vector3.new(18, 6, 18), CFrame.new(top), Color3.fromRGB(104, 237, 226), Enum.Material.Neon, Enum.PartType.Ball).Transparency = 0.45
-                elseif floor.Id >= 5 then
-                    local pillar = solid(folder, "Monolithe", Vector3.new(10, 90 + floor.Id * 6, 10), pos + Vector3.new(0, 45, 0), rock, Enum.Material.Basalt)
-                    if floor.Id == 6 then
-                        visuals.Rod(folder, "Veine interdite", pillar.Position - Vector3.new(0, 35, -6), pillar.Position + Vector3.new(0, 35, 6), 1.2, color, Enum.Material.Neon)
-                    end
-                end
-            end
-        end
         if floor.Id == 2 then
             local ship = Instance.new("Model"); ship.Name = "La Belle Noyée"; ship.Parent = folder
             local center = Vector3.new(-180, floor.Bottom + 40, -10)

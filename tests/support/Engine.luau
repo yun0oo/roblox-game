@@ -54,6 +54,11 @@ function Engine.new()
     end
     local instance
     local methods = {}
+    function methods:GetPropertyChangedSignal(key)
+        self._signals = self._signals or {}
+        if not self._signals[key] then self._signals[key] = signal() end
+        return self._signals[key]
+    end
     function methods:Clone()
         local copy = instance(self.ClassName)
         for key, value in pairs(self._props) do if key ~= "Parent" then copy._props[key] = value end end
@@ -134,7 +139,7 @@ function Engine.new()
     e.ReplicatedStorage = instance("ReplicatedStorage")
     local modules = instance("Folder"); modules.Name = "Modules"; modules.Parent = e.ReplicatedStorage
     local server = instance("Folder")
-    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer", "EquipmentVisuals", "Reef" }) do
+    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer", "EquipmentVisuals", "Reef", "MerchantVisuals" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = modules
     end
     for _, name in ipairs({ "DataSystem", "World", "Ship", "Merchants", "Laboratory", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do

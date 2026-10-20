@@ -6,6 +6,9 @@ local game, workspace, script = e.Game, e.Workspace, e.Script
 local Instance, Vector3, CFrame, Color3, Enum = e.Instance, e.Vector3, e.CFrame, e.Color3, e.Enum
 local UDim2 = { new = function() return {} end, fromOffset = function() return {} end, fromScale = function() return {} end }
 local UDim = { new = function() return {} end }
+local Vector2 = { new = function(x, y) return { X = x, Y = y } end }
+local NumberSequence = { new = function() return {} end }
+local NumberSequenceKeypoint = { new = function() return {} end }
 local task = { defer = function(fn) fn() end }
 local factories, loaded = {}, {}
 local function require(ref)
@@ -74,7 +77,7 @@ aim:Step(humanoid, avatarRoot, camera, false, true)
 check(input.MouseBehavior == "camera-right-click", "Free aim preserves Roblox right-click camera controls")
 aim:Toggle(); aim:Step(humanoid, avatarRoot, camera, false, true)
 check(aim:Centered({ Name = "MouseMovement" }), "Locked mouse aim uses the centered reticle ray")
-check(input.MouseBehavior == Enum.MouseBehavior.LockCenter and humanoid.AutoRotate == false and humanoid.CameraOffset.X > 0, "Shift enables centered aim and shoulder camera lock")
+check(input.MouseBehavior == Enum.MouseBehavior.LockCenter and humanoid.AutoRotate == false and humanoid.CameraOffset.X > 0, "M enables centered aim and shoulder camera lock")
 check(avatarRoot.Position.X == 12 and avatarRoot.Position.Y == 4, "Camera lock never teleports the player")
 aim:Step(humanoid, avatarRoot, camera, true, true)
 check(input.MouseBehavior == Enum.MouseBehavior.Default and input.MouseIconEnabled and humanoid.AutoRotate, "Opening a shop releases the pointer for its buttons")
@@ -83,6 +86,57 @@ check(input.MouseBehavior == Enum.MouseBehavior.LockCenter, "Closing a shop rest
 aim.Focused = false; aim:Step(humanoid, avatarRoot, camera, false, true)
 check(input.MouseBehavior == Enum.MouseBehavior.Default, "Losing window focus releases the cursor")
 aim.Focused = true; aim:Toggle(); aim:Step(humanoid, avatarRoot, camera, false, false)
-check(input.MouseBehavior == Enum.MouseBehavior.Default and input.MouseIconEnabled and humanoid.CameraOffset.Magnitude == 0, "Second Shift restores normal camera and cursor")
+check(input.MouseBehavior == Enum.MouseBehavior.Default and input.MouseIconEnabled and humanoid.CameraOffset.Magnitude == 0, "Second M restores normal camera and cursor")
 check(not aim:Centered({ Name = "MouseMovement" }) and aim:Centered({ Name = "Gamepad1" }) and aim:Centered(Enum.UserInputType.Touch), "Mouse free aim follows the pointer while touch and gamepad stay centered")
+local AimController = factories.AimController()
+check(AimController.InputAction(Enum.KeyCode.M) == "Camera", "M toggles the camera")
+check(AimController.InputAction(Enum.KeyCode.LeftShift) == "Boost" and AimController.InputAction(Enum.KeyCode.RightShift) == "Boost", "Both Shift keys boost without locking the camera")
+check(AimController.InputAction(Enum.KeyCode.R) == nil and AimController.InputAction(Enum.KeyCode.ButtonX) == "Boost", "R is free and controller boost is preserved")
+for _, width in ipairs({ 350, 480, 680, 720, 1000, 1600 }) do
+    local layout = UI.BrowserLayout(width, 650)
+    check(layout.Columns * layout.CellWidth + (layout.Columns - 1) * 10 <= layout.GridWidth, "Collection cards fit narrow and wide screens")
+    check(layout.Stacked or layout.GridWidth + layout.DetailsWidth + 18 == width, "Detail panel cannot overlap the card grid")
+end
+local player = e:Player(99); e.Players.LocalPlayer = player
+local playerGui = Instance.new("PlayerGui"); playerGui.Parent = player
+workspace.CurrentCamera = Instance.new("Camera"); workspace.CurrentCamera.ViewportSize = { X = 1440, Y = 900 }
+ctx.Equip = function() end; ctx.Fire = function() end
+local full = UI.new(ctx)
+check(full.Gui.Parent == playerGui and full.CollectionTabs, "The real HUD and collection window construct successfully")
+full.State = state; state.Eggs = {}; state.Income = 100; state.Animals = {}; state.Discovered = {}
+for id in pairs(Config.Animals) do state.Animals[id] = 1; state.Discovered[id] = true end
+full.CollectionMode = "Animaux"; full:Open("Collection")
+local function cards()
+    local result = {}
+    for _, child in ipairs(full.Browser["Grille de collection"]:GetChildren()) do if child:IsA("TextButton") then table.insert(result, child) end end
+    return result
+end
+check(#cards() == 12 and full.BrowserPages > 1, "A large collection is limited to twelve preview cards per page")
+local firstPage = cards()[1].Name
+full.NextPage.Activated:Fire()
+check(full.CollectionPage == 2 and cards()[1].Name ~= firstPage, "Next page displays a different set of animals")
+full.PreviousPage.Activated:Fire()
+check(full.CollectionPage == 1 and cards()[1].Name == firstPage, "Previous page restores the first animals")
+local browserSent = #sent
+state.Eggs = { { Id = "test-egg", Name = "Œuf de récif", Rarity = "Rare", Unsecured = true } }
+full.CollectionMode = "Œufs"; full:Open("Collection")
+for _, child in ipairs(full.Browser:GetDescendants()) do if child:IsA("TextButton") and child.Text == "À SÉCURISER" then child.Activated:Fire() end end
+check(#sent == browserSent, "An unsecured egg card cannot hatch or deposit it")
+state.Eggs[1].Unsecured = false; state.Eggs[1].ReadyAt = nil; state.OwnBase = true
+full:RenderPanel()
+for _, child in ipairs(full.Browser:GetDescendants()) do if child:IsA("TextButton") and child.Text == "DÉPOSER DANS LA CUVE" then child.Activated:Fire() end end
+check(#sent == browserSent + 1 and sent[#sent][1] == "Hatch" and sent[#sent][2] == "test-egg", "The egg detail action deposits the selected secured egg")
+state.Eggs[1].ReadyAt = 1700000015
+full:RenderPanel()
+check(#full.HatchTimers == 1, "Selected incubating egg retains its live countdown")
+state.Discovered = {}; full:Open("Bestiaire")
+for _, card in ipairs(cards()) do
+    local hasUnknown = false
+    for _, label in ipairs(card:GetChildren()) do if label.ClassName == "TextLabel" and label.Text == "???" then hasUnknown = true end end
+    check(hasUnknown, "Undiscovered species hide their names in the grid")
+end
+workspace.CurrentCamera.ViewportSize = { X = 390, Y = 844 }; workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Fire()
+check(full.Compact and full.MenuItems[1].Button.Text == "🥚", "Small screens switch the HUD navigation to compact icons")
+full:OpenShop("Oxygen")
+check(not full.Browser.Visible and full.List.Visible and not full.CollectionTabs.Visible, "Shop pages release the collection grid and restore their purchase controls")
 print(string.format("UI: %d assertions passed (callbacks with engine fakes; native rendering untested)", passed))

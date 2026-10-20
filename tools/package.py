@@ -48,23 +48,29 @@ Aucune case API à cocher pour cette partie de test. Une session locale non
 publiée est temporaire : sa progression ne sera pas sauvegardée.
 
 Commandes : commandes Roblox / WASD pour nager, Espace pour monter,
-Ctrl pour descendre, R pour accélérer, clic gauche pour tirer,
-Shift pour bloquer/libérer la caméra (viseur centré).
+Ctrl pour descendre, Maj pour accélérer, clic gauche pour tirer,
+M pour bloquer/libérer la caméra (viseur centré).
 E près d’un œuf pour le mettre dans l’inventaire, au terminal pour le déposer,
 ou chez un marchand pour sa boutique. F à la pancarte améliore la base.
 
 Pour conserver la progression : publier une expérience privée, puis autoriser
 l'accès Studio aux services API dans les paramètres de l'expérience.
 
-Nouveautés : 15 modèles marins Quaternius CC0 intégrés, nouveaux boss,
-coraux ramifiés/gorgones/plateaux, récif sans la dalle ni le carré central,
+Nouveautés : fonds sableux continus dans les six profondeurs (récif à 325 m),
+passages centraux ouverts, parois entièrement habillées, herbiers denses,
+éponges bleues creuses et plateaux de corail rose. Plus de 60 jardins par zone.
+Marchands en armures à gemmes et or, coiffures et accessoires propres à chacun.
+Interface bleu/cyan : cartes hexagonales, onglets Animaux/Œufs/Bestiaire,
+grand aperçu détaillé et pagination. M = caméra, Maj = boost.
+15 modèles marins Quaternius CC0 intégrés, nouveaux boss,
+coraux ramifiés/gorgones/plateaux, récif sans carré flottant,
 cuve à œufs séparée, ordinateur de téléportation et nage R6/R15 retravaillée.
 7 marchands, boutique avec aperçu 3D et comparaison des niveaux,
 pancarte de base séparée, équipements visibles sur le personnage, style Roblox
 plus coloré, aquariums lumineux, œufs géants et un seul boss par profondeur.
 Le harpon vole les œufs NON SÉCURISÉS : le tir les fait tomber, puis E les
 récupère. Les œufs arrivés dans leur propre base restent protégés à jamais.
-Un viseur suit la souris en mode libre et reste centré en mode Shift.
+Un viseur suit la souris en mode libre et reste centré en mode caméra M.
 Les bases ont cinq niveaux : achat près de la pancarte avec vos gold.
 Les modèles sont intégrés : aucun import manuel n'est requis.
 

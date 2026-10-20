@@ -5,15 +5,15 @@ function GuardianSystem.new(context) return setmetatable({ Ctx = context, Active
 
 function GuardianSystem:Spawn(egg, floor)
     local ctx = self.Ctx
-    local name = floor.Guardians[ctx.Random:NextInteger(1, #floor.Guardians)]
-    local lower = string.lower(name)
-    local style = (string.find(lower, "crabe") and "crab") or (string.find(lower, "anguille") and "eel")
-        or (string.find(lower, "pieuvre") and "octopus") or (string.find(lower, "méduse") and "jelly") or "shark"
+    local index = ctx.Random:NextInteger(1, #floor.Guardians)
+    local name, style = floor.Guardians[index], floor.GuardianSkins[index]
     local power = ctx.Config.Rarities[egg.Rarity].Power
     local model = ctx.Visuals.Animal(ctx.World.Guardians, { Name = name, Style = style, Color = floor.Color },
-        CFrame.new(egg.Home + Vector3.new(12, 3, 0)), 1.3 + floor.Id * 0.3 + power * 0.15, name)
+        CFrame.new(egg.Home + Vector3.new(20, 3, 0)), floor.GuardianSize * (1 + power * 0.08), name)
     model.PrimaryPart.CanQuery = true
     model:SetAttribute("Guardian", true)
+    model:SetAttribute("MythicSkin", style)
+    model:SetAttribute("BaseSpeed", floor.GuardianSpeed)
     local record = { Model = model, Egg = egg, Floor = floor, Health = floor.GuardianHealth * power,
         MaxHealth = floor.GuardianHealth * power, Power = power, LastAttack = 0, Phase = ctx.Random:NextNumber(0, 6),
         NextAbility = os.clock() + 8, Ability = floor.Ability or (egg.Rarity == "Secret" and "Shock" or nil) }
@@ -54,17 +54,23 @@ function GuardianSystem:Step(dt)
         local target, nearest = nil, record.Floor.Detection
         for _, state in pairs(ctx.States) do
             local root, humanoid = ctx:Root(state)
-            if root and humanoid.Health > 0 and not ctx.World:SafeBase(root.Position) and (root.Position - home).Magnitude < 110 then
+            local detecting = state == record.Target and record.Floor.ChaseRadius or record.Floor.Detection
+            if root and humanoid.Health > 0 and not ctx.World:SafeBase(root.Position) and (root.Position - home).Magnitude < record.Floor.ChaseRadius then
                 local distance = (position - root.Position).Magnitude
-                if distance < nearest then nearest = distance; target = state end
+                if distance < detecting and (not target or distance < nearest) then nearest = distance; target = state end
             end
         end
+        record.Target = target
         local root = target and ctx:Root(target)
         local goal = root and root.Position or home + Vector3.new(math.cos(os.clock() * 0.5 + record.Phase) * 13, 4, math.sin(os.clock() * 0.5 + record.Phase) * 13)
         local delta = goal - position
         local strength = ctx.Event and ctx.Config.Events[ctx.Event.Key].Strength or 1
+        local rageSpeed, rageDamage = 1, 1
+        if target then rageSpeed, rageDamage = ctx.Rules.GuardianThreat(target.Profile, record.Floor, ctx.Config) end
+        local chaseSpeed = record.Floor.GuardianSpeed * (1 + (record.Power - 1) * 0.08) * strength * rageSpeed
+        model:SetAttribute("ChaseSpeed", chaseSpeed)
         if delta.Magnitude > 0.5 then
-            local travel = delta.Unit * math.min(delta.Magnitude, record.Floor.GuardianSpeed * strength * dt)
+            local travel = delta.Unit * math.min(delta.Magnitude, chaseSpeed * dt)
             local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
             params.FilterDescendantsInstances = { ctx.World.Guardians, ctx.World.Eggs }; params.IgnoreWater = true
             local obstacle = workspace:Raycast(position, travel.Unit * (travel.Magnitude + 5), params)
@@ -72,11 +78,11 @@ function GuardianSystem:Step(dt)
             local nextPosition = position + travel
             if not ctx.World:SafeBase(nextPosition) then model:PivotTo(CFrame.lookAt(nextPosition, nextPosition + delta.Unit)) end
         end
-        if root and nearest < 10 and os.clock() - record.LastAttack > 1.6 then
+        if root and nearest < record.Floor.AttackRange and os.clock() - record.LastAttack > record.Floor.AttackCooldown then
             record.LastAttack = os.clock()
             local _, humanoid = ctx:Root(target)
             if humanoid and not ctx.World:SafeBase(root.Position) then
-                humanoid:TakeDamage(record.Floor.GuardianDamage * record.Power * strength * ctx.Rules.DamageMultiplier(target.Profile))
+                humanoid:TakeDamage(record.Floor.GuardianDamage * record.Power * strength * rageDamage * ctx.Rules.DamageMultiplier(target.Profile))
                 ctx.FX:FireClient(target.Player, "Damage", {})
             end
         end
@@ -89,9 +95,10 @@ function GuardianSystem:Step(dt)
             for _, state in pairs(ctx.States) do
                 local victim, humanoid = ctx:Root(state)
                 if victim and (victim.Position - position).Magnitude < 30 and not ctx.World:SafeBase(victim.Position) then
-                    if record.Ability == "Siphon" then state.Oxygen = math.max(0, state.Oxygen - 22)
+                    local _, threatDamage = ctx.Rules.GuardianThreat(state.Profile, record.Floor, ctx.Config)
+                    if record.Ability == "Siphon" then state.Oxygen = math.max(0, state.Oxygen - 22 * threatDamage)
                     elseif record.Ability == "Vortex" then state.SlowUntil = os.clock() + 3
-                    else humanoid:TakeDamage(record.Floor.GuardianDamage * strength * ctx.Rules.DamageMultiplier(state.Profile)) end
+                    else humanoid:TakeDamage(record.Floor.GuardianDamage * strength * threatDamage * ctx.Rules.DamageMultiplier(state.Profile)) end
                     ctx.FX:FireClient(state.Player, "Damage", {})
                 end
             end

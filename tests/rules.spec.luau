@@ -28,13 +28,28 @@ profile.Equipment.Suit = 75
 check(not Rules.PurchaseUpgrade(profile, Config, "Suit"), "Maximum level cannot be exceeded")
 for _, item in ipairs({ { -219, 1 }, { -221, 2 }, { -509, 2 }, { -511, 3 }, { -810, 3 } }) do equal(Rules.FloorAt(Config, item[1]).Id, item[2]) end
 profile = Rules.NewProfile(Config)
-check(Rules.CanEnter(profile, Config.Floors[1]), "Starting reef accessible")
-check(not Rules.CanEnter(profile, Config.Floors[2]), "Shipwreck gated")
+check(Rules.IsPrepared(profile, Config.Floors[1]), "Starting reef equipment is sufficient")
+check(not Rules.IsPrepared(profile, Config.Floors[2]), "Shipwreck recommendation warns new divers")
 profile.Equipment.Suit = 10
-check(Rules.CanEnter(profile, Config.Floors[2]), "Level ten unlocks shipwreck")
-check(not Rules.CanEnter(profile, Config.Floors[3]), "Ruins still gated")
+check(Rules.IsPrepared(profile, Config.Floors[2]), "Level ten meets shipwreck recommendation")
+check(not Rules.IsPrepared(profile, Config.Floors[3]), "Ruins recommend stronger equipment")
 profile.Equipment.Suit = 20
-check(Rules.CanEnter(profile, Config.Floors[3]), "Level twenty unlocks ruins")
+check(Rules.IsPrepared(profile, Config.Floors[3]), "Level twenty meets ruins recommendation")
+local lastSpeed, lastTime = 0, 0
+for index, floor in ipairs(Config.Floors) do
+    check(floor.GuardianSpeed > lastSpeed, "Guardians get faster on every deeper floor")
+    lastSpeed = floor.GuardianSpeed
+    profile.Equipment.Suit = 1
+    local angrySpeed, angryDamage = Rules.GuardianThreat(profile, floor, Config)
+    profile.Equipment.Suit = floor.MinLevel
+    local preparedSpeed, preparedDamage = Rules.GuardianThreat(profile, floor, Config)
+    equal(preparedSpeed, 1); equal(preparedDamage, 1)
+    if index > 1 then check(angrySpeed > preparedSpeed and angryDamage > preparedDamage, "Poor equipment worsens a real chase and attack") end
+end
+for _, rarity in ipairs(Config.RarityOrder) do
+    check(Config.HatchTimes[rarity] > lastTime, "Rarer eggs take longer to incubate")
+    lastTime = Config.HatchTimes[rarity]
+end
 profile.Equipment.Oxygen = 2
 equal(Rules.MaxOxygen(profile), 118)
 local pressure = Rules.PressureMultiplier(profile)
@@ -79,8 +94,14 @@ equal(Rules.PickWeighted(distribution, 1), "B", "Upper bound never selects zero 
 
 profile = Rules.NewProfile(Config)
 profile.Eggs = { { Id = "secured", Floor = 1, Name = "Œuf", Rarity = "Common" } }
-local animal = Rules.Hatch(profile, Config, "secured", 0.3)
-check(animal ~= nil, "A secured egg hatches")
+check(not Rules.Hatch(profile, Config, "secured", 0.3, 1000), "Secured eggs must be deposited first")
+check(Rules.StartIncubation(profile, Config, "secured", 1000), "Deposit starts the incubation")
+equal(profile.Eggs[1].ReadyAt, 1015)
+check(not Rules.StartIncubation(profile, Config, "secured", 1001), "Repeated deposits cannot change the deadline")
+equal(Rules.Sanitize(profile, Config).Eggs[1].ReadyAt, 1015, "Incubation survives saving and loading")
+check(not Rules.Hatch(profile, Config, "secured", 0.3, 1014), "Early hatching is rejected")
+local animal = Rules.Hatch(profile, Config, "secured", 0.3, 1015)
+check(animal ~= nil, "Deposited egg hatches exactly at its deadline")
 equal(#profile.Eggs, 0)
 equal(profile.Animals[animal], 1)
 check(profile.Discovered[animal], "Discovery recorded")

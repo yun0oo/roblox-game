@@ -166,8 +166,15 @@ RunService.RenderStepped:Connect(function(dt)
     local speed = player:GetAttribute("SwimSpeed") or 20
     local current = Vector3.new(player:GetAttribute("CurrentX") or 0, 0, player:GetAttribute("CurrentZ") or 0)
     movement = movement:Lerp(move * speed + current, 1 - math.exp(-dt * 9))
-    velocity.Enabled = true; velocity.VectorVelocity = movement
-    humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+    local underwater = root.Position.Y < Config.WaterTop + 1
+    velocity.Enabled = underwater
+    if underwater then
+        velocity.VectorVelocity = movement
+        humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+    else
+        movement = Vector3.zero
+    end
+    light.Enabled = underwater
     lampAttachment.CFrame = root.CFrame:ToObjectSpace(CFrame.lookAt(root.Position, root.Position + camera.CFrame.LookVector))
     local lampLevel = player:GetAttribute("LampLevel") or 1
     light.Range = 24 + (lampLevel - 1) * 8; light.Brightness = 2.4 + lampLevel * 0.3
@@ -179,6 +186,12 @@ RunService.RenderStepped:Connect(function(dt)
     Lighting.FogColor = Color3.fromRGB(35, 120, 145):Lerp(Color3.fromRGB(12, 24, 52), darkness)
     Lighting.FogStart = 25; Lighting.FogEnd = 210 - darkness * 170 + lampLevel * 4
     correction.TintColor = Color3.fromRGB(207, 246, 255):Lerp(Color3.fromRGB(139, 172, 225), darkness * 0.5)
+    if not underwater then
+        Lighting.Brightness = 2.5; Lighting.Ambient = Color3.fromRGB(135, 151, 158)
+        Lighting.FogStart = 700; Lighting.FogEnd = 1800
+        Lighting.FogColor = Color3.fromRGB(170, 221, 241)
+        correction.TintColor = Color3.new(1, 1, 1)
+    end
     camera.FieldOfView += ((70 + math.max(0, speed - 25) * 0.35) - camera.FieldOfView) * math.min(1, dt * 5)
     if ui.State then
         local delta = ui.State.BasePosition - root.Position

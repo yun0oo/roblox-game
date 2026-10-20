@@ -4,7 +4,7 @@ local EggSystem = {}
 EggSystem.__index = EggSystem
 
 function EggSystem.new(context)
-    return setmetatable({ Ctx = context, Eggs = {}, Occupied = {}, NextSpawn = 0 }, EggSystem)
+    return setmetatable({ Ctx = context, Eggs = {}, Occupied = {}, NextSpawn = 0, NextIncubation = 0 }, EggSystem)
 end
 
 function EggSystem:Spawn(floor, forcedRarity)
@@ -59,7 +59,6 @@ function EggSystem:Pickup(player, id)
     if not ctx:Validate(state) then return end
     local root = ctx:Root(state)
     if not root or (root.Position - egg.Part.Position).Magnitude > ctx.Config.PickupDistance + 1 then return end
-    if not ctx.Rules.CanEnter(state.Profile, ctx.Config.Floors[egg.Floor]) then return end
     if ctx.World:SafeBase(root.Position) then return end
     if #state.Profile.Eggs >= ctx.Config.MaxStoredEggs then ctx:Notify(player, "Faites éclore vos œufs : l'incubateur est plein.", "Warning"); return end
     -- Obstructions cannot be bypassed by triggering a prompt through a wall.
@@ -94,7 +93,7 @@ function EggSystem:Secure(state)
     state.Profile.Stats.Secured += 1; state.Profile.XP += 10 * egg.Floor
     state.Carrying = nil
     self:Remove(egg)
-    self.Ctx:Notify(state.Player, "🔒 ŒUF SÉCURISÉ !\nIl vous appartient définitivement. Faites-le éclore.", "Success")
+    self.Ctx:Notify(state.Player, "🔒 ŒUF SÉCURISÉ !\nDéposez-le dans votre aquarium pour lancer l'incubation.", "Success")
     return true
 end
 
@@ -108,7 +107,7 @@ function EggSystem:Drop(state, reason)
         if reason == "Harpoon" or reason == "Manual" then return false end
         -- A disconnect/death in somebody else's bubble cannot create a steal inside it.
         local offset = position - base.Center
-        position = base.Center + (offset.Magnitude > 0.1 and offset.Unit or Vector3.xAxis) * 44
+        position = base.Center + (offset.Magnitude > 0.1 and offset.Unit or Vector3.xAxis) * (self.Ctx.Config.BaseRadius + 7)
     end
     egg.State = "Dropped"; egg.PreviousCarrier = state.Player.UserId; egg.Carrier = nil
     egg.DropReason = reason; egg.Expires = os.clock() + self.Ctx.Config.DroppedEggLifetime
@@ -123,16 +122,36 @@ function EggSystem:Hatch(state, id)
     if type(id) ~= "string" then return end
     if not self.Ctx:Validate(state) then return end
     local base = self.Ctx.World:SafeBase(state.LastPosition)
-    if not base or base.OwnerId ~= state.Player.UserId then self.Ctx:Notify(state.Player, "Rejoignez votre habitat pour faire éclore un œuf.", "Warning"); return end
-    local animalId, message = self.Ctx.Rules.Hatch(state.Profile, self.Ctx.Config, id, self.Ctx.Random:NextNumber())
-    if not animalId then self.Ctx:Notify(state.Player, message, "Warning"); return end
+    if not base or base.OwnerId ~= state.Player.UserId then self.Ctx:Notify(state.Player, "Rejoignez votre île pour déposer un œuf.", "Warning"); return end
+    local egg, message = self.Ctx.Rules.StartIncubation(state.Profile, self.Ctx.Config, id, os.time())
+    if not egg then self.Ctx:Notify(state.Player, message, "Warning"); return end
+    self.Ctx.World:RefreshIncubators(state)
+    self.Ctx:Notify(state.Player, "🥚 ŒUF DÉPOSÉ DANS L'AQUARIUM !\nÉclosion dans " .. self.Ctx.Config.HatchTimes[egg.Rarity] .. " secondes.", egg.Rarity)
+end
+
+function EggSystem:FinishIncubation(state, id)
+    -- Completion uses only the persisted server deadline, never a client timer.
+    local animalId = self.Ctx.Rules.Hatch(state.Profile, self.Ctx.Config, id, self.Ctx.Random:NextNumber(), os.time())
+    if not animalId then return false end
     self.Ctx.World:RefreshAnimals(state)
-    self.Ctx.FX:FireClient(state.Player, "Hatch", { AnimalId = animalId, Position = base.Core.Position + Vector3.new(0, 7, 0) })
-    self.Ctx:Notify(state.Player, "🎉 NOUVEL ANIMAL DÉCOUVERT !\n" .. self.Ctx.Config.Animals[animalId].Name, "Success")
+    self.Ctx.World:RefreshIncubators(state)
+    self.Ctx.FX:FireClient(state.Player, "Hatch", { AnimalId = animalId, Position = state.Base.TankCenter })
+    self.Ctx:Notify(state.Player, "🎉 NOUVEL ANIMAL DANS L'AQUARIUM !\n" .. self.Ctx.Config.Animals[animalId].Name .. " produit des gold !", "Success")
+    return true
 end
 
 function EggSystem:Step()
     local now = os.clock()
+    if now >= self.NextIncubation then
+        self.NextIncubation = now + 0.5
+        for _, state in pairs(self.Ctx.States) do
+            if self.Ctx.Data and self.Ctx.Data:IsClosing(state.Player) then continue end
+            for index = #state.Profile.Eggs, 1, -1 do
+                local egg = state.Profile.Eggs[index]
+                if egg.ReadyAt and os.time() >= egg.ReadyAt then self:FinishIncubation(state, egg.Id) end
+            end
+        end
+    end
     if now >= self.NextSpawn then
         self.NextSpawn = now + self.Ctx.Config.SpawnInterval
         for _, floor in ipairs(self.Ctx.Config.Floors) do self:Spawn(floor) end

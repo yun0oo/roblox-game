@@ -1,8 +1,8 @@
 # Underwater Egg
 
-Jeu Roblox multijoueur sous-marin en Luau, construit avec Rojo. La carte, les animaux, les gardiens et les interfaces sont générés par le projet : aucun modèle payant ni pack externe n'est nécessaire.
+Jeu Roblox multijoueur en Luau, construit avec Rojo : exploration sous-marine et îles personnelles à la surface, chacune avec un aquarium géant. La carte, les animaux, les gardiens et les interfaces sont générés par le projet : aucun modèle payant ni pack externe n'est nécessaire.
 
-**Explorer → prendre un œuf gardé → échapper aux harpons → sécuriser à sa base → faire éclore → gagner → améliorer → descendre.**
+**Plonger → prendre un œuf gardé → échapper aux harpons → remonter sur son île → déposer dans l'aquarium → attendre l'éclosion → produire des gold → s'équiper → descendre.**
 
 ## Télécharger sur GitHub
 
@@ -35,12 +35,13 @@ L'archive `build/UnderwaterEgg-project.zip` regroupe les sources, les tests, la 
 | Océan | Six paliers verticaux, récif, épave, ruines, forêt bioluminescente, squelette de titan et fosse interdite ; puits central et stations O₂ |
 | Exploration | Nage 3D, oxygène, pression, lampe, propulseur, ralentissement selon l'œuf |
 | Œufs | 24 noms d'œufs, 16 nids par palier, choix aléatoire des nids et raretés, expiration ; jusqu'à 36 œufs actifs |
-| Gardiens | Un gardien par apparition, patrouille, poursuite, retour au nid, PV, attaque, dégâts et vitesse selon profondeur/rareté |
+| Gardiens | Géants mythologiques : Kraken, Léviathan, dragon marin, Scylla et Charybde ; vitesse croissante de 14 à 46 studs/s, rage contre les plongeurs mal équipés, poursuite prolongée et attaques meurtrières |
 | Boss | Attaques annoncées : siphon d'oxygène, onde de choc, ralentissement de vortex ; immunité complète des habitats |
-| Harpon | Projectile visible, corde, recul, sons et impact ; collision balayée côté serveur, portée et cadence configurables |
-| Habitats | Huit bulles protégées, sécurisation automatique, incubateur, atelier et présentoirs des douze espèces possédées les plus rentables |
+| Harpon | Fusil détaillé avec crosse, canon, sandows, moulinet, flèche et pointe à ardillons ; projectile, corde, recul, sons et collision balayée côté serveur |
+| Habitats | Huit îles protégées au-dessus de l'eau, rampes de plongée, aquarium géant inclus, dépôt des œufs, atelier et animaux qui nagent dans la cuve |
+| Incubation | Dépôt manuel sur son île ; œuf visible dans l'aquarium, compte à rebours et éclosion automatique selon rareté ; échéance sauvegardée lors d'une reconnexion |
 | Collection | 61 animaux d'éclosion, au moins dix par palier ; huit hybrides de fusion ; bestiaire avec modèles et espèces inconnues `???` |
-| Économie | Production connectée par minute, prix configurables, sept équipements améliorables |
+| Économie | Les animaux produisent automatiquement des gold par minute ; ces gold achètent les sept équipements, les décorations et les fusions |
 | Fusion | Trois identiques → Gold → Diamond → Mythic ; cinq recettes connues et trois recettes secrètes privées côté serveur |
 | Phénomènes | Paliers de 5, 15 et 40 minutes ; avertissement, courants, obscurité, gardiens renforcés et probabilités modifiées |
 | Prestige | Progression recommençable, bonus permanents d'argent, oxygène, nage, harpon et coût de fusion |
@@ -102,7 +103,18 @@ Ces contrôles ne remplacent pas Roblox Studio : le rendu, la physique réseau, 
 
 Les valeurs publiques sont centralisées dans `src/shared/Config.luau` : probabilités par profondeur, catalogues, revenus, tailles, ralentissements, oxygène, équipement, harpons, durées et bonus d'événement. Les poids sont normalisés ; ils n'ont pas besoin de totaliser 100.
 
-La combinaison débloque les paliers aux niveaux **1 / 10 / 20 / 35 / 50 / 75**. Chaque niveau réduit aussi la consommation liée à la pression. Les variantes produisent **Gold ×3,5 / Diamond ×12 / Mythic ×45**, avant le multiplicateur de prestige.
+Tous les paliers sont accessibles, même avec la combinaison 1. Les niveaux **1 / 10 / 20 / 35 / 50 / 75** sont des recommandations de survie. Sous le niveau conseillé, les gardiens gagnent jusqu'à **85 % de vitesse** et **150 % de dégâts** ; aucun mur ou téléportation ne remplace ce danger. Les améliorations de nage, protection, combinaison et propulseur permettent de survivre. Chaque combinaison réduit aussi la consommation liée à la pression.
+
+| Rareté | Incubation après dépôt | Aura |
+| --- | --- | --- |
+| Common | 15 s | Blanche |
+| Rare | 40 s | Bleue |
+| Epic | 90 s | Violette |
+| Legendary | 3 min | Dorée |
+| Mythic | 6 min | Rose |
+| Secret | 12 min | Turquoise intense |
+
+Les délais sont configurables dans `Config.HatchTimes`. Le serveur conserve l'échéance absolue : une reconnexion ne redémarre pas l'incubation. Un œuf terminé pendant l'absence éclot au retour. Les animaux produisent des gold pendant la connexion. Les variantes produisent **Gold ×3,5 / Diamond ×12 / Mythic ×45**, avant le multiplicateur de prestige.
 
 Pour revenir au test MVP initial, régler `Config.ActiveFloors = 3`. Les paliers supplémentaires ne sont alors pas construits et leurs œufs n'apparaissent pas. La configuration par défaut active les six paliers.
 
@@ -112,7 +124,9 @@ Les recettes complètes se trouvent exclusivement dans `src/server/FusionData.lu
 
 Le profil contient argent, équipement (harpon compris), animaux normaux et variantes, bestiaire, œufs sécurisés, recettes, prestige, XP, profondeur record, statistiques et personnalisation. Le revenu est produit pendant la connexion, sans revenu hors ligne.
 
-Les œufs en cours de transport restent dans le monde : une mort ou déconnexion les fait tomber. Un œuf arrivé dans l'habitat de son transporteur passe dans son inventaire persistant et disparaît du monde partagé. Tous les habitats protègent les visiteurs, mais seul son propre habitat sécurise un œuf pour soi.
+Les œufs en cours de transport restent dans le monde : une mort ou déconnexion les fait tomber. Un œuf arrivé sur l'île de son transporteur passe dans son inventaire persistant et disparaît du monde partagé. Le joueur le dépose ensuite avec **E** au terminal devant l'aquarium, ou avec **Collection → Déposer** sur son île. Le compte à rebours commence alors et l'animal rejoint automatiquement l'aquarium à la fin. Les douze espèces possédées les plus rentables sont représentées dans la cuve ; toute la collection produit des gold. Toutes les îles protègent les visiteurs, mais seule sa propre île sécurise un œuf pour soi.
+
+Les profils existants restent compatibles : le champ persistant `Money` représente désormais les gold affichés. Les échéances d'incubation sont des champs facultatifs des œufs déjà sécurisés.
 
 Le prestige requiert la combinaison 20 et son prix affiché. Après une confirmation à deux étapes, il remet argent à 150, équipement à 1, XP à zéro et vide les animaux/variantes/œufs. Bestiaire, recettes découvertes, statistiques, record de profondeur et cosmétiques restent acquis.
 

@@ -77,18 +77,14 @@ local function start()
         end
         state.MoveCredit -= distance
         local bottom = Config.Floors[Config.ActiveFloors].Bottom + 3
-        if math.abs(position.X) > Config.Bounds or math.abs(position.Z) > Config.Bounds or position.Y > 99 or position.Y < bottom then
-            self:Teleport(state, Vector3.new(math.clamp(position.X, -420, 420), math.clamp(position.Y, bottom + 6, 95), math.clamp(position.Z, -420, 420)))
+        if math.abs(position.X) > Config.Bounds or math.abs(position.Z) > Config.Bounds or position.Y > Config.SurfaceCeiling or position.Y < bottom then
+            self:Teleport(state, Vector3.new(math.clamp(position.X, -420, 420), math.clamp(position.Y, bottom + 6, Config.SurfaceCeiling - 5), math.clamp(position.Z, -420, 420)))
             return false
         end
         local floor = Rules.FloorAt(Config, position.Y)
-        if not Rules.CanEnter(state.Profile, floor) then
-            self:Teleport(state, Vector3.new(position.X, floor.Top + 15, position.Z))
-            if now > (state.NextGateWarning or 0) then
-                state.NextGateWarning = now + 4
-                self:Notify(state.Player, "⚠ ÉQUIPEMENT INSUFFISANT\nCombinaison niveau " .. floor.MinLevel .. " requis.", "Warning")
-            end
-            return false
+        if not Rules.IsPrepared(state.Profile, floor) and now > (state.NextGateWarning or 0) then
+            state.NextGateWarning = now + 15
+            self:Notify(state.Player, "⚠ PROFONDEUR DANGEREUSE\nCombinaison " .. floor.MinLevel .. " conseillée : les gardiens vous rattraperont !", "Warning")
         end
         state.LastPosition = position; state.Floor = floor.Id
         return true
@@ -103,11 +99,8 @@ local function start()
         local tool = Instance.new("Tool")
         tool.Name = "Harpon"; tool.ToolTip = "Viser et tirer • les habitats sont protégés"
         tool.CanBeDropped = false; tool.RequiresHandle = true
-        tool.Grip = CFrame.new(0, -0.3, 0.5) * CFrame.Angles(math.pi / 2, 0, 0)
-        local handle = Instance.new("Part"); handle.Name = "Handle"; handle.Size = Vector3.new(0.6, 0.6, 3.2)
-        handle.Color = Color3.fromRGB(57, 150, 169); handle.Material = Enum.Material.Metal
-        handle.CanCollide = false; handle.CanTouch = false; handle.Massless = true; handle.Parent = tool
-        local origin = Instance.new("Attachment"); origin.Name = "RopeOrigin"; origin.Position = Vector3.new(0, 0, -1.7); origin.Parent = handle
+        tool.Grip = CFrame.new(0, -0.35, 0.3)
+        Visuals.Harpoon(tool, state.Profile.Equipment.Harpoon)
         tool.Parent = state.Player:WaitForChild("Backpack")
         state.Tool = tool
         character:FindFirstChildOfClass("Humanoid"):EquipTool(tool)
@@ -133,9 +126,9 @@ local function start()
         state.Player:SetAttribute("SwimSpeed", speed)
         state.Player:SetAttribute("LampLevel", profile.Equipment.Lamp)
         state.Player:SetAttribute("CurrentX", current.X); state.Player:SetAttribute("CurrentZ", current.Z)
-        return { Money = math.floor(profile.Money), Income = Rules.Income(profile, Config), Oxygen = state.Oxygen,
+        return { Money = math.floor(profile.Money), Gold = math.floor(profile.Money), ServerTime = os.time(), Income = Rules.Income(profile, Config), Oxygen = state.Oxygen,
             MaxOxygen = Rules.MaxOxygen(profile), Health = select(2, ctx:Root(state)) and select(2, ctx:Root(state)).Health or 0,
-            Depth = math.max(0, math.floor(85 - state.LastPosition.Y)), Floor = state.Floor,
+            Depth = math.max(0, math.floor(Config.WaterTop - state.LastPosition.Y)), Floor = state.Floor,
             Equipment = profile.Equipment, Animals = profile.Animals, Discovered = profile.Discovered, Eggs = profile.Eggs,
             Variants = profile.Variants, Prestige = profile.Prestige, PrestigeCost = Rules.PrestigeCost(profile), Recipes = recipes,
             OwnedDecor = profile.OwnedDecor, Palette = profile.Palette,
@@ -152,16 +145,17 @@ local function start()
         local root = character:WaitForChild("HumanoidRootPart", 12)
         local humanoid = character:WaitForChild("Humanoid", 12)
         if not root or not humanoid or ctx.States[state.Player] ~= state or state.Player.Character ~= character then return end
-        ctx:Teleport(state, state.Base.Center + Vector3.new(0, 1, 14))
+        ctx:Teleport(state, state.Base.Spawn)
         state.Oxygen = Rules.MaxOxygen(state.Profile)
         humanoid.WalkSpeed = Rules.SwimSpeed(state.Profile)
-        humanoid.JumpPower = 0
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+        humanoid.JumpPower = 50
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
         humanoid.Died:Connect(function()
             ctx.Eggs:Drop(state, "Death")
         end)
         equipTool(state, character)
         ctx.World:RefreshAnimals(state)
+        ctx.World:RefreshIncubators(state)
         character:SetAttribute("UnderwaterReady", true)
         ctx.Snapshot:FireClient(state.Player, makeSnapshot(state))
     end
@@ -180,11 +174,11 @@ local function start()
             SaveStatus = offline and "STUDIO · NON SAUVEGARDÉ" or "Sauvegarde active", Tokens = 18, TokenTime = os.clock() }
         ctx.States[player] = state; loading[player] = nil
         local leaderstats = Instance.new("Folder"); leaderstats.Name = "leaderstats"; leaderstats.Parent = player
-        for _, key in ipairs({ "Argent", "Animaux", "Profondeur" }) do local value = Instance.new("IntValue"); value.Name = key; value.Parent = leaderstats end
+        for _, key in ipairs({ "Gold", "Animaux", "Profondeur" }) do local value = Instance.new("IntValue"); value.Name = key; value.Parent = leaderstats end
         player.CharacterAdded:Connect(function(character) onCharacter(state, character) end)
         -- The automatic avatar may already exist by the time the world/profile loads.
         if player.Character then task.spawn(onCharacter, state, player.Character) end
-        ctx:Notify(player, "Bienvenue sous l'océan !\nTrouvez un œuf, évitez son gardien, puis revenez à votre habitat.", "Success")
+        ctx:Notify(player, "Bienvenue sur votre île !\nTrouvez un œuf, évitez son gardien, puis déposez-le dans votre aquarium en surface.", "Success")
         if offline then ctx:Notify(player, "MODE STUDIO HORS LIGNE\nDataStore indisponible : cette session ne sera pas sauvegardée.", "Warning") end
     end
 
@@ -192,8 +186,9 @@ local function start()
         base.HatchPrompt.Triggered:Connect(function(player)
             local state = ctx.States[player]
             if state and base.OwnerId == player.UserId and ctx:Validate(state) and (state.LastPosition - base.Core.Position).Magnitude <= 13 then
-                local egg = state.Profile.Eggs[1]
-                if egg then ctx.Eggs:Hatch(state, egg.Id) else ctx:Notify(player, "Rapportez d'abord un œuf à votre habitat.") end
+                local egg
+                for _, stored in ipairs(state.Profile.Eggs) do if not stored.ReadyAt then egg = stored; break end end
+                if egg then ctx.Eggs:Hatch(state, egg.Id) else ctx:Notify(player, "Rapportez un œuf ou consultez les incubations dans votre aquarium.") end
             end
         end)
         base.UpgradePrompt.Triggered:Connect(function(player)
@@ -236,7 +231,10 @@ local function start()
             elseif action == "Prestige" then
                 if state.Carrying then ctx:Notify(player, "Sécurisez d'abord votre œuf.", "Warning"); return end
                 local success, message = Rules.Rebirth(state.Profile, Config)
-                if success then state.Oxygen = Rules.MaxOxygen(state.Profile); ctx.World:RefreshAnimals(state) end
+                if success then
+                    state.Oxygen = Rules.MaxOxygen(state.Profile)
+                    ctx.World:RefreshAnimals(state); ctx.World:RefreshIncubators(state)
+                end
                 ctx:Notify(player, message, success and "Success" or "Warning")
             else
                 local success, message = Rules.Decorate(state.Profile, Config, payload)
@@ -256,7 +254,7 @@ local function start()
             ctx:Notify(player, "Retour à l'habitat dans 4 secondes. Aucun œuf ne peut voyager avec vous.")
             task.delay(4, function()
                 state.Returning = false
-                if ctx.States[player] == state and not state.Carrying and ctx:Root(state) then ctx:Teleport(state, state.Base.Center + Vector3.new(0, 1, 14)) end
+                if ctx.States[player] == state and not state.Carrying and ctx:Root(state) then ctx:Teleport(state, state.Base.Spawn) end
             end)
         elseif action == "Sync" then ctx.Snapshot:FireClient(player, makeSnapshot(state)) end
     end)
@@ -274,27 +272,30 @@ local function start()
             if ctx:Validate(state) then
                 local root, humanoid = ctx:Root(state)
                 local floor = Config.Floors[state.Floor]
-                local station = ctx.World:AtStation(root.Position)
+                local station = root.Position.Y >= Config.WaterTop - 2 or ctx.World:AtStation(root.Position)
                 if station then state.Oxygen = math.min(Rules.MaxOxygen(state.Profile), state.Oxygen + step * 35)
                 else state.Oxygen = math.max(0, state.Oxygen - floor.OxygenDrain * Rules.PressureMultiplier(state.Profile) * step) end
                 if state.Oxygen <= 0 then humanoid:TakeDamage(step * 9) end
                 if state.Oxygen / Rules.MaxOxygen(state.Profile) < 0.2 and os.clock() > (state.NextOxygenWarning or 0) then
                     state.NextOxygenWarning = os.clock() + 15; ctx:Notify(state.Player, "⚠ OXYGÈNE FAIBLE\nRejoignez une station O₂ ou un habitat !", "Warning")
                 end
-                state.Profile.MaxDepth = math.max(state.Profile.MaxDepth, math.floor(85 - root.Position.Y))
+                state.Profile.MaxDepth = math.max(state.Profile.MaxDepth, math.max(0, math.floor(Config.WaterTop - root.Position.Y)))
                 state.Player:SetAttribute("SwimSpeed", ctx:Speed(state))
                 humanoid.WalkSpeed = ctx:Speed(state)
             end
-            state.Profile.Money = math.min(Config.MaxMoney, state.Profile.Money + Rules.Income(state.Profile, Config) / 60 * step)
+            if not ctx.Data:IsClosing(state.Player) then
+                state.Profile.Money = math.min(Config.MaxMoney, state.Profile.Money + Rules.Income(state.Profile, Config) / 60 * step)
+            end
         end
         ctx.Eggs:Step()
         ctx.Guardians:Step(step)
         if snapshots >= Config.SnapshotInterval then
             snapshots = 0
+            ctx.World:StepAquariums(os.clock())
             for _, state in pairs(ctx.States) do
                 ctx.Snapshot:FireClient(state.Player, makeSnapshot(state))
                 local stats = state.Player:FindFirstChild("leaderstats")
-                if stats then stats.Argent.Value = math.floor(state.Profile.Money); stats.Animaux.Value = Rules.AnimalCount(state.Profile); stats.Profondeur.Value = state.Profile.MaxDepth end
+                if stats then stats.Gold.Value = math.floor(state.Profile.Money); stats.Animaux.Value = Rules.AnimalCount(state.Profile); stats.Profondeur.Value = state.Profile.MaxDepth end
             end
         end
     end)
@@ -311,7 +312,8 @@ local function start()
         ctx.Eggs:Drop(state, "Disconnect")
         ctx.States[player] = nil
         state.Base.OwnerId = 0; state.Base.Model:SetAttribute("OwnerId", 0)
-        state.Base.Label.Text = "HABITAT DISPONIBLE\nZONE SÉCURISÉE"; state.Base.Display:ClearAllChildren()
+        state.Base.Label.Text = "ÎLE DISPONIBLE\nAQUARIUM GÉANT · ZONE SÉCURISÉE"; state.Base.Display:ClearAllChildren()
+        state.Base.EggDisplay:ClearAllChildren(); state.Base.Incubators = {}; state.Base.Swimmers = {}
         local custom = state.Base.Model:FindFirstChild("Personnalisation"); if custom then custom:Destroy() end
         ctx.Data:Save(player, true)
     end

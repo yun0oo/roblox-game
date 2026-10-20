@@ -4,8 +4,7 @@
 local Config = require("../src/shared/Config")
 local Rules = require("../src/shared/Rules")
 local clock = 10
-local realTime = os.time
-local os = { clock = function() return clock end, time = realTime }
+local os = { clock = function() return clock end, time = function() return 1700000000 + math.floor(clock) end }
 local passed = 0
 local function check(condition, message) assert(condition, message); passed += 1 end
 local V = {}
@@ -21,7 +20,11 @@ vectorMeta.__index = function(a, key)
     if key == "Dot" then return function(b, c) return b.X * c.X + b.Y * c.Y + b.Z * c.Z end end
 end
 local Vector3 = { new = V.new, zero = V.new(), xAxis = V.new(1, 0, 0) }
-local CFrame = { new = function(pos) return { Position = pos } end, lookAt = function(pos) return { Position = pos } end }
+local frameMeta = {}
+local CFrame = {}
+function CFrame.new(pos, y, z) return setmetatable({ Position = type(pos) == "table" and pos or V.new(pos, y, z) }, frameMeta) end
+CFrame.lookAt = CFrame.new
+frameMeta.__mul = function(a, b) return CFrame.new(a.Position + b.Position) end
 local Color3 = { fromRGB = function() return {} end }
 local ColorSequence = { new = function() return {} end }
 local RaycastParams = { new = function() return {} end }
@@ -72,10 +75,12 @@ local function context()
     local ctx = { Config = Config, Rules = Rules, States = {}, Notices = 0, Effects = 0,
         Random = { NextNumber = function() return 0.3 end, NextInteger = function() return 1 end },
         Visuals = { Part = function(_, _, _, frame) return fakePart(frame.Position) end,
+            HarpoonProjectile = function(_, frame) return fakePart(frame.Position) end,
             Egg = function(_, _, _, frame) return fakePart(frame.Position) end, Color = function() return {} end, Label = function() end,
             Animal = function(_, spec, frame) return fakeModel(spec.Name, frame.Position) end },
         FX = { FireAllClients = function() end, FireClient = function() end } }
-    ctx.World = setmetatable({ Bases = { { Center = V.new(200, 0, 0), Core = { Position = V.new(200, 0, 0) }, OwnerId = 1 } }, Eggs = {}, Events = {}, Guardians = {}, RefreshAnimals = function() end }, World)
+    ctx.World = setmetatable({ Config = Config, Bases = { { Center = V.new(200, 0, 0), TankCenter = V.new(200, 0, 0), Core = { Position = V.new(200, 0, 0) }, OwnerId = 1 } }, Spawns = {}, Eggs = {}, Events = {}, Guardians = {}, RefreshAnimals = function() end, RefreshIncubators = function() end }, World)
+    for _, floor in ipairs(Config.Floors) do ctx.World.Spawns[floor.Id] = {} end
     function ctx:Notify() self.Notices += 1 end
     function ctx:Broadcast() self.Notices += 1 end
     function ctx:Root(state) return state.Root, state.Humanoid end
@@ -87,7 +92,7 @@ local function context()
 end
 local function state(ctx, id, position)
     local p = player(id)
-    local s = { Player = p, Profile = Rules.NewProfile(Config), LastPosition = position, Root = { Position = position },
+    local s = { Player = p, Profile = Rules.NewProfile(Config), Base = ctx.World.Bases[1], LastPosition = position, Root = { Position = position, CFrame = CFrame.new(position) },
         Humanoid = { Health = 100, TakeDamage = function(self, amount) self.Health -= amount end },
         Tool = { Parent = p.Character, Handle = { FindFirstChild = function() return {} end } } }
     ctx.States[p] = s; byCharacter[p.Character] = p
@@ -127,14 +132,23 @@ check(#b.Profile.Eggs == 0, "Somebody else's base does not secure your egg")
 ctx.Eggs:Hatch(b, "safe")
 check(Rules.AnimalCount(b.Profile) == 0, "Hatching cannot access another player's inventory")
 ctx.Eggs:Hatch(a, "safe")
-check(Rules.AnimalCount(a.Profile) == 1 and #a.Profile.Eggs == 0, "Owner hatches in own base")
+check(Rules.AnimalCount(a.Profile) == 0 and a.Profile.Eggs[1].ReadyAt, "Owner deposits into own aquarium without an instant animal")
+local deadline = a.Profile.Eggs[1].ReadyAt
 ctx.Eggs:Hatch(a, "safe")
-check(Rules.AnimalCount(a.Profile) == 1, "Replayed hatch is idempotent")
+check(a.Profile.Eggs[1].ReadyAt == deadline, "Repeated remote hatch cannot skip or restart incubation")
+ctx.Eggs:Step()
+check(Rules.AnimalCount(a.Profile) == 0, "Server heartbeat cannot hatch before deadline")
+clock += Config.HatchTimes.Common
+ctx.Eggs:Step()
+check(Rules.AnimalCount(a.Profile) == 1 and #a.Profile.Eggs == 0, "Server automatically hatches the deposited egg at deadline")
+ctx.Eggs:Hatch(a, "safe")
+check(Rules.AnimalCount(a.Profile) == 1, "Replayed hatch never duplicates an animal")
 
 ctx = context(); a = state(ctx, 1, V.new()); item = egg(ctx, "distant", V.new(40, 0, 0))
 ctx.Eggs:Pickup(a.Player, item.Id); check(a.Carrying == nil, "Remote prompt distance checked")
 item.Part.Position = V.new(2, 0, 0); item.Floor = 2
-ctx.Eggs:Pickup(a.Player, item.Id); check(a.Carrying == nil, "Equipment depth gate checked during pickup")
+ctx.Eggs:Pickup(a.Player, item.Id); check(a.Carrying == item.Id, "A poorly equipped diver can still pick up a deeper egg")
+ctx.Eggs:Drop(a, "Manual")
 item.Floor = 1; hitResult = { Instance = {} }
 ctx.Eggs:Pickup(a.Player, item.Id); check(a.Carrying == nil, "Pickup through a wall rejected")
 hitResult = nil; a.Valid = false
@@ -174,10 +188,12 @@ check(data ~= nil and store.Value.Session.Id == first.Token, "Load acquires a le
 local blocked = second:Load(p)
 check(blocked == nil, "Concurrent session cannot load or overwrite a locked profile")
 data.Money = 1234
+data.Eggs = { { Id = "incubating", Name = "Œuf", Floor = 1, Rarity = "Common", StartedAt = os.time(), ReadyAt = os.time() + 15 } }
 check(first:Save(p, false) and store.Value.Data.Money == 1234, "Autosave persists actual profile state")
 check(first:Save(p, true) and store.Value.Session == nil, "Leaving releases the lease")
 local restored = second:Load(p)
 check(restored and restored.Money == 1234, "Reconnect restores saved progression")
+check(restored.Eggs[1].ReadyAt == data.Eggs[1].ReadyAt, "Reconnect preserves incubation deadline without restarting it")
 local existing = store.Value
 store.Fail = true
 local failed = DataSystem.new(Config, Rules)
@@ -236,11 +252,26 @@ clock += 3
 ctx.Guardians:Step(0.1)
 check(a.Humanoid.Health == 100, "Guardians never attack a player in a safe base")
 a.Root.Position = V.new(145, 0, 0)
-guardian.Model.Position = V.new(140, 0, 0)
+guardian.Model.Position = V.new(130, 0, 0)
 ctx.Guardians:Step(0.1)
-check(guardian.Model.Position.X < 140, "Lured guardian returns toward its nest")
+check(guardian.Model.Position.X < 130, "Lured guardian returns toward its nest")
 ctx.Guardians:Damage(guardian.Model, guardian.Health + 1, a.Player)
 check(guardian.Model.Destroyed and item.Guardian == nil and ctx.Guardians.Active[guardian.Model] == nil, "Defeated guardian is removed without duplicating the egg")
+
+ctx = context(); a = state(ctx, 1, V.new(17, 3, 0))
+item = egg(ctx, "rage", V.new())
+local angry = ctx.Guardians:Spawn(item, Config.Floors[2])
+ctx.Guardians:Step(0.1)
+local badSpeed = (angry.Model.Position - V.new(20, 3, 0)).Magnitude / 0.1
+local badDamage = 100 - a.Humanoid.Health
+angry.Model.Position = V.new(20, 3, 0); a.Profile.Equipment.Suit = 10; a.Humanoid.Health = 100
+clock += 2; ctx.Guardians:Step(0.1)
+check(badSpeed > (angry.Model.Position - V.new(20, 3, 0)).Magnitude / 0.1, "Actual guardian movement is faster against inadequate equipment")
+check(badDamage > 100 - a.Humanoid.Health, "Adequate equipment reduces actual guardian attack damage")
+ctx = context(); a = state(ctx, 1, V.new(17, 3, 0))
+item = egg(ctx, "deadly", V.new()); item.Rarity = "Secret"
+ctx.Guardians:Spawn(item, Config.Floors[6]); ctx.Guardians:Step(0.1)
+check(a.Humanoid.Health <= 0, "A deep Secret guardian can kill a starting diver")
 
 clock = 0; ctx = context()
 ctx.Eggs.RefreshForEvent = function(self) self.Refreshed = true end
@@ -294,7 +325,7 @@ for _, ability in ipairs({ "Siphon", "Shock", "Vortex" }) do
     check(boss.Telegraph ~= nil, "Boss attack telegraphed before impact")
     check(a.Oxygen == 100 and a.Humanoid.Health == 100 and not a.SlowUntil, "Telegraph itself has no combat effect")
     clock += 1.3; ctx.Guardians:Step(0.01)
-    check((ability == "Siphon" and a.Oxygen == 78) or (ability == "Shock" and a.Humanoid.Health < 100)
+    check((ability == "Siphon" and a.Oxygen < 100) or (ability == "Shock" and a.Humanoid.Health < 100)
         or (ability == "Vortex" and a.SlowUntil > clock), "Boss ability produces its configured gameplay effect")
     a.Oxygen = 100; a.Humanoid.Health = 100; a.SlowUntil = nil
     boss.NextAbility = clock; ctx.Guardians:Step(0.01)

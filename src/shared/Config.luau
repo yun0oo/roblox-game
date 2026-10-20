@@ -6,6 +6,12 @@ Config.Version = 1
 Config.MaxPlayers = 8
 Config.Bounds = 430
 Config.WaterTop = 105
+Config.SurfaceCeiling = 210
+Config.BaseRadius = 62
+Config.BaseHeight = 123
+Config.HatchTimes = { Common = 15, Rare = 40, Epic = 90, Legendary = 180, Mythic = 360, Secret = 720 }
+Config.UndergearedSpeedBonus = 0.85
+Config.UndergearedDamageBonus = 1.5
 Config.MaxStoredEggs = 24
 Config.MaxAnimals = 10000
 Config.MaxMoney = 1e15
@@ -94,7 +100,7 @@ Config.Animals = {
 Config.Upgrades = {
     Oxygen = { Name = "Oxygène", Max = 15, BaseCost = 75, Growth = 1.55, Description = "+18 unités de réserve / niveau" },
     Swim = { Name = "Nage", Max = 10, BaseCost = 100, Growth = 1.7, Description = "+2 studs/s / niveau" },
-    Suit = { Name = "Combinaison", Max = 75, BaseCost = 35, Growth = 1.16, Description = "Pression réduite · Épave 10 · Ruines 20" },
+    Suit = { Name = "Combinaison", Max = 75, BaseCost = 35, Growth = 1.16, Description = "Pression réduite · limite la rage des gardiens en profondeur" },
     Shield = { Name = "Protection", Max = 10, BaseCost = 90, Growth = 1.7, Description = "−6 % de dégâts / niveau" },
     Lamp = { Name = "Lampe", Max = 8, BaseCost = 60, Growth = 1.65, Description = "+8 studs de visibilité / niveau" },
     Thruster = { Name = "Propulseur", Max = 8, BaseCost = 150, Growth = 1.75, Description = "Accélération plus puissante · recharge 7 s" },
@@ -194,7 +200,7 @@ Config.Decorations = {
     coral = { Name = "Corail rose", Cost = 500, Color = { 255, 135, 160 }, Kind = "Palette" },
     abyss = { Name = "Nuit abyssale", Cost = 2500, Color = { 169, 136, 255 }, Kind = "Palette" },
     bubbles = { Name = "Fontaine de bulles", Cost = 700, Kind = "Effect" },
-    aquarium = { Name = "Aquarium panoramique", Cost = 2000, Kind = "Aquarium" },
+    aquarium = { Name = "Aquarium annexe décoratif", Cost = 2000, Kind = "Aquarium" },
     statue = { Name = "Statue du grand gardien", Cost = 5000, Kind = "Statue" },
 }
 Config.Events.Minor.Names = { "COURANTS SOUS-MARINS", "MIGRATION LUMINEUSE", "BROUILLARD MARIN" }
@@ -203,4 +209,23 @@ Config.Events.Legendary = { Interval = 2400, Duration = 210, Warning = 30, Names
     Bonuses = { { Rare = 35, Epic = 36 }, { Epic = 35, Legendary = 50 }, { Legendary = 45, Mythic = 40 }, { Mythic = 70, Secret = 6 }, { Secret = 30 }, { Secret = 45 } } }
 Config.Events.Minor.Bonuses[4] = { Mythic = 16, Secret = 0.3 }; Config.Events.Minor.Bonuses[5] = { Secret = 2 }; Config.Events.Minor.Bonuses[6] = { Secret = 6 }
 Config.Events.Major.Bonuses[4] = { Mythic = 40, Secret = 2 }; Config.Events.Major.Bonuses[5] = { Secret = 12 }; Config.Events.Major.Bonuses[6] = { Secret = 22 }
+-- Recommended equipment is a survival target, never an access restriction.
+local guardianNames = {
+    { "Serpent des marées", "Kraken corallien", "Dragon du récif" },
+    { "Léviathan des épaves", "Kraken pirate", "Scylla des naufrages" },
+    { "Léviathan atlante", "Scylla des ruines", "Dragon de l'oracle" },
+    { "Dragon abyssal", "Kraken spectral", "Scylla des ombres" },
+    { "Léviathan titan", "Kraken des profondeurs", "Charybde" },
+    { "Léviathan primordial", "Kraken ancestral", "Charybde, dévoreuse d'océans" },
+}
+for index, floor in ipairs(Config.Floors) do
+    floor.Guardians = guardianNames[index]
+    floor.GuardianSkins = index >= 5 and { "leviathan", "kraken", "charybdis" } or { "leviathan", "kraken", (index == 2 or index == 4) and "scylla" or "dragon" }
+    floor.GuardianSpeed = ({ 14, 22, 28, 34, 40, 46 })[index]
+    floor.Detection = 65 + index * 28
+    floor.ChaseRadius = 150 + index * 35
+    floor.GuardianSize = 2.5 + index * 0.65
+    floor.AttackRange = 6 + index * 2.5
+    floor.AttackCooldown = 1.6 - index * 0.1
+end
 return Config

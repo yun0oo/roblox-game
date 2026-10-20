@@ -9,8 +9,8 @@ Utiliser d'abord une expérience privée et deux joueurs locaux. Tester le MVP a
 - Commencer avec le fichier `.rbxl` non publié, sans changer les réglages API, puis appuyer sur **F5 / Play**. Vérifier le personnage Roblox pendant le chargement, puis son arrivée dans son habitat ; l'interface doit indiquer la session Studio non sauvegardée.
 - Refaire le test dans une expérience privée publiée avec accès API désactivé : le démarrage doit également réussir en session temporaire.
 - Ouvrir le fichier construit, lancer le serveur et vérifier l'absence d'erreurs dans Output côté serveur et clients.
-- Vérifier la génération de l'eau, des huit bulles et des paliers actifs ; les passages du puits central doivent rester traversables.
-- Vérifier que chacun apparaît dans son propre habitat avec son harpon et une réserve d'oxygène pleine.
+- Vérifier la génération de l'eau, des huit îles de surface avec leur aquarium géant et des paliers actifs ; les passages du puits central doivent rester traversables.
+- Vérifier que chacun apparaît sur sa propre île avec son harpon et une réserve d'oxygène pleine. Marcher et sauter sur la plateforme ; emprunter la rampe, plonger puis remonter sans blocage de la surface ou de l'ancien plafond.
 - Nager dans les six directions, utiliser le propulseur, mourir puis réapparaître ; vérifier la caméra, la lampe et les animations.
 - Tester l'émulateur tactile et une manette : réticule central, tir, montée, descente, achat, défilement et fermeture des panneaux.
 - Mesurer la durée de génération de terrain, la mémoire serveur/client et les images/seconde. Faire un essai avec huit clients avant publication publique.
@@ -20,7 +20,9 @@ Utiliser d'abord une expérience privée et deux joueurs locaux. Tester le MVP a
 - Observer six œufs maximum par palier, chacun accompagné d'un gardien. Les nids occupés ne doivent pas recevoir un deuxième œuf.
 - Attendre les cycles et expirations : plusieurs positions et raretés doivent apparaître, avec des variations à l'intérieur des nids.
 - Attirer un gardien, esquiver, l'éloigner du nid et vérifier son retour. Le combattre au harpon et récupérer l'œuf.
-- Vérifier qu'aucun gardien ni attaque spéciale ne blesse un joueur dans une bulle.
+- Comparer les tailles, les silhouettes mythologiques et les vitesses des six profondeurs ; vérifier les yeux lumineux, cornes, tentacules et dents. Comparer une poursuite avec la combinaison conseillée et avec la combinaison 1.
+- Vérifier les auras colorées de chaque rareté sur les œufs sauvages, transportés et en incubation, ainsi que leur visibilité dans les grottes.
+- Vérifier qu'aucun gardien ni attaque spéciale ne blesse un joueur sur une île protégée.
 - Aux paliers profonds, vérifier les avertissements d'attaque puis les effets de siphon, onde de choc et vortex. Les joueurs doivent pouvoir esquiver avant l'impact.
 
 ## Interception à deux joueurs
@@ -33,24 +35,25 @@ Utiliser d'abord une expérience privée et deux joueurs locaux. Tester le MVP a
 6. B récupère l'œuf tombé : il devient transporteur et gagne un vol réussi.
 7. A poursuit B et peut l'intercepter à son tour après son cooldown.
 8. Tirer à travers une paroi : elle bloque le projectile. Tester également chaque extrémité de portée et les niveaux de harpon 1/2/3.
-9. A entre dans sa propre bulle pendant qu'un projectile arrive : l'œuf doit rester sécurisé, même à la limite de la zone.
-10. B entre dans la bulle de A avec son propre œuf : B est protégé, mais seul l'habitat de B peut sécuriser cet œuf pour lui.
-11. Tester une mort/déconnexion avec un œuf en exploration, dans sa base et en visite dans une autre base.
+9. A entre dans sa propre île pendant qu'un projectile arrive : l'œuf doit rester sécurisé, même à la limite de la zone.
+10. B entre dans l'île de A avec son propre œuf : B est protégé, mais seul l'habitat de B peut sécuriser cet œuf pour lui.
+11. Tester une mort/déconnexion avec un œuf en exploration, dans sa base et en visite dans une autre île.
 
 ## Progression et oxygène
 
-- Avec la combinaison 1, tenter le palier 2 : avertissement et retour au-dessus de la limite.
-- Tester les seuils 10 / 20 / 35 / 50 / 75 sans réinitialiser les gains.
-- Comparer la réserve maximale et la consommation après amélioration ; vérifier chaque station O₂ et le rechargement en bulle.
+- Avec la combinaison 1, traverser les paliers 2 et 3 : avertissement de danger sans téléportation ni interdiction de ramasser un œuf. Un gardien doit détecter, poursuivre, rattraper et attaquer le plongeur.
+- Comparer la survie avec les combinaisons conseillées 10 / 20 / 35 / 50 / 75, puis la nage, le propulseur et la protection améliorés.
+- Comparer la réserve maximale et la consommation après amélioration ; vérifier chaque station O₂ et le rechargement en surface.
 - À oxygène critique : avertissement ; à zéro : baisse de santé, puis chute d'un œuf transporté à la mort.
 - Vérifier les coûts et l'effet des sept équipements, y compris la recharge du propulseur et la portée de lampe.
 
 ## Éclosion, collection et fusion
 
 - Ramener un œuf : message de sécurisation, ajout à l'incubateur, retrait définitif du monde partagé.
-- Faire éclore par l'incubateur et par l'interface. Répéter un identifiant d'œuf déjà consommé ne doit créer aucun animal supplémentaire.
-- Vérifier l'animation et le nouveau modèle sur le présentoir ; une espèce inconnue passe de `???` à son entrée complète.
-- Pendant une minute connecté, comparer le revenu réel au revenu affiché ; vérifier les revenus des paliers profonds.
+- Déposer avec E au terminal puis avec Collection → Déposer : l'œuf doit être visible dans la cuve et afficher le compte à rebours. Vérifier les délais 15 / 40 / 90 / 180 / 360 / 720 secondes selon rareté. Répéter une requête ne redémarre pas le délai et ne provoque jamais une éclosion anticipée.
+- Quitter l'île pendant l'incubation : éclosion automatique, animation et animal dans l'aquarium ; une espèce inconnue passe de `???` à son entrée complète. Quitter/revenir avec de vraies sauvegardes : le délai doit être conservé, même si l'échéance est dépassée pendant l'absence.
+- Pendant une minute connecté, comparer les gold réellement reçus au revenu affiché ; acheter ensuite un équipement avec ces gold. Vérifier les revenus des paliers profonds.
+- Observer les animaux nager à l'intérieur des vitres. Vérifier la flèche, les ardillons et la corde du nouveau harpon équipé et lors d'un tir.
 - Fusionner trois normaux en Gold, trois Gold en Diamond et trois Diamond en Mythic. Vérifier consommation, prix et multiplicateurs.
 - Tester les cinq recettes connues, une recette secrète, une combinaison inconnue, un manque d'ingrédients et un manque d'argent.
 - Une recette secrète doit apparaître après découverte ; rejouer la même recette ne doit pas annoncer une nouvelle découverte.
@@ -65,7 +68,7 @@ Utiliser d'abord une expérience privée et deux joueurs locaux. Tester le MVP a
 
 ## Prestige, décoration et classements
 
-- Acheter une palette, un aquarium, les bulles et la statue. Les achats répétés d'un objet possédé ne doivent pas refaire payer.
+- Acheter une palette, l'aquarium annexe, les bulles et la statue. L'aquarium géant principal doit être inclus dès l'arrivée. Les achats répétés d'un objet possédé ne doivent pas refaire payer.
 - Vérifier chacun des six tris de classement avec des joueurs ayant des statistiques différentes.
 - Le prestige insuffisant doit être refusé. Un prestige valide demande une confirmation, efface uniquement les éléments annoncés et conserve bestiaire/recettes/décorations/statistiques.
 - Vérifier les bonus du prestige dans le revenu, la réserve, la vitesse et les fusions suivantes.

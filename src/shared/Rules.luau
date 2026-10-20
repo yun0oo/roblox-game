@@ -61,7 +61,12 @@ function Rules.Sanitize(raw, config)
             if #clean.Eggs >= config.MaxStoredEggs then break end
             if type(egg) == "table" and type(egg.Id) == "string" and #egg.Id <= 64 and not seen[egg.Id]
                 and config.Floors[egg.Floor] and config.Rarities[egg.Rarity] and type(egg.Name) == "string" then
-                table.insert(clean.Eggs, { Id = egg.Id, Floor = egg.Floor, Rarity = egg.Rarity, Name = egg.Name:sub(1, 100) })
+                local saved = { Id = egg.Id, Floor = egg.Floor, Rarity = egg.Rarity, Name = egg.Name:sub(1, 100) }
+                if Rules.IsFinite(egg.ReadyAt) and egg.ReadyAt > 0 then
+                    saved.ReadyAt = integer(egg.ReadyAt, 0, 1, 1e12)
+                    saved.StartedAt = integer(egg.StartedAt, saved.ReadyAt - config.HatchTimes[egg.Rarity], 0, saved.ReadyAt)
+                end
+                table.insert(clean.Eggs, saved)
                 seen[egg.Id] = true
             end
         end
@@ -117,7 +122,7 @@ function Rules.PurchaseUpgrade(profile, config, key)
     if type(key) ~= "string" or not config.Upgrades[key] then return false, "Amélioration inconnue." end
     local cost = Rules.UpgradeCost(config, key, profile.Equipment[key])
     if not cost then return false, "Niveau maximum atteint." end
-    if profile.Money < cost then return false, "Pas assez d'argent." end
+    if profile.Money < cost then return false, "Pas assez de gold." end
     profile.Money -= cost
     profile.Equipment[key] += 1
     return true, "Équipement amélioré !"
@@ -143,10 +148,24 @@ function Rules.Income(profile, config)
     return total * (1 + (profile.Prestige or 0) * 0.25)
 end
 
-function Rules.Hatch(profile, config, eggId, unit)
+function Rules.StartIncubation(profile, config, eggId, now)
+    if not Rules.IsFinite(now) then return nil, "Horloge indisponible." end
+    for _, egg in ipairs(profile.Eggs) do
+        if egg.Id == eggId then
+            if egg.ReadyAt then return nil, "Cet œuf est déjà dans l'aquarium." end
+            egg.StartedAt = math.floor(now)
+            egg.ReadyAt = egg.StartedAt + config.HatchTimes[egg.Rarity]
+            return egg
+        end
+    end
+    return nil, "Cet œuf n'est plus disponible."
+end
+
+function Rules.Hatch(profile, config, eggId, unit, now)
     if Rules.AnimalCount(profile) >= config.MaxAnimals then return nil, "Collection pleine." end
     for index, egg in ipairs(profile.Eggs) do
         if egg.Id == eggId then
+            if not egg.ReadyAt or not Rules.IsFinite(now) or now < egg.ReadyAt then return nil, "L'incubation n'est pas terminée." end
             local animalId = Rules.RollAnimal(config, egg, unit)
             if not animalId then return nil, "Table d'éclosion indisponible." end
             table.remove(profile.Eggs, index)
@@ -170,7 +189,12 @@ function Rules.FloorAt(config, y)
     return config.Floors[#config.Floors]
 end
 
-function Rules.CanEnter(profile, floor) return profile.Equipment.Suit >= floor.MinLevel end
+function Rules.IsPrepared(profile, floor) return profile.Equipment.Suit >= floor.MinLevel end
+
+function Rules.GuardianThreat(profile, floor, config)
+    local deficit = math.clamp((floor.MinLevel - profile.Equipment.Suit) / floor.MinLevel, 0, 1)
+    return 1 + deficit * config.UndergearedSpeedBonus, 1 + deficit * config.UndergearedDamageBonus
+end
 
 function Rules.CanIntercept(context)
     return context.HasHarpoon == true and context.CooldownReady == true and context.InRange == true
@@ -208,7 +232,7 @@ function Rules.Fuse(profile, config, recipes, request)
         local count = grade == "Normal" and (profile.Animals[id] or 0) or ((profile.Variants[id] or {})[grade] or 0)
         if count < 3 then return nil, "Trois animaux de la même espèce et du même niveau sont nécessaires." end
         local cost = math.floor(config.Animals[id].Income * config.Grades[grade] * 0.5 / (1 + profile.Prestige * 0.03))
-        if profile.Money < cost then return nil, "Pas assez d'argent pour la fusion." end
+        if profile.Money < cost then return nil, "Pas assez de gold pour la fusion." end
         profile.Money -= cost
         if grade == "Normal" then profile.Animals[id] = count - 3; if profile.Animals[id] == 0 then profile.Animals[id] = nil end
         else profile.Variants[id][grade] = count - 3 end
@@ -232,7 +256,7 @@ function Rules.Fuse(profile, config, recipes, request)
             local expected = table.clone(recipe.Ingredients); table.sort(expected)
             if table.concat(chosen, ":") == table.concat(expected, ":") then
                 local cost = math.floor(config.Animals[recipe.Output].Income * 0.4 / (1 + profile.Prestige * 0.03))
-                if profile.Money < cost then return nil, "Pas assez d'argent pour cette fusion." end
+                if profile.Money < cost then return nil, "Pas assez de gold pour cette fusion." end
                 profile.Money -= cost
                 for id, amount in pairs(need) do profile.Animals[id] -= amount; if profile.Animals[id] == 0 then profile.Animals[id] = nil end end
                 profile.Animals[recipe.Output] = (profile.Animals[recipe.Output] or 0) + 1
@@ -250,7 +274,7 @@ end
 function Rules.PrestigeCost(profile) return math.min(1e13, math.floor(1e6 * 2 ^ math.min(profile.Prestige, 24))) end
 function Rules.Rebirth(profile, config)
     local cost = Rules.PrestigeCost(profile)
-    if profile.Money < cost or profile.Equipment.Suit < 20 then return false, "Le prestige nécessite la combinaison 20 et " .. cost .. " $." end
+    if profile.Money < cost or profile.Equipment.Suit < 20 then return false, "Le prestige nécessite la combinaison 20 et " .. cost .. " gold." end
     profile.Prestige += 1; profile.Money = 150; profile.XP = 0
     profile.Animals = {}; profile.Variants = {}; profile.Eggs = {}
     for key in pairs(config.Upgrades) do profile.Equipment[key] = 1 end
@@ -260,7 +284,7 @@ function Rules.Decorate(profile, config, id)
     local item = type(id) == "string" and config.Decorations[id]
     if not item then return false, "Décoration inconnue." end
     if not profile.OwnedDecor[id] then
-        if profile.Money < item.Cost then return false, "Pas assez d'argent." end
+        if profile.Money < item.Cost then return false, "Pas assez de gold." end
         profile.Money -= item.Cost; profile.OwnedDecor[id] = true
     end
     if item.Kind == "Palette" then profile.Palette = id end

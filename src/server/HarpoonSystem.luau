@@ -15,7 +15,7 @@ function HarpoonSystem:Fire(state, direction)
     if os.clock() < (state.NextShot or 0) then return end
     state.NextShot = os.clock() + spec.Cooldown
     direction = direction.Unit
-    local part = ctx.Visuals.Part(ctx.World.Events, "Projectile harpon", Vector3.new(0.2, 0.2, 3), CFrame.lookAt(root.Position, root.Position + direction), Color3.fromRGB(184, 248, 255), Enum.Material.Neon)
+    local part = ctx.Visuals.HarpoonProjectile(ctx.World.Events, CFrame.lookAt(root.Position, root.Position + direction))
     local endpoint = Instance.new("Attachment"); endpoint.Parent = part
     local start = state.Tool.Handle:FindFirstChild("RopeOrigin")
     local beam = Instance.new("Beam"); beam.Attachment0 = start; beam.Attachment1 = endpoint
@@ -29,7 +29,7 @@ local function crossesSafe(world, a, b)
     local delta = b - a
     for _, base in ipairs(world.Bases) do
         local t = math.clamp((base.Center - a):Dot(delta) / math.max(delta:Dot(delta), 0.001), 0, 1)
-        if (a + delta * t - base.Center).Magnitude <= 37 then return true end
+        if (a + delta * t - base.Center).Magnitude <= world.Config.BaseRadius then return true end
     end
     return false
 end

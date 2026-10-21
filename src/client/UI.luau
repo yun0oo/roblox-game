@@ -506,6 +506,7 @@ function UI:RenderPanel()
             "07  RESPIREZ\nLes stations vertes O₂, la surface et le navire rechargent votre réserve. L'oxygène se consomme plus vite en profondeur. À zéro, votre santé diminue.",
             "08  PRENEZ DES RISQUES\nLes événements de 5, 15 et 40 minutes augmentent la rareté et le danger. Esquivez les ondes rouges annonçant les attaques des boss. Après sa défaite, un boss réapparaît après un court répit.",
             "09  ÉVOLUEZ\nFusionnez vos animaux dans votre habitat, découvrez les recettes secrètes, personnalisez la base et recommencez avec le prestige pour obtenir des bonus permanents.",
+            "CRÉDITS DES DÉCORS\nPoly by Google, God Appeasers, Device Lab, Laney XR Labs — modèles via Poly Pizza, CC-BY 3.0 (creativecommons.org/licenses/by/3.0). Rochers, ruines et épave : WebGL Aquarium / Human Engines, Copyright Google Inc., BSD 3-Clause. Modèles adaptés et recolorés.",
             "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · Maj / X manette : propulseur · M : verrouiller / libérer la caméra · clic / RT : tirer · E : interagir.",
         }) do paragraph(text, 112) end
     end

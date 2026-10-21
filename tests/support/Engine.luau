@@ -139,7 +139,7 @@ function Engine.new()
     e.ReplicatedStorage = instance("ReplicatedStorage")
     local modules = instance("Folder"); modules.Name = "Modules"; modules.Parent = e.ReplicatedStorage
     local server = instance("Folder")
-    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer", "EquipmentVisuals", "Reef", "MerchantVisuals" }) do
+    for _, name in ipairs({ "Config", "Rules", "Visuals", "ArtData", "ArtRenderer", "EquipmentVisuals", "Reef", "MerchantVisuals", "ArtBudget" }) do
         local ref = instance("ModuleScript"); ref.Name = name; ref.Parent = modules
     end
     for _, name in ipairs({ "DataSystem", "World", "Ship", "Merchants", "Laboratory", "EggSystem", "GuardianSystem", "HarpoonSystem", "EventSystem", "FusionData" }) do

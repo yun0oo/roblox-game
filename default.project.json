@@ -5,6 +5,9 @@
     "ReplicatedStorage": {
       "Modules": {
         "$path": "src/shared"
+      },
+      "ThirdPartyNotices": {
+        "$path": "assets/THIRD_PARTY_NOTICES.txt"
       }
     },
     "ServerScriptService": {

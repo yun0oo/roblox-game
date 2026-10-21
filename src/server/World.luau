@@ -62,32 +62,12 @@ function World.Build(config, visuals)
         visuals.Label(station, "O₂  RECHARGE\nApprochez-vous pour respirer", Color3.fromRGB(174, 255, 228), 10, 150)
         table.insert(self.Stations, stationPos)
         if floor.Id == 2 then
-            local ship = Instance.new("Model"); ship.Name = "La Belle Noyée"; ship.Parent = folder
-            local center = Vector3.new(-180, floor.Bottom + 40, -10)
-            solid(ship, "Pont", Vector3.new(80, 8, 155), center, Color3.fromRGB(92, 69, 58), Enum.Material.WoodPlanks)
-            for side = -1, 1, 2 do
-                solid(ship, "Coque", Vector3.new(6, 40, 155), center + Vector3.new(side * 40, 13, 0), Color3.fromRGB(76, 63, 56), Enum.Material.WoodPlanks)
-            end
-            for i = -2, 2 do
-                solid(ship, "Poutre", Vector3.new(5, 60, 5), center + Vector3.new(0, 28, i * 28), Color3.fromRGB(73, 62, 53), Enum.Material.Wood)
-            end
-            for i = 1, 6 do
-                solid(ship, "Coffre", Vector3.new(9, 6, 6), center + Vector3.new(15, 8, i * 18 - 65), Color3.fromRGB(167, 122, 58), Enum.Material.WoodPlanks)
-                visuals.Rod(ship, "Chaîne", center + Vector3.new(-15, 5, i * 18 - 65), center + Vector3.new(-20, 30, i * 18 - 65), 0.7, Color3.fromRGB(92, 112, 116), Enum.Material.Metal)
-            end
+            reef.Prop(folder, "reef_wreck", Vector3.new(-185, floor.Bottom, -5), 32, visuals, -0.25)
+            for i = 1, 6 do reef.Prop(folder, "reef_chest", Vector3.new(-160 + i * 14, floor.Bottom, 65), 1.8, visuals, i * 0.8) end
         elseif floor.Id == 3 then
-            local temple = Instance.new("Model"); temple.Name = "Sanctuaire d'Atlantis"; temple.Parent = folder
-            local center = Vector3.new(190, floor.Bottom + 18, 70)
-            solid(temple, "Esplanade", Vector3.new(135, 8, 120), center, Color3.fromRGB(91, 103, 127), Enum.Material.Marble)
-            for x = -1, 1, 2 do
-                for z = -1, 1, 2 do
-                    local p = center + Vector3.new(x * 48, 35, z * 42)
-                    local column = solid(temple, "Colonne", Vector3.new(12, 66, 12), p, Color3.fromRGB(130, 145, 155), Enum.Material.Marble)
-                    column.Shape = Enum.PartType.Cylinder; column.CFrame *= CFrame.Angles(0, 0, math.pi / 2); column.Size = Vector3.new(66, 12, 12)
-                    visuals.Part(temple, "Rune", Vector3.new(13, 2, 13), CFrame.new(p + Vector3.new(0, 29, 0)), color, Enum.Material.Neon)
-                end
-            end
-            solid(temple, "Fronton", Vector3.new(128, 10, 110), center + Vector3.new(0, 72, 0), Color3.fromRGB(105, 118, 141), Enum.Material.Marble)
+            reef.Prop(folder, "reef_arch", Vector3.new(195, floor.Bottom, 70), 19, visuals, math.pi / 2)
+            reef.Prop(folder, "reef_columns", Vector3.new(210, floor.Bottom, 15), 17, visuals, 0)
+            reef.Prop(folder, "reef_columns", Vector3.new(210, floor.Bottom, 125), 17, visuals, math.pi)
         elseif floor.Id >= 5 then
             local origin = Vector3.new(-175, floor.Bottom + 125, 60)
             for i = -3, 3 do

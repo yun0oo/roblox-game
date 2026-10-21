@@ -90,3 +90,11 @@ N'annoncer le gameplay natif et la qualité graphique validés qu'après ces ess
 - R6 et R15 : nager horizontalement, monter/descendre, rester immobile, viser au harpon et tourner en mode caméra M. La nage ne doit plus redémarrer à chaque image. Observer aussi le deuxième joueur.
 - Osciller près de la surface : pas d'alternance rapide des poses. Remonter l'échelle, marcher sur le pont, mourir et réapparaître : vérifier la restauration de la marche et des joints.
 - Tester huit clients avec aquariums pleins, cuves pleines et coraux visibles ; mesurer FPS/mémoire et vérifier le budget de détails. Ces essais natifs restent nécessaires avant publication.
+
+## Modèles de décor importés
+
+- Tester sans aucune API de maillage activée : les coraux roses, éponges bleues et algues courbées doivent être des sculptures complètes ; aucun ellipsoïde/cylindre de remplacement ne doit apparaître. Refaire avec le rendu natif disponible.
+- Explorer les six fonds, les quatre parois, les corniches, l’épave et les arches. Vérifier les textures colorées des rochers et le sol toujours continu. Les jardins doivent aussi utiliser les nouveaux modèles dans les aquariums.
+- S’éloigner des plantes puis revenir : changement de détail sans branches coupées ni modèles définitivement disparus. Contrôler une arrivée tardive et les réapparitions.
+- Vérifier les œufs, boss, harpon et animaux près d’un récif dense : les budgets visuels sont distincts. Mesurer FPS/mémoire à huit joueurs, avant et après plusieurs allers-retours entre paliers. Les plafonds automatiques ne constituent pas une validation de performances natives.
+- Les attributions apparaissent dans Guide ; les conditions intégrales sont dans le ZIP et dans ReplicatedStorage.ThirdPartyNotices.

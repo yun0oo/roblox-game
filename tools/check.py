@@ -33,8 +33,9 @@ run('luau-compile', '--null', *[str(p.relative_to(ROOT)) for p in sources])
 run('luau-analyze', 'src/shared/Rules.luau', 'src/shared/Config.luau', 'tests/rules.spec.luau', 'tests/progression.spec.luau')
 run('luau', 'tests/rules.spec.luau')
 run('luau', 'tests/progression.spec.luau')
+run('luau', 'tests/art_budget.spec.luau')
 run('python3', 'tools/check_art.py')
-for suite in ('services', 'startup', 'ui', 'swimming'):
+for suite in ('services', 'startup', 'ui', 'swimming', 'artstream'):
     module_sources = []
     if suite == 'services':
         for name in ('World', 'EggSystem', 'HarpoonSystem', 'DataSystem', 'GuardianSystem', 'EventSystem'):
@@ -42,7 +43,7 @@ for suite in ('services', 'startup', 'ui', 'swimming'):
             module_sources.append(f'local {name} = (function()\n{body}\nend)()\n')
     else:
         for path in sources:
-            if (path.parent.name == 'client' and not ((suite == 'ui' and path.name in ('UI.luau', 'AimController.luau')) or (suite == 'swimming' and path.name in ('SwimController.luau', 'SwimAnimation.luau')))) or path.name.endswith('.server.luau'):
+            if (path.parent.name == 'client' and not ((suite == 'ui' and path.name in ('UI.luau', 'AimController.luau')) or (suite == 'swimming' and path.name in ('SwimController.luau', 'SwimAnimation.luau')) or (suite == 'artstream' and path.name == 'Art.client.luau'))) or path.name.endswith('.server.luau'):
                 continue
             module_sources.append(f'factories["{path.stem}"] = function()\n{path.read_text()}\nend\n')
     harness = (ROOT / f'tests/{suite}.spec.luau').read_text().replace('--[[ MODULES ]]', '\n'.join(module_sources))
@@ -75,6 +76,9 @@ if not definitions.is_file():
 run('luau-lsp', 'analyze', '--platform=roblox', '--definitions=' + str(definitions),
     '--sourcemap=build/sourcemap.json', *[str(p.relative_to(ROOT)) for p in sources])
 document = ET.parse(build / 'UnderwaterEgg.rbxlx').getroot()
+notices = [item for item in document.iter('Item') if item.get('class') == 'StringValue' and any(node.get('name') == 'Name' and node.text == 'ThirdPartyNotices' for node in item.iter())]
+assert len(notices) == 1
+assert next(node.text for node in notices[0].iter() if node.get('name') == 'Value') == (ROOT/'assets/THIRD_PARTY_NOTICES.txt').read_text()
 scripts = [item for item in document.iter('Item') if item.get('class') in ('Script', 'LocalScript', 'ModuleScript')]
 assert len(scripts) == len(sources), f'Expected {len(sources)} scripts, got {len(scripts)}'
 bundled = {node.text.strip() for node in document.iter() if node.get('name') == 'Source' and node.text}

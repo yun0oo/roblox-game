@@ -1,5 +1,5 @@
 --!nonstrict
--- Portable CC0/derived art. Native editable meshes are an optional enhancement;
+-- Portable licensed/derived art. Native editable meshes are an optional enhancement;
 -- a bounded triangle renderer also works without enabling any Studio API.
 local data = require(game:GetService("ReplicatedStorage"):WaitForChild("Modules").ArtData)
 local ArtRenderer = {}
@@ -9,6 +9,7 @@ local variantTints = { Color3.fromRGB(255, 204, 81), Color3.fromRGB(166, 244, 25
 
 local function color(rgb, tint, kind)
     local base = Color3.fromRGB(rgb[1], rgb[2], rgb[3])
+    if kind == "environment" then return base end
     if kind == "licensed" then
         for _, variant in ipairs(variantTints) do if tint == variant then return base:Lerp(tint, 0.65) end end
         return base
@@ -35,10 +36,18 @@ local function nativeMesh(key, asset, tint)
         if not editable then error("Mesh memory budget unavailable") end
         local mesh, ids = asset.Full, {}
         for index, v in ipairs(mesh.Vertices) do ids[index] = editable:AddVertex(Vector3.new(v[1], v[2], v[3])) end
+        local normals = {}
+        if mesh.Normals then
+            for index, n in ipairs(mesh.Normals) do
+                local v = Vector3.new(n[1], n[2], n[3])
+                normals[index] = editable:AddNormal(v.Magnitude > 0.001 and v.Unit or Vector3.new(0, 1, 0))
+            end
+        end
         for index, face in ipairs(mesh.Faces) do
             local id = editable:AddTriangle(ids[face[1]], ids[face[2]], ids[face[3]])
             local paint = editable:AddColor(color(mesh.Colors[index], tint, asset.Kind))
             editable:SetFaceColors(id, { paint, paint, paint })
+            if mesh.Normals then editable:SetFaceNormals(id, { normals[face[1]], normals[face[2]], normals[face[3]] }) end
         end
         local part = service:CreateMeshPartAsync(Content.fromObject(editable))
         part.Name = "Sculpture"; part.Anchored = true; part.CanCollide = false; part.CanTouch = false; part.CanQuery = false
@@ -66,7 +75,7 @@ local function wedge(parent, center, right, up, back, height, length, tint)
     part.CastShadow = false; part.Parent = parent
 end
 
-function ArtRenderer.Build(key, tint, scale, allowNative)
+function ArtRenderer.Build(key, tint, scale, allowNative, quality)
     local asset = data[key] or data.fish
     local model = Instance.new("Model"); model.Name = "ArtSkin"
     local part = allowNative and nativeMesh(key, asset, tint)
@@ -76,7 +85,7 @@ function ArtRenderer.Build(key, tint, scale, allowNative)
         part.Parent = model
         model.PrimaryPart = part
     else
-        local mesh, vertices = asset.Lod, {}
+        local mesh, vertices = quality == "Far" and asset.Far or asset.Lod, {}
         for index, v in ipairs(mesh.Vertices) do vertices[index] = Vector3.new(v[1], v[2], v[3]) * scale end
         for index, face in ipairs(mesh.Faces) do
             local a, b, c = vertices[face[1]], vertices[face[2]], vertices[face[3]]
@@ -99,8 +108,9 @@ function ArtRenderer.Build(key, tint, scale, allowNative)
     return model
 end
 
-function ArtRenderer.Cost(key)
-    return #(data[key] or data.fish).Lod.Faces * 2
+function ArtRenderer.Cost(key, quality)
+    local asset = data[key] or data.fish
+    return #(quality == "Far" and asset.Far or asset.Lod).Faces * 2
 end
 
 function ArtRenderer.Bounds(key)

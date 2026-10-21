@@ -158,6 +158,23 @@ for index, region in ipairs(e.Workspace.Floors:GetChildren()) do
     check(#region["Jardins de tout le palier"]:GetChildren() >= 64, "Every depth has distributed floor gardens and jellyfish")
     check(biomes[index].Sand[1] >= 140 and biomes[index].Wall[3] >= 140, "Deep sand and cliff palettes retain readable midtones")
 end
+local imported = {}
+for _, item in ipairs(e.Workspace.Floors:GetDescendants()) do
+    if item:IsA("BasePart") and item:GetAttribute("ArtEnvironment") then
+        local key = item:GetAttribute("ArtAsset")
+        imported[key] = true
+        check(loaded.ArtData[key] and loaded.ArtData[key].Kind == "environment", "Every imported scenery proxy resolves to its actual mesh")
+        check(item.Transparency == 1, "Unloaded scenery never shows a placeholder sphere or cuboid")
+    end
+    check(item.Name ~= "Branche calcaire" and item.Name ~= "Ruban d’algue" and item.Name ~= "Paroi de l’éponge", "Old primitive coral and plant sculptures are removed")
+end
+for _, key in ipairs({ "reef_fan", "reef_tubes", "reef_branch", "reef_kelp", "reef_meadow", "reef_anemone", "reef_lilac", "reef_boulder_a", "reef_boulder_b", "reef_shelf", "reef_arch", "reef_columns", "reef_wreck", "reef_chest" }) do
+    check(imported[key], "The map actually uses its licensed prefab: " .. key)
+    local near = loaded.ArtRenderer.Build(key, e.Color3.new(1, 1, 1), e.Vector3.new(2, 3, 2), false, "Lod")
+    local far = loaded.ArtRenderer.Build(key, e.Color3.new(1, 1, 1), e.Vector3.new(2, 3, 2), false, "Far")
+    check(#near:GetChildren() > #far:GetChildren() and #far:GetChildren() > 10, "Both portable geometry levels render an authored sculpture: " .. key)
+    near:Destroy(); far:Destroy()
+end
 local roles = {}
 for _, key in ipairs(loaded.Config.UpgradeOrder) do
     local npc = e.Workspace.NPCs["Marchand_" .. key][loaded.Config.Merchants[key].Name]

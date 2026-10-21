@@ -133,6 +133,202 @@
       "source": "https://github.com/trebeljahr/quaternius-showcase/blob/722c39e964360beff2728a8ee4d103e2d11d457c/public/glb/fish_pack/Dolphin.glb",
       "sha256": "3c8bdc0440b5585c15c753a6b6a07f57a80ce3f33f58333c804069c714dd9993",
       "pack": "fish_pack"
+    },
+    {
+      "file": "PolyPizza_Coral.glb",
+      "author": "Poly by Google",
+      "license": "CC-BY-3.0",
+      "source": "https://poly.pizza/m/80uVAty6wZ2",
+      "mirror": "https://github.com/Vivtorsing/Aquarium/blob/f0df5b244a836f60f4014cca5194fb137d67766d/src/models/Coral.glb",
+      "sha256": "f7e422348c7c12ba762d8c4cca7a6a93bc2eee8bfc1e42ba5411cbadb63af3b8",
+      "pack": "Poly Pizza marine collection",
+      "modifications": "Geometry normalized and decimated; tube palette changed to turquoise."
+    },
+    {
+      "file": "PolyPizza_EnviroCoral.glb",
+      "author": "God Appeasers",
+      "license": "CC-BY-3.0",
+      "source": "https://poly.pizza/m/0CrDBiCnI5e",
+      "mirror": "https://github.com/Vivtorsing/Aquarium/blob/f0df5b244a836f60f4014cca5194fb137d67766d/src/models/EnviroCoral.glb",
+      "sha256": "20279c0377459939da1e6f8365ee552c04367b964fbd0894df36881c6482a774",
+      "pack": "Poly Pizza marine collection",
+      "modifications": "Geometry normalized and decimated; tube palette changed to turquoise."
+    },
+    {
+      "file": "PolyPizza_OrangeCoral.glb",
+      "author": "Device Lab",
+      "license": "CC-BY-3.0",
+      "source": "https://poly.pizza/m/3HEc6LvqCJd",
+      "mirror": "https://github.com/Vivtorsing/Aquarium/blob/f0df5b244a836f60f4014cca5194fb137d67766d/src/models/OrangeCoral.glb",
+      "sha256": "63219c5123ce4a69b2283de514dca9ae08e9ec2c1bcad3094afd2ec5043b12b7",
+      "pack": "Poly Pizza marine collection",
+      "modifications": "Geometry normalized and decimated; tube palette changed to turquoise."
+    },
+    {
+      "file": "PolyPizza_Seaweed.glb",
+      "author": "Laney XR Labs",
+      "license": "CC-BY-3.0",
+      "source": "https://poly.pizza/m/461xlaa6SZW",
+      "mirror": "https://github.com/Vivtorsing/Aquarium/blob/f0df5b244a836f60f4014cca5194fb137d67766d/src/models/Seaweed.glb",
+      "sha256": "a30dd45c26e04659b61b86b4e85ded4f6d2f505cc02b644c2a1f1669c43742d5",
+      "pack": "Poly Pizza marine collection",
+      "modifications": "Geometry normalized and decimated; tube palette changed to turquoise."
+    },
+    {
+      "file": "PolyPizza_SeaweedThree.glb",
+      "author": "Laney XR Labs",
+      "license": "CC-BY-3.0",
+      "source": "https://poly.pizza/m/f_gXhnf06Oc",
+      "mirror": "https://github.com/Vivtorsing/Aquarium/blob/f0df5b244a836f60f4014cca5194fb137d67766d/src/models/SeaweedThree.glb",
+      "sha256": "3d8c0c63f4e9836bee558e6a26c1df011da91c3b04c2cf4d2b83655663f20f8d",
+      "pack": "Poly Pizza marine collection",
+      "modifications": "Geometry normalized and decimated; tube palette changed to turquoise."
+    },
+    {
+      "file": "PolyPizza_Anemone.glb",
+      "author": "Poly by Google",
+      "license": "CC-BY-3.0",
+      "source": "https://poly.pizza/m/eUZruaSm-9X",
+      "mirror": "https://github.com/Vivtorsing/Aquarium/blob/f0df5b244a836f60f4014cca5194fb137d67766d/src/models/Anemone.glb",
+      "sha256": "e04938ca44526a7ca313ae73c52ae76715ba448978da07ee4b8dc4ab4bf7a6b0",
+      "pack": "Poly Pizza marine collection",
+      "modifications": "Geometry normalized and decimated; tube palette changed to turquoise."
+    },
+    {
+      "file": "PolyPizza_WhiteAnemone.glb",
+      "author": "Poly by Google",
+      "license": "CC-BY-3.0",
+      "source": "https://poly.pizza/m/5mWGVL6VgMd",
+      "mirror": "https://github.com/Vivtorsing/Aquarium/blob/f0df5b244a836f60f4014cca5194fb137d67766d/src/models/WhiteAnemone.glb",
+      "sha256": "fa930939fba002d485ebc40477a479ecba0ecade74031e2b866136985f5381a1",
+      "pack": "Poly Pizza marine collection",
+      "modifications": "Geometry normalized and decimated; tube palette changed to turquoise."
+    },
+    {
+      "file": "Aquarium_CoralStoneA.js",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/CoralStoneA.js",
+      "sha256": "5497f4beb486405110d9e6071f90fffc28a2927d7f11b017a8a519edca20c15d",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_CoralStoneB.js",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/CoralStoneB.js",
+      "sha256": "453123562e004b55d570b6b52ee4e8d61412da614d876eeb0b61e154d70f49e8",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_RockB.js",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/RockB.js",
+      "sha256": "33ede7ea37626d596d91136a38d3099ad26c3e22a4677b29797ce6e02d9e4ac3",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_Arch.js",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/Arch.js",
+      "sha256": "1957edd08f4b07f1ef4e48011d25422cf55f50bea6cb2d535557ae984e0afb01",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_RuinColumn.js",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/RuinColumn.js",
+      "sha256": "592abc1cedb9ed40bec91554c5d0df5d676d1bbb7052ef98c370c04ea8bec301",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_SunknShip.js",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/SunknShip.js",
+      "sha256": "7dd09397e58c379983db7d09d6b92d702a88138dfedc0539bf0614974ad256d3",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_TreasureChest.js",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/TreasureChest.js",
+      "sha256": "352bc7a812bfc6564a3ff9272c9e8545f440a83b0a95d037e6df720dc986eb98",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_Arch_DM.jpg",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/Arch_DM.jpg",
+      "sha256": "6e400f52e845b9083450f101884cf426cda854a35290cecb010e0f6c8ae788b3",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_Chest_DM.jpg",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/Chest_DM.jpg",
+      "sha256": "afbbd96b86bf0f5acb93ef69aa80475fe8ee771fd36e70177f2b7e6619ea2dfa",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_CoralReef_DM.jpg",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/CoralReef_DM.jpg",
+      "sha256": "449a46ffbcd4b3f0ac71bdf025d41a1687b992e2996c67165e1cf0f8e51e4b8b",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_Rock01_DM.jpg",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/Rock01_DM.jpg",
+      "sha256": "6a6f735973e0b07be50707f5ed1d4906541c305c9eef3b185b876a8a2c9cac21",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_SunknShipBoxes_DM.jpg",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/SunknShipBoxes_DM.jpg",
+      "sha256": "cc5e700db4d1d53f248f1f14516329e8a3780d8376798708a5598438d4a876fd",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_SunknShipDeck_DM.jpg",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/SunknShipDeck_DM.jpg",
+      "sha256": "cb2db59baab9137b6fb422e6b265a6bfe25509f558fddfed1eaa619f01971447",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "Aquarium_SunknShipHull_DM.jpg",
+      "author": "Google Inc. / Human Engines (WebGL Aquarium)",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/WebGLSamples/WebGLSamples.github.io/blob/4c87dfea3cff6bf9f351c5ed4a191f86ceed8bbc/aquarium/assets/SunknShipHull_DM.jpg",
+      "sha256": "4bafebe6462fdf7aa9b2565bdfb421fef13b7fd31757281d0bedd643766f1379",
+      "pack": "WebGL Aquarium",
+      "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
     }
   ]
 }

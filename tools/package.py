@@ -11,7 +11,7 @@ if not source.is_file() or not source.read_bytes().startswith(b'<roblox!'):
 downloads = ROOT / 'downloads'
 downloads.mkdir(exist_ok=True)
 shutil.copyfile(source, downloads / source.name)
-instructions = '''UNDERWATER EGG — NÉRÉIDE · RÉCIFS, CUVE & MODÈLES MARINS
+instructions = '''UNDERWATER EGG — NÉRÉIDE · VRAIS MODÈLES DE DÉCORS MARINS
 
 1. Extraire ce ZIP dans un nouveau dossier.
 2. Ouvrir le fichier UnderwaterEgg.rbxl avec Roblox Studio sur Windows/macOS.
@@ -56,7 +56,16 @@ ou chez un marchand pour sa boutique. F à la pancarte améliore la base.
 Pour conserver la progression : publier une expérience privée, puis autoriser
 l'accès Studio aux services API dans les paramètres de l'expérience.
 
-Nouveautés : fonds sableux continus dans les six profondeurs (récif à 325 m),
+Nouveautés : 14 décors 3D préexistants intégrés : coraux, éponges et plantes
+Poly Pizza (Poly by Google, God Appeasers, Device Lab, Laney XR Labs), rochers,
+arches, colonnes, épave et coffres de la scène WebGL Aquarium. Les anciens
+coraux et algues en pièces simples sont remplacés jusque dans les aquariums.
+Modèles détaillés ou allégés selon le rendu disponible, chargés à proximité.
+Crédits, sources et licences dans CREDITS-DECORS.md et le dossier LICENCES.
+APERCU-MODELES-HORS-ROBLOX.png présente les sculptures séparément :
+c’est un rendu des modèles hors Roblox, pas une capture de la carte en jeu.
+
+Fonds sableux continus dans les six profondeurs (récif à 325 m),
 passages centraux ouverts, parois entièrement habillées, herbiers denses,
 éponges bleues creuses et plateaux de corail rose. Plus de 60 jardins par zone.
 Marchands en armures à gemmes et or, coiffures et accessoires propres à chacun.
@@ -85,6 +94,11 @@ with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip', 'w', zipfile.ZIP_DEFLATED)
     package.write(source, source.name)
     package.writestr('LIRE-MOI.txt', instructions.encode('utf-8'))
     package.write(ROOT / 'assets/CREDITS.md', 'CREDITS-MODELES.md')
+    package.write(ROOT / 'assets/MARINE_SCENERY_CREDITS.md', 'CREDITS-DECORS.md')
+    package.write(ROOT / 'docs/previews/reef-models.png', 'APERCU-MODELES-HORS-ROBLOX.png')
+    package.write(ROOT / 'assets/source/Aquarium.LICENSE.md', 'LICENCES/Aquarium-BSD-3-Clause.txt')
+    package.write(ROOT / 'assets/source/PolyPizza.CC-BY-3.0.txt', 'LICENCES/PolyPizza-CC-BY-3.0.txt')
+    package.write(ROOT / 'assets/source/PolyPizza.ATTRIBUTION.md', 'LICENCES/PolyPizza-Attribution.md')
 with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip') as package:
     assert package.testzip() is None
     assert package.read(source.name) == source.read_bytes()

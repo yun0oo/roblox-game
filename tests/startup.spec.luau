@@ -65,6 +65,38 @@ end
 for _, base in ipairs(e.Workspace.Bases:GetChildren()) do
     check(base:FindFirstChild("Aquarium géant") ~= nil, "Every surface island includes a giant aquarium")
 end
+local vessel = e.Workspace.Map["NÉRÉIDE · Navire d'exploration"]
+local nets = 0
+for _, model in ipairs(vessel:GetChildren()) do
+    if model.Name == "Filet de remontée" then
+        nets += 1
+        local grips = 0
+        for _, child in ipairs(model:GetChildren()) do
+            if child.ClassName == "TrussPart" then
+                grips += 1
+                check(child.Anchored and child.CanCollide, "Each net has native solid climbing grips")
+                check(child.Position.Y - child.Size.Y / 2 < loaded.Config.WaterTop - 10 and child.Position.Y + child.Size.Y / 2 > loaded.Config.BaseHeight - 7, "Net climbing spans submerged water to above the deck")
+            end
+        end
+        check(grips >= 6, "The rope net can be climbed across its width")
+    end
+end
+check(nets == 2, "Both ends of the shared diving pool have a climbable rescue net")
+local aquariumBase = { Model = e.Instance.new("Model"), TankCenter = e.Vector3.new(0, 131, 0),
+    Lab = { Display = e.Instance.new("Folder") }, TierLabel = e.Instance.new("TextLabel") }
+local aquariumBottom
+for level = 1, #loaded.Config.BaseUpgrades do
+    loaded.Ship.Aquarium(aquariumBase, level, loaded.Config, loaded.Visuals)
+    local tank = aquariumBase.Model["Aquarium géant"]
+    for _, child in ipairs(tank:GetDescendants()) do
+        check(not child:GetAttribute("ArtEnvironment") and child.Name ~= "Roche de récif", "Upgrading an aquarium never brings back coral or reef rocks")
+    end
+    local pane = tank:FindFirstChild("Vitre panoramique")
+    check(tank.Animaux and pane, "All aquarium upgrade tiers retain the animal display and glass")
+    local bottom = pane.Position.Y - pane.Size.Y / 2
+    aquariumBottom = aquariumBottom or bottom
+    check(math.abs(bottom - aquariumBottom) < .001, "Aquarium upgrades grow upward and keep the pedestal on the deck")
+end
 check(player.Character.Harpon.Handle:GetAttribute("ArtAsset") == "harpoon" and player.Character.Harpon:FindFirstChild("Flèche"), "Harpoon combines the imported body with a welded barbed spear")
 for _, guardian in ipairs(e.Workspace.Guardians:GetChildren()) do
     check(guardian.PrimaryPart and guardian:GetAttribute("Guardian") and guardian:GetAttribute("Health") > 0,
@@ -115,6 +147,13 @@ travel(player, e.Vector3.new(100, 100, 65))
 check(replacement.HumanoidRootPart.Position.Y >= loaded.Config.WaterTop + 1, "Server rejects diving from the ship's outside edge")
 travel(player, beforeEdge)
 travel(player, e.Vector3.new(0, 99, 0))
+-- The net stays inside the validated shared surface opening.
+for _, side in ipairs({ -1, 1 }) do
+    travel(player, e.Vector3.new(0, 95, side * 42))
+    travel(player, e.Vector3.new(0, 120, side * 42))
+    check(replacement.HumanoidRootPart.Position.Y >= 118, "Server accepts surfacing along either rescue net")
+    travel(player, e.Vector3.new(0, 98, 0))
+end
 travel(player, e.Vector3.new(0, -550, 0))
 check(replacement.HumanoidRootPart.Position.Y == -550 and latest(player).Floor == 3 and latest(player).Equipment.Suit == 1,
     "Starting diver crosses two depth recommendations without a level teleport")

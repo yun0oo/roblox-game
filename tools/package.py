@@ -11,7 +11,7 @@ if not source.is_file() or not source.read_bytes().startswith(b'<roblox!'):
 downloads = ROOT / 'downloads'
 downloads.mkdir(exist_ok=True)
 shutil.copyfile(source, downloads / source.name)
-instructions = '''UNDERWATER EGG — NÉRÉIDE · VRAIS MODÈLES DE DÉCORS MARINS
+instructions = '''UNDERWATER EGG — NÉRÉIDE · BASES, FILETS ET HARPON
 
 1. Extraire ce ZIP dans un nouveau dossier.
 2. Ouvrir le fichier UnderwaterEgg.rbxl avec Roblox Studio sur Windows/macOS.
@@ -19,7 +19,7 @@ instructions = '''UNDERWATER EGG — NÉRÉIDE · VRAIS MODÈLES DE DÉCORS MARI
 4. Attendre le chargement : votre galerie est sur le navire NÉRÉIDE.
    Retrouvez votre portrait et votre pseudo au-dessus de votre aquarium.
 5. Rejoindre le bassin central : tous les joueurs plongent et remontent ici.
-   Utiliser les échelles pour revenir sur le pont.
+   Grimper sur les grands filets aux deux extrémités pour revenir sur le pont.
 6. Explorer vers le bas : un boss géant surveille chaque palier.
    E près d’un œuf l’ajoute à votre inventaire NON SÉCURISÉ.
    Aucun œuf n’est attaché au personnage : sa rareté colore le plongeur.
@@ -56,14 +56,23 @@ ou chez un marchand pour sa boutique. F à la pancarte améliore la base.
 Pour conserver la progression : publier une expérience privée, puis autoriser
 l'accès Studio aux services API dans les paramètres de l'expérience.
 
-Nouveautés : 14 décors 3D préexistants intégrés : coraux, éponges et plantes
+Nouveautés : bases en teck, métal, verre et laiton, rangements Kenney CC0,
+filets de remontée réellement grimpables et nouveau corps de harpon Kenney.
+Petit HUD : gold et profondeur, oxygène seulement utile, événement sur une ligne.
+Le bouton ☰ ouvre les menus ; inventaire et harpon restent en accès direct.
+M = caméra, Maj = boost. Aucune case ou import supplémentaire.
+
+14 décors 3D préexistants intégrés : coraux, éponges et plantes
 Poly Pizza (Poly by Google, God Appeasers, Device Lab, Laney XR Labs), rochers,
 arches, colonnes, épave et coffres de la scène WebGL Aquarium. Les anciens
-coraux et algues en pièces simples sont remplacés jusque dans les aquariums.
+coraux et algues en pièces simples sont remplacés dans les récifs.
+Les aquariums sont désormais sans coraux ni rochers.
 Modèles détaillés ou allégés selon le rendu disponible, chargés à proximité.
 Crédits, sources et licences dans CREDITS-DECORS.md et le dossier LICENCES.
 APERCU-MODELES-HORS-ROBLOX.png présente les sculptures séparément :
-c’est un rendu des modèles hors Roblox, pas une capture de la carte en jeu.
+Les fichiers APERCU-BASE-HORS-ROBLOX.png et APERCU-HARPON-HORS-ROBLOX.png
+montrent les géométries construites par le jeu avec un éclairage Blender.
+Ces aperçus sont des rendus hors Roblox, pas des captures en jeu.
 
 Fonds sableux continus dans les six profondeurs (récif à 325 m),
 passages centraux ouverts, parois entièrement habillées, herbiers denses,
@@ -99,6 +108,10 @@ with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip', 'w', zipfile.ZIP_DEFLATED)
     package.write(ROOT / 'assets/source/Aquarium.LICENSE.md', 'LICENCES/Aquarium-BSD-3-Clause.txt')
     package.write(ROOT / 'assets/source/PolyPizza.CC-BY-3.0.txt', 'LICENCES/PolyPizza-CC-BY-3.0.txt')
     package.write(ROOT / 'assets/source/PolyPizza.ATTRIBUTION.md', 'LICENCES/PolyPizza-Attribution.md')
+    package.write(ROOT / 'assets/source/Kenney.LICENSE.txt', 'LICENCES/Kenney-CC0.txt')
+    package.write(ROOT / 'assets/source/Kenney.README.md', 'LICENCES/Kenney-Provenance.md')
+    package.write(ROOT / 'docs/previews/base.png', 'APERCU-BASE-HORS-ROBLOX.png')
+    package.write(ROOT / 'docs/previews/harpoon.png', 'APERCU-HARPON-HORS-ROBLOX.png')
 with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip') as package:
     assert package.testzip() is None
     assert package.read(source.name) == source.read_bytes()

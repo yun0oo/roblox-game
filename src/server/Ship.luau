@@ -6,11 +6,42 @@ local brass = Color3.fromRGB(255, 195, 56)
 local ivory = Color3.fromRGB(247, 251, 255)
 local teak = Color3.fromRGB(205, 141, 75)
 local teal = Color3.fromRGB(36, 230, 212)
+local steel = Color3.fromRGB(157, 181, 193)
 
 local function solid(visuals, parent, name, size, frame, color, material, shape)
     local part = visuals.Part(parent, name, size, frame, color, material or Enum.Material.SmoothPlastic, shape)
     part.CanCollide = true; part.CanQuery = true; part.CastShadow = true
     return part
+end
+
+-- Rope mesh backed by native climbable trusses, not an ornamental flat panel.
+local function rescueNet(vessel, config, visuals, side)
+    local net = Instance.new("Model"); net.Name = "Filet de remontée"; net.Parent = vessel
+    local bottom, top = config.WaterTop - 22, config.BaseHeight - 2
+    local z = side * (config.DiveHalfLength - 2)
+    local rope = Color3.fromRGB(224, 205, 160)
+    for x = -12, 12, 4 do
+        local climb = Instance.new("TrussPart"); climb.Name = "Prise de filet"
+        climb.Size = Vector3.new(4, top - bottom, 2)
+        climb.CFrame = CFrame.new(x, (bottom + top) / 2, z)
+        climb.Anchored = true; climb.CanCollide = true; climb.Transparency = 1; climb.Parent = net
+        visuals.Rod(net, "Corde verticale", Vector3.new(x, bottom, z - side * 1.1), Vector3.new(x, top, z - side * 1.1), 0.2, rope, Enum.Material.Fabric)
+    end
+    for y = bottom, top, 3 do
+        visuals.Rod(net, "Maille du filet", Vector3.new(-14, y, z - side * 1.1), Vector3.new(14, y, z - side * 1.1), 0.2, rope, Enum.Material.Fabric)
+    end
+    for edge = -1, 1, 2 do
+        visuals.Rod(net, "Ralingue renforcée", Vector3.new(edge * 14, bottom, z - side * 1.1), Vector3.new(edge * 14, top, z - side * 1.1), 0.45, rope, Enum.Material.Fabric)
+        solid(visuals, net, "Fixation inox", Vector3.new(1.2, 1.2, 2.5), CFrame.new(edge * 14, top, z), steel, Enum.Material.Metal)
+    end
+    net:SetAttribute("ClimbBottom", bottom); net:SetAttribute("ClimbTop", top)
+end
+
+local function lifeRing(parent, position, visuals)
+    for i = 1, 16 do
+        local a, b = (i - 1) * math.pi / 8, i * math.pi / 8
+        visuals.Rod(parent, "Bouée de sauvetage", position + Vector3.new(math.cos(a) * 2.1, math.sin(a) * 2.1, 0), position + Vector3.new(math.cos(b) * 2.1, math.sin(b) * 2.1, 0), 0.85, i % 4 == 0 and ivory or Color3.fromRGB(246, 112, 54))
+    end
 end
 
 function Ship.Build(world, config, visuals)
@@ -44,7 +75,10 @@ function Ship.Build(world, config, visuals)
         local z = side * (config.DiveHalfLength + length / 2)
         block("Coque centrale", Vector3.new(70, 24, length), Vector3.new(0, deckY - 14, z), navy)
         local promenade = block("Promenade centrale", Vector3.new(70, 4, length), Vector3.new(0, deckY, z), ivory)
-        promenade.TopSurface = Enum.SurfaceType.Studs
+        promenade.TopSurface = Enum.SurfaceType.Smooth
+        for x = -22, 22, 44 do
+            block("Incrustation de promenade", Vector3.new(0.3, 0.08, length), Vector3.new(x, deckY + 2.05, z), steel, Enum.Material.Metal)
+        end
         block("Cadre du bassin", Vector3.new(72, 3, 2), Vector3.new(0, deckY + 2, side * config.DiveHalfLength), brass)
         block("Marche du bassin", Vector3.new(28, 1, 9), Vector3.new(0, deckY + 3, side * (config.DiveHalfLength + 6)), navy)
     end
@@ -76,18 +110,17 @@ function Ship.Build(world, config, visuals)
     local nameplate = visuals.Part(vessel, "Nom du navire", Vector3.one, CFrame.new(0, deckY + 36, 258), brass)
     nameplate.Transparency = 1
     visuals.Label(nameplate, "N É R É I D E\nEXPÉDITION OCÉANIQUE", ivory, 6, 650).TextSize = 30
-    -- The single communal entrance has ladders from the ocean to both ends.
+    -- Both ends of the shared moonpool can be climbed without a teleport.
     for side = -1, 1, 2 do
         block("Margelle du bassin", Vector3.new(5, 3, 96), Vector3.new(side * 32.5, deckY + 1, 0), brass)
-        local ladder = Instance.new("TrussPart"); ladder.Name = "Échelle du bassin"
-        ladder.Size = Vector3.new(8, 38, 2); ladder.CFrame = CFrame.new(0, config.WaterTop - 1, side * (config.DiveHalfLength - 2))
-        ladder.Anchored = true; ladder.Color = brass; ladder.Parent = vessel
+        rescueNet(vessel, config, visuals, side)
+        lifeRing(vessel, Vector3.new(21, deckY + 7, side * (config.DiveHalfLength + 1)), visuals)
         local light = visuals.Part(vessel, "Balisage du bassin", Vector3.new(2, 1, 92), CFrame.new(side * 33, deckY + 2.8, 0), teal, Enum.Material.Neon)
         local point = Instance.new("PointLight"); point.Range = 32; point.Brightness = 1; point.Color = teal; point.Parent = light
     end
     local sign = visuals.Part(vessel, "Plongeoir commun", Vector3.one, CFrame.new(0, deckY + 6, 65), teal)
     sign.Transparency = 1
-    visuals.Label(sign, "↓ PLONGEOIR COMMUN ↓\nTOUS LES PLONGEURS PARTENT ICI", teal, 13, 550).TextSize = 25
+    visuals.Label(sign, "↓ PLONGER · FILETS POUR REMONTER", teal, 6, 180).TextSize = 18
     for z = 90, 220, 30 do
         visuals.Part(vessel, "Guide vers le bassin", Vector3.new(1.5, 0.12, 12), CFrame.new(0, deckY + 2.1, z), brass, Enum.Material.Neon)
     end
@@ -102,8 +135,23 @@ function Ship.Build(world, config, visuals)
         local row = math.floor((i - 1) / 2)
         local center = Vector3.new(column * 104, config.BaseHeight, -195 + row * 130)
         local model = Instance.new("Model"); model.Name = "Base_" .. i; model.Parent = world.BasesFolder
-        local plot = solid(visuals, model, "Galerie personnelle", Vector3.new(88, 0.4, 100), CFrame.new(center - Vector3.new(0, 9.8, 0)), Color3.fromRGB(78, 220, 78), Enum.Material.SmoothPlastic)
-        plot.TopSurface = Enum.SurfaceType.Studs
+        local plot = solid(visuals, model, "Galerie personnelle", Vector3.new(88, 0.4, 100), CFrame.new(center - Vector3.new(0, 9.8, 0)), navy, Enum.Material.Metal)
+        plot.TopSurface = Enum.SurfaceType.Smooth
+        solid(visuals, model, "Terrasse en teck", Vector3.new(82, 0.15, 94), CFrame.new(center + Vector3.new(0, -9.5, 0)), teak, Enum.Material.WoodPlanks)
+        for z = -44, 44, 5.5 do
+            visuals.Part(model, "Calfatage de la terrasse", Vector3.new(81, 0.03, 0.12), CFrame.new(center + Vector3.new(0, -9.4, z)), Color3.fromRGB(80, 59, 47), Enum.Material.Wood)
+        end
+        local rear = center + Vector3.new(0, 6, -47)
+        solid(visuals, model, "Cloison de galerie", Vector3.new(84, 30, 1.2), CFrame.new(rear), navy, Enum.Material.Metal)
+        solid(visuals, model, "Corniche de galerie", Vector3.new(86, 1, 3), CFrame.new(rear + Vector3.new(0, 15, 0)), ivory, Enum.Material.Metal)
+        for x = -36, 36, 12 do
+            visuals.Part(model, "Nervure de cloison", Vector3.new(0.2, 25, 0.2), CFrame.new(rear + Vector3.new(x, 0, 0.7)), steel, Enum.Material.Metal)
+        end
+        for side = -1, 1, 2 do
+            require(game:GetService("ReplicatedStorage").Modules.Reef).Prop(model, "ship_cargo", center + Vector3.new(side * 35, -9.4, -35), 0.95, visuals, side * 0.3)
+            visuals.Part(model, "Lumière de coursive", Vector3.new(0.25, 0.15, 86), CFrame.new(center + Vector3.new(side * 40, -9.2, 0)), teal, Enum.Material.Neon)
+            solid(visuals, model, "Pilastre de galerie", Vector3.new(2.5, 33, 3), CFrame.new(center + Vector3.new(side * 41, 7, -45)), ivory, Enum.Material.Metal)
+        end
         for side = -1, 1, 2 do
             visuals.Part(model, "Filet de laiton", Vector3.new(88, 0.15, 0.3), CFrame.new(center + Vector3.new(0, -9.5, side * 49)), brass, Enum.Material.Metal)
         end
@@ -111,7 +159,7 @@ function Ship.Build(world, config, visuals)
         local core, bench, prompt, upgrade = lab.Deposit, lab.Terminal, lab.HatchPrompt, lab.TerminalPrompt
         -- A separate, unmistakable upgrade board, away from the egg deposit.
         local signPos = center + Vector3.new(29, -3, 31)
-        solid(visuals, model, "Pied de pancarte", Vector3.new(0.8, 7, 0.8), CFrame.new(signPos - Vector3.new(0, 3, 0)), teak)
+        solid(visuals, model, "Pied de pancarte", Vector3.new(2, 7, 1.4), CFrame.new(signPos - Vector3.new(0, 3, 0)), navy, Enum.Material.Metal)
         local baseSign = visuals.Part(model, "Pancarte amélioration", Vector3.new(14, 6, 0.65), CFrame.new(signPos), brass)
         visuals.Label(baseSign, "⬆ AMÉLIORER LA BASE\nAQUARIUM · REVENUS · DÉCORS", ivory, 2, 110)
         local upgradeStatus = require(script.Parent.Laboratory).UpgradeBoard(model, baseSign, center, visuals)
@@ -119,11 +167,11 @@ function Ship.Build(world, config, visuals)
         upgradeBase.KeyboardKeyCode = Enum.KeyCode.F; upgradeBase.MaxActivationDistance = 12; upgradeBase.RequiresLineOfSight = false; upgradeBase.Parent = baseSign
         for side = -1, 1, 2 do
             for z = -45, 15, 15 do
-                solid(visuals, model, "Piquet de galerie", Vector3.new(1, 5, 1), CFrame.new(center + Vector3.new(side * 42, -7, z)), Color3.fromRGB(102, 65, 35), Enum.Material.Wood)
+                solid(visuals, model, "Chandelier de galerie", Vector3.new(0.6, 6, 0.6), CFrame.new(center + Vector3.new(side * 42, -6.5, z)), steel, Enum.Material.Metal)
             end
-            for y = -8, -5, 3 do
-                solid(visuals, model, "Clôture de galerie", Vector3.new(0.65, 0.7, 61), CFrame.new(center + Vector3.new(side * 42, y, -15)), teak, Enum.Material.Wood)
-            end
+            local glass = solid(visuals, model, "Garde-corps vitré", Vector3.new(0.25, 4.4, 60), CFrame.new(center + Vector3.new(side * 42, -6.7, -15)), Color3.fromRGB(194, 232, 242), Enum.Material.Glass)
+            glass.Transparency = 0.72; glass.Reflectance = 0.06
+            solid(visuals, model, "Main courante inox", Vector3.new(0.8, 0.5, 62), CFrame.new(center + Vector3.new(side * 42, -3.5, -15)), steel, Enum.Material.Metal)
         end
         local marker = visuals.Part(model, "Identité du propriétaire", Vector3.one, CFrame.new(center + Vector3.new(0, 38, -8)), brass)
         marker.Transparency = 1
@@ -139,7 +187,7 @@ function Ship.Build(world, config, visuals)
         local tier = label:Clone(); tier.Name = "Niveau"; tier.Position = UDim2.fromScale(0, 0.86); tier.Size = UDim2.fromScale(1, 0.14)
         tier.TextSize = 19; tier.TextColor3 = brass; tier.Text = "AQUARIUM · NIVEAU 1"; tier.Parent = gui
         local base = { Model = model, Center = center, Spawn = center + Vector3.new(0, -6, 37), TankCenter = center + Vector3.new(0, 8, -10),
-            UpgradeStatus = upgradeStatus, Lab = lab, IncubationCenter = lab.Center, Core = core, Bench = bench, BaseSign = baseSign, HatchPrompt = prompt, UpgradePrompt = upgrade, BasePrompt = upgradeBase, Label = label, Avatar = portrait, TierLabel = tier,
+            UpgradeStatus = upgradeStatus, Lab = lab, IncubationCenter = lab.Center, Core = core, Bench = bench, BaseSign = baseSign, HatchPrompt = prompt, UpgradePrompt = upgrade, BasePrompt = upgradeBase, Label = label, Avatar = portrait, TierLabel = tier, Marker = marker,
             Min = center + Vector3.new(-44, -16, -50), Max = center + Vector3.new(44, 80, 50),
             OwnerId = 0, Swimmers = {}, Incubators = {}, Level = 0 }
         table.insert(world.Bases, base)
@@ -151,15 +199,25 @@ end
 function Ship.Aquarium(base, level, config, visuals)
     local old = base.Model:FindFirstChild("Aquarium géant"); if old then old:Destroy() end
     local tank = Instance.new("Model"); tank.Name = "Aquarium géant"; tank.Parent = base.Model
-    local center = base.TankCenter
     local width, height, depth = 52 + level * 2, 24 + level * 2.4, 29 + level
+    -- Upgrade upward: the pedestal stays on the deck instead of sinking into it.
+    base.TankAnchor = base.TankAnchor or base.TankCenter
+    local lift = (height - 26.4) / 2
+    local center = base.TankAnchor + Vector3.new(0, lift, 0)
+    base.TankCenter = center
+    if base.Marker then base.Marker.CFrame = CFrame.new(base.Center + Vector3.new(0, 38 + lift, -8)) end
     local accent = level >= 3 and brass or teal
     local function piece(name, size, pos, color, material)
         return solid(visuals, tank, name, size, CFrame.new(pos), color, material)
     end
-    piece("Socle sculpté", Vector3.new(width + 5, 5, depth + 5), center - Vector3.new(0, height / 2 + 2, 0), navy)
+    piece("Socle sculpté", Vector3.new(width + 5, 5, depth + 5), center - Vector3.new(0, height / 2 + 2, 0), navy, Enum.Material.Metal)
+    piece("Plinthe ivoire", Vector3.new(width + 6, 0.8, depth + 6), center - Vector3.new(0, height / 2 + 4, 0), ivory, Enum.Material.Metal)
     piece("Bandeau en laiton", Vector3.new(width + 6, 0.6, depth + 6), center - Vector3.new(0, height / 2 - 0.3, 0), brass)
-    piece("Couronne technique", Vector3.new(width + 5, 2, depth + 5), center + Vector3.new(0, height / 2, 0), navy)
+    piece("Couronne technique", Vector3.new(width + 5, 2, depth + 5), center + Vector3.new(0, height / 2, 0), ivory, Enum.Material.Metal)
+    piece("Capot de filtration", Vector3.new(width + 2, 0.6, depth + 2), center + Vector3.new(0, height / 2 + 1.3, 0), navy, Enum.Material.Metal)
+    for x = -width / 2 + 4, width / 2 - 4, 4 do
+        visuals.Part(tank, "Grille de ventilation", Vector3.new(0.6, 0.08, depth - 5), CFrame.new(center + Vector3.new(x, height / 2 + 1.65, 0)), steel, Enum.Material.Metal)
+    end
     local water = visuals.Part(tank, "Eau claire", Vector3.new(width - 1, height - 2, depth - 1), CFrame.new(center), Color3.fromRGB(64, 166, 184))
     water.Transparency = 0.95
     for side = -1, 1, 2 do
@@ -174,10 +232,11 @@ function Ship.Aquarium(base, level, config, visuals)
     piece("Sable nacré", Vector3.new(width - 1, 1, depth - 1), center - Vector3.new(0, height / 2 - 1, 0), Color3.fromRGB(255, 230, 151), Enum.Material.Sand)
     local lightBar = visuals.Part(tank, "Rampe lumineuse", Vector3.new(width - 4, 0.2, 0.8), CFrame.new(center + Vector3.new(0, height / 2 - 1.5, depth / 2 - 2)), accent, Enum.Material.Neon)
     local lamp = Instance.new("PointLight"); lamp.Color = Color3.fromRGB(164, 235, 239); lamp.Range = 38; lamp.Brightness = 1.5 + level * 0.2; lamp.Parent = lightBar
-    for side = -1, 1, 2 do
-        local rockPos = center + Vector3.new(side * (width / 2 - 8), -height / 2 + 3, -depth / 2 + 5)
-        visuals.Part(tank, "Roche de récif", Vector3.new(9, 5, 7), CFrame.new(rockPos), Color3.fromRGB(77, 154, 184), Enum.Material.Rock, Enum.PartType.Ball)
-        require(game:GetService("ReplicatedStorage").Modules.Reef).Coral(tank, rockPos + Vector3.new(0, 2, 0), 0.65 + level * 0.035, side > 0 and 1 or 2, visuals)
+    -- Clear display: no coral or rock sculptures, including after an upgrade.
+    for i = -2, 2 do
+        local x = i * (width - 10) / 5
+        piece("Trappe de maintenance", Vector3.new((width - 12) / 5, 2.8, 0.12), center + Vector3.new(x, -height / 2 - 2, depth / 2 + 2.56), steel, Enum.Material.Metal)
+        visuals.Part(tank, "Témoin de filtration", Vector3.new(0.6, 0.16, 0.15), CFrame.new(center + Vector3.new(x, -height / 2 - 1.4, depth / 2 + 2.65)), accent, Enum.Material.Neon)
     end
     for side = -1, 1, 2 do
         local air = visuals.Part(tank, "Diffuseur de bulles", Vector3.new(1, 0.3, depth - 4), CFrame.new(center + Vector3.new(side * (width / 2 - 3), -height / 2 + 1.6, 0)), ivory)
@@ -193,7 +252,7 @@ function Ship.Aquarium(base, level, config, visuals)
     end
     if level >= 4 then
         for side = -1, 1, 2 do
-            visuals.Part(tank, "Cristal d'Atlantide", Vector3.new(2, 7, 2), CFrame.new(center + Vector3.new(side * 14, -height / 2 + 5, -7)) * CFrame.Angles(0, 0, side * 0.2), accent, Enum.Material.Neon)
+            visuals.Part(tank, "Balisage premium", Vector3.new(0.3, 0.3, depth - 2), CFrame.new(center + Vector3.new(side * (width / 2 + 1), height / 2 + 1.65, 0)), accent, Enum.Material.Neon)
         end
     end
     base.Display = Instance.new("Folder"); base.Display.Name = "Animaux"; base.Display.Parent = tank

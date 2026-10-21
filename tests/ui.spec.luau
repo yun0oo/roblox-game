@@ -9,7 +9,8 @@ local UDim = { new = function() return {} end }
 local Vector2 = { new = function(x, y) return { X = x, Y = y } end }
 local NumberSequence = { new = function() return {} end }
 local NumberSequenceKeypoint = { new = function() return {} end }
-local task = { defer = function(fn) fn() end }
+local noticeTimers = {}
+local task = { defer = function(fn) fn() end, delay = function(_, fn) table.insert(noticeTimers, fn) end }
 local factories, loaded = {}, {}
 local function require(ref)
     if not loaded[ref.Name] then loaded[ref.Name] = factories[ref.Name]() end
@@ -103,6 +104,36 @@ workspace.CurrentCamera = Instance.new("Camera"); workspace.CurrentCamera.Viewpo
 ctx.Equip = function() end; ctx.Fire = function() end
 local full = UI.new(ctx)
 check(full.Gui.Parent == playerGui and full.CollectionTabs, "The real HUD and collection window construct successfully")
+check(not full.Menu.Visible and not full.OxygenPanel.Visible and not full.Objective.Visible, "Exploration starts with the drawer closed and no empty objective or surface oxygen meter")
+full.MenuButton.Activated:Fire()
+check(full.Menu.Visible, "The compact menu button exposes all expedition pages")
+state.Eggs = {}; state.Income = 100; state.Oxygen = 100; state.MaxOxygen = 100
+state.Depth = 0; state.Floor = 1; state.SaveStatus = "Sauvegardé"; state.Offline = false
+state.Event = { Name = "Prochain événement", Active = false, Remaining = 300 }
+state.ServerTime = 1700000000; state.ShotRemaining = 0; state.BoostRemaining = 0
+full:Update(state); full:Tick()
+check(not full.OxygenPanel.Visible and not full.Save.Visible and not full.Cooldown.Visible, "Full surface oxygen, successful saves and ready harpoon do not create permanent HUD messages")
+state.Depth = 30; state.Oxygen = 18; state.Offline = true; state.SaveStatus = "STUDIO · NON SAUVEGARDÉ"
+full:Update(state)
+check(full.OxygenPanel.Visible and full.Oxygen.Text == "18 %" and full.Save.Visible, "Diving shows the small oxygen meter and temporary Studio saves remain explicit")
+state.Carrying = { Rarity = "Rare" }
+full:Update(state)
+check(full.Objective.Visible and string.find(full.Objective.Text, "RARE"), "A vulnerable inventory egg keeps its return instruction visible")
+state.Carrying = nil; state.OwnBase = true
+state.Eggs = { { Id = "secured", Rarity = "Rare" } }
+full:Update(state)
+check(full.Objective.Visible, "A secured unincubated egg keeps the deposit instruction at home")
+state.Eggs[1].ReadyAt = state.ServerTime + 40
+full:Update(state)
+check(not full.Objective.Visible, "Incubating eggs do not leave a stale deposit instruction")
+state.Eggs = {}; full:Open("Guide")
+check(not full.Menu.Visible, "Opening a page closes the navigation drawer")
+full:Open(nil)
+full:Toast("Œuf sécurisé", "Rare"); local oldest = full.Notices[1]
+full:Toast("Équipement amélioré", "Success"); full:Toast("Oxygène faible", "Warning")
+check(#full.Notices == 2 and oldest.Destroyed, "Notifications stay limited to two compact notices")
+for _, expire in ipairs(noticeTimers) do expire() end
+check(#full.Notices == 0, "Timed notifications disappear completely")
 full.State = state; state.Eggs = {}; state.Income = 100; state.Animals = {}; state.Discovered = {}
 for id in pairs(Config.Animals) do state.Animals[id] = 1; state.Discovered[id] = true end
 full.CollectionMode = "Animaux"; full:Open("Collection")
@@ -136,7 +167,7 @@ for _, card in ipairs(cards()) do
     check(hasUnknown, "Undiscovered species hide their names in the grid")
 end
 workspace.CurrentCamera.ViewportSize = { X = 390, Y = 844 }; workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Fire()
-check(full.Compact and full.MenuItems[1].Button.Text == "🥚", "Small screens switch the HUD navigation to compact icons")
+check(full.Compact and full.MenuItems[1].Button.Text == "ŒUFS & ANIMAUX", "Small screens keep readable menu labels inside the collapsible drawer")
 full:OpenShop("Oxygen")
 check(not full.Browser.Visible and full.List.Visible and not full.CollectionTabs.Visible, "Shop pages release the collection grid and restore their purchase controls")
 print(string.format("UI: %d assertions passed (callbacks with engine fakes; native rendering untested)", passed))

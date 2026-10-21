@@ -402,3 +402,42 @@ Creative Commons Notice
     this trademark restriction does not form part of this License.
 
     Creative Commons may be contacted at https://creativecommons.org/.
+
+
+KENNEY CC0 — NAVIRE ET HARPON
+Auteur : Kenney (https://kenney.nl), Creative Commons Zero 1.0.
+Sources : https://github.com/shorepine/kenney/tree/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster
+Modèles : blaster-e.glb (fusil-harpon), crate-medium.glb (rangement de galerie).
+Modifications : soudure des sommets, simplification, couleurs intégrées, palette marine du fusil.
+Le README du miroir confirme la licence CC0 de sa bibliothèque graphique.
+Licence : https://creativecommons.org/publicdomain/zero/1.0/
+
+Déclaration de licence fournie par le miroir :
+
+
+	Castle Kit (2.0)
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 27-03-2024 13:37
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You can use this content for personal, educational, and commercial purposes.
+
+	Support by crediting 'Kenney' or 'www.kenney.nl' (this is not a requirement)
+
+			------------------------------
+
+	• Website : www.kenney.nl
+	• Donate  : www.kenney.nl/donate
+
+	• Patreon : patreon.com/kenney
+
+	Follow on social media for updates:
+
+	• Twitter:   twitter.com/KenneyNL
+	• Instagram: instagram.com/kenney_nl
+	• Mastodon:  mastodon.gamedev.place/@kenney

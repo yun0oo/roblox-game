@@ -5,12 +5,13 @@ Les modèles sont fournis dans le dépôt et convertis en données numériques p
 | Source | Auteur | Licence | Utilisation |
 | --- | --- | --- | --- |
 | [Barramundi Fish](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/BarramundiFish) | Microsoft | CC0 1.0 | Poisson d'aquarium ; anatomie de base modifiée pour requin, Léviathan et dragon marin |
-| [Blaster Kit, blaster-b](https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/blaster-b.glb) | Kenney | CC0 1.0 | Corps du harpon, complété par une flèche, des ardillons et un moulinet originaux |
+| [Blaster Kit, blaster-e](https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/blaster-e.glb) | Kenney | CC0 1.0 | Corps fin du fusil-harpon, palette marine ; rail, flèche, ardillons et moulinet originaux |
+| [Blaster Kit, crate-medium](https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/crate-medium.glb) | Kenney | CC0 1.0 | Caisses de matériel dans les galeries du navire |
 
 | [Animated Cute Fish Pack](https://quaternius.com/packs/cutefish.html) | Quaternius | CC0 1.0 | Poisson-clown, papillon, globe, lune, espadon, requin, requin gobelin, baudroie, piranha, mérou, chirurgien et poisson-lion |
 | [Animated Fish Pack](https://quaternius.com/packs/animatedfish.html) | Quaternius | CC0 1.0 | Raie manta, baleine et dauphin |
 
-Les déclarations de licence des distributeurs sont conservées dans `source/`. Le fichier `Kenney.LICENSE.txt` est la licence racine de la bibliothèque miroir ; son README confirme que toute la bibliothèque graphique, dont Blaster Kit, est CC0. Les empreintes des modèles originaux sont dans `manifest.json`.
+Les déclarations de licence des distributeurs sont conservées dans `source/`. Le fichier `Kenney.LICENSE.txt` est la licence racine de la bibliothèque miroir ; son README conservé dans `source/Kenney.README.md` confirme que toute la bibliothèque graphique, dont Blaster Kit, est CC0. Les empreintes des modèles originaux sont dans `manifest.json`.
 
 L'œuf ovoïde, les silhouettes animales procédurales, les tentacules, les cornes, les nageoires, le bateau, les aquariums et leurs décors sont créés pour Underwater Egg. Le Kraken, Scylla et Charybde sont des modèles originaux ; les sources externes ne sont pas présentées comme des monstres prêts à l'emploi.
 
@@ -75,3 +76,10 @@ ne cautionnent pas Underwater Egg.
 Les empreintes de chaque modèle et texture ainsi que leurs sources précises
 sont conservées dans assets/manifest.json. Les autres modèles marins, notamment
 ceux de Quaternius, gardent les crédits détaillés dans CREDITS-MODELES.md.
+
+
+## Navire, filets et harpon
+
+Les caisses de matériel et le nouveau corps de harpon sont des modèles Kenney CC0 préexistants, figés au commit du tableau. Les géométries sont soudées et simplifiées avec `blender -b -t 2 --python tools/build_ship_art.py`, puis intégrées au catalogue numérique local. `tools/build_art.py` exécute aussi cette passe. Les textures de palette sont converties en couleurs de faces ; le fusil est recoloré en bleu marin. Aucun appel au catalogue Roblox ni achat de modèle n’est nécessaire.
+
+Terrasses en teck, garde-corps vitrés, cloisons, cuves, ventilation, filets de corde, rail du harpon, sandows, moulinet et flèche sont originaux. Les coraux et rochers décoratifs sont retirés des aquariums à tous les niveaux ; les décors d’exploration conservent les sculptures marines créditées ci-dessus.

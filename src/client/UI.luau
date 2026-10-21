@@ -77,58 +77,61 @@ function UI.new(context)
         self.Compact = size.X / scale < 900
         if self.MenuItems then
             for _, entry in ipairs(self.MenuItems) do
-                entry.Button.Size = UDim2.fromOffset(self.Compact and 58 or 152, 40)
-                entry.Button.Text = self.Compact and entry.Icon or entry.Text
+                entry.Button.Size = UDim2.fromOffset(152, 40)
+                entry.Button.Text = entry.Text
             end
-            self.MenuHeading.Visible = not self.Compact
+            self.MenuHeading.Visible = true
+        end
+        if self.Compass then
+            self.Compass.AnchorPoint = Vector2.new(0.5, self.Compact and 1 or 0)
+            self.Compass.Position = self.Compact and UDim2.new(0.4, 0, 1, -187) or UDim2.new(0.5, 0, 0, 20)
+            self.Compass.Size = self.Compact and UDim2.fromOffset(220, 20) or UDim2.new(1, -480, 0, 30)
         end
         if self.State and (self.Tab == "Collection" or self.Tab == "Bestiaire") then self:RenderPanel() end
     end
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(resize); resize()
-    local top = panel(root, { Position = UDim2.fromOffset(20, 18), Size = UDim2.new(1, -40, 0, 84) })
-    label(top, "UNDERWATER\nEGG", UserInputService.TouchEnabled and 16 or 23, C.Teal, { Position = UDim2.fromOffset(18, 12), Size = UDim2.new(0.23, -18, 1, -24), Font = Enum.Font.GothamBlack })
-    local function stat(x, title)
-        local frame = make("Frame", top, { BackgroundTransparency = 1, Position = UDim2.fromScale(x, 0), Size = UDim2.fromScale(0.24, 1) })
-        label(frame, title, 11, C.Muted, { Position = UDim2.fromOffset(8, 12), Size = UDim2.new(1, -12, 0, 16) })
-        return frame, label(frame, "…", 22, C.White, { Position = UDim2.fromOffset(8, 30), Size = UDim2.new(1, -12, 0, 28), Font = Enum.Font.GothamBold })
-    end
-    local moneyFrame; moneyFrame, self.Money = stat(0.25, "GOLD")
-    self.Income = label(moneyFrame, "+0 gold / min", 11, C.Teal, { Position = UDim2.fromOffset(8, 61), Size = UDim2.new(1, -12, 0, 15) })
-    local oxygenFrame; oxygenFrame, self.Oxygen = stat(0.50, "RÉSERVE D'OXYGÈNE")
-    local track = make("Frame", oxygenFrame, { Position = UDim2.new(0, 8, 0, 65), Size = UDim2.new(1, -20, 0, 5), BackgroundColor3 = C.Navy, BorderSizePixel = 0 }); round(track, 4)
-    self.OxygenBar = make("Frame", track, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.Teal, BorderSizePixel = 0 }); round(self.OxygenBar, 4)
-    local depthFrame; depthFrame, self.Depth = stat(0.75, "PROFONDEUR")
-    self.Floor = label(depthFrame, "RÉCIF", 11, C.Muted, { Position = UDim2.fromOffset(8, 61), Size = UDim2.new(1, -12, 0, 15) })
-    local menu = make("Frame", root, { Position = UDim2.fromOffset(20, 126), Size = UDim2.fromOffset(152, 460), BackgroundTransparency = 1 })
-    self.MenuItems = {}
-    self.MenuHeading = label(menu, "VOTRE EXPÉDITION", 10, C.Muted, { Size = UDim2.fromOffset(152, 18) })
+    -- Small independent instruments leave the middle of the screen open.
+    local wallet = panel(root, { Name = "Gold", Position = UDim2.fromOffset(20, 16), Size = UDim2.fromOffset(205, 50), BackgroundColor3 = C.Navy, BackgroundTransparency = 0.18 })
+    label(wallet, "G", 18, C.Gold, { Position = UDim2.fromOffset(12, 8), Size = UDim2.fromOffset(24, 32), Font = Enum.Font.GothamBlack })
+    self.Money = label(wallet, "…", 18, C.White, { Position = UDim2.fromOffset(42, 6), Size = UDim2.fromOffset(150, 23), Font = Enum.Font.GothamBold })
+    self.Income = label(wallet, "+0 / min", 10, C.Muted, { Position = UDim2.fromOffset(42, 29), Size = UDim2.fromOffset(150, 15) })
+    local depth = panel(root, { Name = "Profondeur", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 16), Size = UDim2.fromOffset(185, 50), BackgroundColor3 = C.Navy, BackgroundTransparency = 0.18 })
+    self.Depth = label(depth, "Surface", 17, C.White, { Position = UDim2.fromOffset(12, 6), Size = UDim2.fromOffset(161, 23), Font = Enum.Font.GothamBold })
+    self.Floor = label(depth, "NÉRÉIDE", 10, C.Muted, { Position = UDim2.fromOffset(12, 29), Size = UDim2.fromOffset(161, 15) })
+    self.OxygenPanel = panel(root, { Name = "Oxygène", AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(UserInputService.TouchEnabled and 0.4 or 0.5, 0, 1, -96), Size = UDim2.fromOffset(220, 33), BackgroundColor3 = C.Navy, BackgroundTransparency = 0.25, Visible = false })
+    label(self.OxygenPanel, "O₂", 12, C.Muted, { Position = UDim2.fromOffset(10, 3), Size = UDim2.fromOffset(30, 18) })
+    self.Oxygen = label(self.OxygenPanel, "100 %", 11, C.Muted, { Position = UDim2.fromOffset(130, 3), Size = UDim2.fromOffset(80, 18), TextXAlignment = Enum.TextXAlignment.Right })
+    local track = make("Frame", self.OxygenPanel, { Position = UDim2.fromOffset(10, 24), Size = UDim2.fromOffset(200, 3), BackgroundColor3 = C.Panel, BorderSizePixel = 0 }); round(track, 3)
+    self.OxygenBar = make("Frame", track, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.Teal, BorderSizePixel = 0 }); round(self.OxygenBar, 3)
+    local menu = panel(root, { Name = "Menu d’expédition", Position = UDim2.fromOffset(20, 118), Size = UDim2.fromOffset(172, 484), BackgroundColor3 = C.Navy, BackgroundTransparency = 0.08, Visible = false, ZIndex = 5 })
+    self.Menu = menu; self.MenuItems = {}
+    self.MenuButton = button(root, "☰", { Position = UDim2.fromOffset(20, 76), Size = UDim2.fromOffset(36, 32), TextSize = 20, BackgroundColor3 = C.Navy, TextColor3 = C.White }, function() menu.Visible = not menu.Visible end)
+    self.QuickInventory = button(root, "🥚 0", { Position = UDim2.fromOffset(64, 76), Size = UDim2.fromOffset(76, 32), TextSize = 12, BackgroundColor3 = C.Navy, TextColor3 = C.White }, function() self:Open("Collection") end)
+    self.EquipButton = button(root, "HARPON", { Position = UDim2.fromOffset(148, 76), Size = UDim2.fromOffset(77, 32), TextSize = 10, BackgroundColor3 = C.Navy, TextColor3 = C.Teal }, function() context.Equip() end)
+    self.MenuHeading = label(menu, "EXPÉDITION", 10, C.Muted, { Position = UDim2.fromOffset(10, 10), Size = UDim2.fromOffset(152, 18), ZIndex = 6 })
     for i, entry in ipairs({ { "Collection", "ŒUFS & ANIMAUX" }, { "Bestiaire", "BESTIAIRE" }, { "Équipement", "ÉQUIPEMENT" }, { "Fusion", "FUSION" }, { "Prestige", "PRESTIGE" }, { "Habitat", "BASE & AQUARIUM" }, { "Classement", "CLASSEMENT" }, { "Guide", "COMMENT JOUER" } }) do
-        local item = button(menu, entry[2], { Position = UDim2.fromOffset(0, 26 + (i - 1) * 48), Size = UDim2.fromOffset(152, 40), BackgroundColor3 = C.Panel, TextColor3 = C.White, TextSize = 12 }, function() self:Open(entry[1]) end)
+        local item = button(menu, entry[2], { Position = UDim2.fromOffset(10, 36 + (i - 1) * 48), Size = UDim2.fromOffset(152, 40), BackgroundColor3 = C.Panel, TextColor3 = C.White, TextSize = 12, ZIndex = 6 }, function() self:Open(entry[1]) end)
         local icons = { "🥚", "🐋", "🤿", "🧬", "⭐", "🏠", "🏆", "?" }
         table.insert(self.MenuItems, { Button = item, Text = entry[2], Icon = icons[i] })
         if entry[1] == "Collection" then self.InventoryButton = item end
     end
-    button(menu, "ÉQUIPER LE HARPON", { Position = UDim2.fromOffset(0, 416), Size = UDim2.fromOffset(152, 42), TextSize = 11 }, function() context.Equip() end)
-    self.Home = button(root, "RETOUR À L'HABITAT", { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 20, 1, -80), Size = UDim2.fromOffset(180, 38), BackgroundColor3 = C.Panel, TextColor3 = C.Muted, TextSize = 11 }, function() context.Action:FireServer("Return") end)
-    self.EventPanel = panel(root, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 126), Size = UDim2.fromOffset(248, 106) })
-    label(self.EventPanel, "L'OCÉAN EST VIVANT", 10, C.Muted, { Position = UDim2.fromOffset(14, 10), Size = UDim2.fromOffset(220, 15) })
-    self.EventName = label(self.EventPanel, "Prochain phénomène", 15, C.White, { Position = UDim2.fromOffset(14, 31), Size = UDim2.fromOffset(220, 24), Font = Enum.Font.GothamBold })
-    self.EventTimer = label(self.EventPanel, "05:00", 21, C.Teal, { Position = UDim2.fromOffset(14, 61), Size = UDim2.fromOffset(220, 28), Font = Enum.Font.GothamBold })
-    self.ToastBox = make("Frame", root, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 245), Size = UDim2.fromOffset(248, 390), BackgroundTransparency = 1 })
-    make("UIListLayout", self.ToastBox, { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder })
-    self.Objective = label(root, "TROUVEZ UN ŒUF  →  ÉVITEZ SON GARDIEN  →  REVENEZ À VOTRE HABITAT", 12, C.White,
-        { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -46), Size = UDim2.new(1, -50, 0, 28), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold })
-    self.Help = label(root, "WASD · NAGER    ESPACE / CTRL · MONTER / DESCENDRE    MAJ · BOOST    M · CAMÉRA    CLIC · HARPON", 10, C.Muted,
-        { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -15), Size = UDim2.new(1, -40, 0, 24), TextXAlignment = Enum.TextXAlignment.Center })
-    self.Compass = label(root, "Votre habitat", 12, C.Teal, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 106), Size = UDim2.new(0.5, -24, 0, 18), TextXAlignment = Enum.TextXAlignment.Right })
-    self.Save = label(root, "CONNEXION AU SERVEUR…", 10, C.Muted, { Position = UDim2.fromOffset(22, 106), Size = UDim2.new(0.5, -24, 0, 16) })
-    self.Cooldown = label(root, "HARPON PRÊT", 11, C.Teal, { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -24, 1, -84), Size = UDim2.fromOffset(220, 20), TextXAlignment = Enum.TextXAlignment.Right })
+    self.Home = button(menu, "RETOUR À LA BASE", { Position = UDim2.fromOffset(10, 432), Size = UDim2.fromOffset(152, 38), BackgroundColor3 = C.Panel, TextColor3 = C.Muted, TextSize = 11, ZIndex = 6 }, function() menu.Visible = false; context.Action:FireServer("Return") end)
+    self.EventPanel = panel(root, { Name = "Événement", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 76), Size = UDim2.fromOffset(185, 32), BackgroundColor3 = C.Navy, BackgroundTransparency = 0.25 })
+    self.EventName = label(self.EventPanel, "Prochain événement", 10, C.Muted, { Position = UDim2.fromOffset(10, 0), Size = UDim2.fromOffset(122, 32), TextTruncate = Enum.TextTruncate.AtEnd, TextWrapped = false })
+    self.EventTimer = label(self.EventPanel, "05:00", 11, C.Muted, { Position = UDim2.fromOffset(134, 0), Size = UDim2.fromOffset(42, 32), TextXAlignment = Enum.TextXAlignment.Right })
+    self.ToastBox = make("Frame", root, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 120), Size = UDim2.fromOffset(232, 140), BackgroundTransparency = 1 })
+    make("UIListLayout", self.ToastBox, { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder })
+    self.Objective = label(root, "", 11, C.White, { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(UserInputService.TouchEnabled and 0.4 or 0.5, 0, 1, -142), Size = UDim2.fromOffset(310, 32), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamMedium, Visible = false })
+    self.Help = label(root, "", 10, C.Muted, { Visible = false })
+    self.Compass = label(root, "", 10, C.Muted, { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 20), Size = UDim2.new(1, -480, 0, 30), TextTruncate = Enum.TextTruncate.AtEnd, TextWrapped = false, TextXAlignment = Enum.TextXAlignment.Center, Visible = false })
+    self.Save = label(root, "Connexion…", 9, C.Muted, { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 20, 1, -7), Size = UDim2.fromOffset(215, 16) })
+    self.Cooldown = label(root, "", 10, C.Teal, { AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 20, 1, -44), Size = UDim2.fromOffset(175, 18), Visible = false })
     self.Reticle = make("Frame", root, { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(32, 32), BackgroundTransparency = 1, Visible = false, ZIndex = 2 })
     for _, segment in ipairs({ { 15, 0, 2, 9 }, { 15, 23, 2, 9 }, { 0, 15, 9, 2 }, { 23, 15, 9, 2 }, { 14, 14, 4, 4 } }) do
         local line = make("Frame", self.Reticle, { Position = UDim2.fromOffset(segment[1], segment[2]), Size = UDim2.fromOffset(segment[3], segment[4]), BackgroundColor3 = C.White, BorderSizePixel = 0, ZIndex = 2 })
         round(line, 2); make("UIStroke", line, { Color = C.Navy, Thickness = 1.2 })
     end
-    self.CameraHint = label(root, "M · VERROUILLER LA CAMÉRA", 10, C.Muted, { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -106), Size = UDim2.fromOffset(320, 18), TextXAlignment = Enum.TextXAlignment.Center })
+    self.CameraHint = label(root, "M · CAMÉRA", 10, C.Muted, { Position = UDim2.new(0, 20, 1, -25), Size = UDim2.fromOffset(185, 16), AnchorPoint = Vector2.new(0, 1), Visible = false })
     self.Dimmer = make("TextButton", root, { Size = UDim2.fromScale(1, 1), Text = "", BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.4, Visible = false, ZIndex = 20 })
     self.Dimmer.Activated:Connect(function() self:Open(nil) end)
     self.Modal = panel(root, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.new(0.94, 0, 0.90, 0), Visible = false, ZIndex = 21 })
@@ -153,10 +156,8 @@ function UI.new(context)
     button(self.Modal, "×", { Position = UDim2.new(1, -68, 0, 14), Size = UDim2.fromOffset(50, 54), BackgroundColor3 = C.Teal, TextColor3 = C.Navy, TextSize = 32, ZIndex = 25 }, function() self:Open(nil) end)
     self.List = make("ScrollingFrame", self.Modal, { Position = UDim2.fromOffset(24, 78), Size = UDim2.new(1, -48, 1, -154), BackgroundTransparency = 1, BorderSizePixel = 0,
         ScrollBarThickness = 4, ScrollBarImageColor3 = C.Teal, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 22 })
-    self.CameraHint.Visible = not UserInputService.TouchEnabled
     if UserInputService.TouchEnabled then
         self.Help.Text = "JOYSTICK · NAGER    ↑ / ↓ · PROFONDEUR    TIRER · HARPON"
-        self.Home.Position = UDim2.new(0, 20, 1, -152)
         local function hold(text, x, field)
             local b = button(root, text, { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, x, 1, -118), Size = UDim2.fromOffset(72, 66), TextSize = 24 })
             b.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then self[field] = 1 end end)
@@ -173,12 +174,12 @@ end
 function UI:Toast(message, tone)
     local rarity = self.Ctx.Config.Rarities[tone]
     local color = rarity and self.Ctx.Visuals.Color(rarity.Color) or (tone == "Warning" and C.Gold or C.Teal)
-    local frame = panel(self.ToastBox, { Size = UDim2.fromOffset(248, 82) })
+    local frame = panel(self.ToastBox, { Size = UDim2.fromOffset(232, 60), BackgroundColor3 = C.Navy, BackgroundTransparency = 0.15 })
     make("Frame", frame, { Size = UDim2.new(0, 3, 1, -20), Position = UDim2.fromOffset(0, 10), BackgroundColor3 = color, BorderSizePixel = 0 })
     label(frame, message, 12, color, { Position = UDim2.fromOffset(13, 8), Size = UDim2.new(1, -24, 1, -16), Font = Enum.Font.GothamMedium })
     table.insert(self.Notices, frame)
-    while #self.Notices > 4 do local old = table.remove(self.Notices, 1); old:Destroy() end
-    task.delay(7, function()
+    while #self.Notices > 2 do local old = table.remove(self.Notices, 1); old:Destroy() end
+    task.delay(5, function()
         local index = table.find(self.Notices, frame)
         if index then table.remove(self.Notices, index); frame:Destroy() end
     end)
@@ -187,6 +188,7 @@ end
 function UI:Open(tab)
     if tab ~= "Prestige" then self.PrestigeArmedAt = nil end
     self.Tab = tab; self.Signature = ""
+    if self.Menu then self.Menu.Visible = false end
     self.Modal.Visible = tab ~= nil; self.Dimmer.Visible = tab ~= nil
     if tab == "Collection" and self.State and self.State.Carrying then self.CollectionMode = "Œufs" end
     if tab then self:RenderPanel() end
@@ -516,15 +518,22 @@ end
 function UI:Update(state)
     self.State = state; self.ReceivedAt = os.clock()
     self.InventoryButton.Text = self.Compact and ("🥚 " .. #state.Eggs) or ("🥚 INVENTAIRE · " .. #state.Eggs)
-    self.Money.Text = UI.Format(state.Money) .. " gold"; self.Income.Text = "+" .. UI.Format(state.Income) .. " gold / min"
-    self.Oxygen.Text = math.ceil(state.Oxygen) .. " / " .. state.MaxOxygen
-    self.OxygenBar.Size = UDim2.fromScale(math.clamp(state.Oxygen / state.MaxOxygen, 0, 1), 1)
-    self.OxygenBar.BackgroundColor3 = state.Oxygen / state.MaxOxygen < 0.2 and C.Red or C.Teal
-    self.Depth.Text = state.Depth .. " m"; self.Floor.Text = (state.Depth == 0 and "SURFACE" or self.Ctx.Config.Floors[state.Floor].ShortName) .. " · COMBI " .. state.Equipment.Suit
+    self.QuickInventory.Text = "🥚 " .. #state.Eggs
+    self.Money.Text = UI.Format(state.Money); self.Income.Text = "+" .. UI.Format(state.Income) .. " / min"
+    local ratio = math.clamp(state.Oxygen / math.max(1, state.MaxOxygen), 0, 1)
+    self.Oxygen.Text = math.ceil(ratio * 100) .. " %"
+    self.OxygenPanel.Visible = state.Depth > 0 or ratio < 0.99
+    self.Oxygen.TextColor3 = ratio < 0.2 and C.Red or C.Muted
+    self.OxygenBar.Size = UDim2.fromScale(ratio, 1)
+    self.OxygenBar.BackgroundColor3 = ratio < 0.2 and C.Red or C.Teal
+    self.Depth.Text = state.Depth == 0 and "Surface" or state.Depth .. " m"; self.Floor.Text = state.Depth == 0 and "NÉRÉIDE" or self.Ctx.Config.Floors[state.Floor].ShortName
     self.Save.Text = state.SaveStatus; self.Save.TextColor3 = state.Offline and C.Gold or C.Muted
+    self.Save.Visible = state.Offline or (state.SaveStatus ~= "Sauvegardé" and state.SaveStatus ~= "Sauvegarde active")
     self.EventName.Text = state.Event.Name; self.EventName.TextColor3 = state.Event.Active and C.Gold or C.White
-    self.Objective.Text = state.Carrying and ("ŒUF " .. string.upper(state.Carrying.Rarity) .. " NON SÉCURISÉ · ÉVITEZ LES HARPONS → VOTRE BASE") or #state.Eggs > 0 and (#state.Eggs .. " ŒUF(S) DANS L’INVENTAIRE  →  DÉPOSEZ-LES DANS VOTRE AQUARIUM")
-        or (state.OwnBase and "VOTRE AQUARIUM  ·  ÉCLOSIONS & GOLD  ·  MARCHANDS SUR LE PONT" or "PLONGEZ  →  ÉVITEZ LE BOSS  →  RÉCUPÉREZ DES ŒUFS")
+    local waiting = 0
+    for _, egg in ipairs(state.Eggs) do if not egg.ReadyAt then waiting += 1 end end
+    self.Objective.Visible = state.Carrying ~= nil or (state.OwnBase and waiting > 0)
+    self.Objective.Text = state.Carrying and ("ŒUF " .. string.upper(state.Carrying.Rarity) .. " · Retournez à votre base") or "E · Déposer vos œufs dans la cuve"
     self.Objective.TextColor3 = state.Carrying and self.Ctx.Visuals.Color(self.Ctx.Config.Rarities[state.Carrying.Rarity].Color) or #state.Eggs > 0 and C.Gold or C.White
     local signature = self.Tab or ""
     if self.Tab == "Collection" or self.Tab == "Bestiaire" or self.Tab == "Fusion" then
@@ -555,9 +564,10 @@ function UI:Tick()
         end
     end
     local remaining = math.max(0, self.State.Event.Remaining - elapsed)
-    self.EventTimer.Text = string.format("%02d:%02d", math.floor(remaining / 60), math.floor(remaining % 60)) .. (self.State.Event.Active and "  ·  RARETÉ ↑" or "")
+    self.EventTimer.Text = string.format("%02d:%02d", math.floor(remaining / 60), math.floor(remaining % 60))
     local cooldown = math.max(0, self.State.ShotRemaining - elapsed)
-    self.Cooldown.Text = cooldown > 0 and string.format("HARPON  ·  %.1f s", cooldown) or "HARPON PRÊT  ·  VISEZ ET TIREZ"
+    self.Cooldown.Text = cooldown > 0 and string.format("Harpon · %.1f s", cooldown) or ""
+    self.Cooldown.Visible = cooldown > 0 and not self.Tab
     if self.BoostButton then
         local boost = math.max(0, self.State.BoostRemaining - elapsed)
         self.BoostButton.Text = boost > 0 and ("BOOST · " .. math.ceil(boost) .. " s") or "BOOST"

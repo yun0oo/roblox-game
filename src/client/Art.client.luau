@@ -5,6 +5,10 @@ local modules = game:GetService("ReplicatedStorage"):WaitForChild("Modules")
 local Renderer = require(modules:WaitForChild("ArtRenderer"))
 local Budget = require(modules:WaitForChild("ArtBudget"))
 local roots, active = {}, {}
+local function artFrame(root)
+    local offset = root:GetAttribute("ArtOffset")
+    return offset and root.CFrame * CFrame.new(offset) or root.CFrame
+end
 local function watch(instance)
     if instance:IsA("BasePart") and instance:GetAttribute("ArtAsset") then roots[instance] = {} end
 end
@@ -56,11 +60,12 @@ RunService.RenderStepped:Connect(function(dt)
                 if not ok then record.Failed = true; warn("[Underwater Egg] Modèle indisponible:", key, model); return end
                 local native = model:GetAttribute("ArtCost") == 1
                 if not root.Parent or not record.Wanted or (not native and record.RequestedQuality ~= quality) then model:Destroy(); return end
-                model.Parent = root; model:PivotTo(root.CFrame)
+                local frame = artFrame(root)
+                model.Parent = root; model:PivotTo(frame)
                 root.LocalTransparencyModifier = 1
                 local aura = root:FindFirstChild("Aura de rareté")
                 if aura then aura.Adornee = model end
-                record.Model = model; record.Frame = root.CFrame; record.InitialHeight = root.Size.Y
+                record.Model = model; record.Frame = frame; record.InitialHeight = root.Size.Y
                 record.Native = native; record.Quality = native and "Lod" or quality
                 active[root] = record
             end)
@@ -72,9 +77,10 @@ RunService.RenderStepped:Connect(function(dt)
             local scale = root.Size.Y / record.InitialHeight
             if math.abs(scale - (record.Scale or 1)) > 0.002 then record.Model:ScaleTo(scale); record.Scale = scale end
         end
-        if record.Frame ~= root.CFrame then
-            if root:GetAttribute("ArtEnvironment") or ((record.Frame.Position - root.Position).Magnitude < 0.005 and (record.Frame.LookVector - root.CFrame.LookVector).Magnitude < 0.002) then record.Frame = root.CFrame
-            else record.Frame = record.Frame:Lerp(root.CFrame, math.min(1, dt * 18)) end
+        local target = artFrame(root)
+        if record.Frame ~= target then
+            if root:GetAttribute("ArtRigid") or root:GetAttribute("ArtEnvironment") or ((record.Frame.Position - target.Position).Magnitude < 0.005 and (record.Frame.LookVector - target.LookVector).Magnitude < 0.002) then record.Frame = target
+            else record.Frame = record.Frame:Lerp(target, math.min(1, dt * 18)) end
             record.Model:PivotTo(record.Frame)
         end
     end

@@ -8,13 +8,6 @@
       "sha256": "ecc3bafb6b00f2c8b810863c388e3768a7b7ea0d0335e8cb8c574c266e571f4a"
     },
     {
-      "file": "KenneyBlaster.glb",
-      "author": "Kenney",
-      "license": "CC0-1.0",
-      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/blaster-b.glb",
-      "sha256": "7df4457ed864bc0714fc33059ac56d198304092093b1e78dc407b6c829945a4f"
-    },
-    {
       "file": "Quaternius_Clownfish.glb",
       "author": "Quaternius",
       "license": "CC0-1.0",
@@ -329,6 +322,20 @@
       "sha256": "4bafebe6462fdf7aa9b2565bdfb421fef13b7fd31757281d0bedd643766f1379",
       "pack": "WebGL Aquarium",
       "modifications": "Geometry normalized; texture colours baked into surfaces; reef rock palette shifted to blue."
+    },
+    {
+      "file": "KenneyCargo.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/crate-medium.glb",
+      "sha256": "187c32592fedaecbbb84152102bbf536f733cbc0c2cfee60828fb18a4803619c"
+    },
+    {
+      "file": "KenneySpeargun.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/blaster-e.glb",
+      "sha256": "df3e35c9286d7bfe8bde2ff7231ef40ff89b1e7caa52fbf80ea685cb601de3ca"
     }
   ]
 }

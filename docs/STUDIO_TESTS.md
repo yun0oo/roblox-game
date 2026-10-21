@@ -8,8 +8,8 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 
 - Ouvrir le `.rbxl` non publié et appuyer sur F5 sans changer de case API. Vérifier le personnage, le chargement puis l'arrivée dans sa propre galerie, avec le statut de session temporaire.
 - Vérifier l'absence d'erreur serveur/client dans Output. Refaire le démarrage dans une expérience privée publiée avec API désactivées.
-- Parcourir le navire : pont continu, coque, hublots, proue, passerelle, huit galeries, aquariums, clôtures et pancartes. Le portrait, le pseudo et le niveau doivent correspondre au propriétaire, y compris après départ/réattribution.
-- Tous plongent au bassin central. Tester les échelles et le refus de traverser la surface ailleurs. Nager dans six directions, utiliser le propulseur, mourir et réapparaître.
+- Parcourir le navire : pont continu, coque, hublots, proue, passerelle, huit galeries, aquariums, garde-corps vitrés et pancartes. Le portrait, le pseudo et le niveau doivent correspondre au propriétaire, y compris après départ/réattribution.
+- Tous plongent au bassin central. Tester les deux filets grimpables, sur toute leur largeur et dans les deux sens, et le refus de traverser la surface ailleurs. Nager dans six directions, utiliser le propulseur, mourir et réapparaître.
 - Tester R6 et R15, y compris un avatar à échelle personnalisée : masque, harnais, bouteilles, épaulières, palmes, lampe et turbines suivent correctement les membres sans gêner les contrôles ou modifier les vêtements.
 
 ## Sept marchands et interface
@@ -20,7 +20,7 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 - Acheter près du marchand correct : une seule dépense, un seul niveau, effet réel et mise à jour immédiate sur l'avatar. Un achat Harpon remplace l'arme tenue sans duplicata.
 - Refaire avec gold insuffisants, niveau maximum, mauvais marchand et requête distante hors portée : aucun débit ni amélioration indue.
 - La pancarte dorée d'amélioration de base est séparée du dépôt d'œufs. F ouvre Base & Aquarium ; comparer le prochain niveau et le bonus avant achat.
-- Vérifier les cinq niveaux, croissance de la cuve, filtres/coraux/cristaux, capacité exposée et bonus de revenu. L'achat exige sa propre galerie et la proximité de sa pancarte.
+- Vérifier les cinq niveaux, croissance de la cuve, filtres et éclairages, absence de coraux et de rochers, capacité exposée et bonus de revenu. L'achat exige sa propre galerie et la proximité de sa pancarte.
 - Depuis le menu à distance, Localiser guide vers sa propre pancarte. La pancarte d'un autre joueur ne donne aucun achat.
 - Tester les panneaux à petite résolution, le défilement, la fermeture, les touches manette et les boutons tactiles.
 
@@ -48,7 +48,7 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 - Équiper le harpon : viseur visible au curseur sur PC, au centre sur mobile/manette. Sans harpon ou avec un menu ouvert, il disparaît. Comparer son point avec le rayon de visée et l’impact du projectile.
 - Appuyer sur M : curseur bloqué au centre, caméra à l’épaule, personnage orienté avec la caméra. Marcher, nager et viser en haut/en bas ; les déplacements restent valides côté serveur.
 - Appuyer une seconde fois : retour à la caméra libre, sans décalage résiduel. La rotation avec clic droit doit continuer à fonctionner en mode libre.
-- Ouvrir une boutique en mode verrouillé : curseur libre pour acheter et fermer ; le verrouillage reprend à la fermeture. Alt-Tab libère aussi le pointeur. Tester mort/réapparition, saisie dans un champ texte et escalade des échelles.
+- Ouvrir une boutique en mode verrouillé : curseur libre pour acheter et fermer ; le verrouillage reprend à la fermeture. Alt-Tab libère aussi le pointeur. Tester mort/réapparition, saisie dans un champ texte et escalade des filets.
 - Maj gauche et droite déclenchent le propulseur sur PC ; M bascule uniquement la caméra. R est libre. Vérifier qu’aucun verrouillage natif Shift ne se superpose.
 
 ## Oxygène et progression
@@ -88,8 +88,8 @@ N'annoncer le gameplay natif et la qualité graphique validés qu'après ces ess
 - E à son ordinateur : menu des sept destinations, téléportation devant le bon marchand et ouverture de sa spécialité. Contrôler l'absence de débit, la collision à l'arrivée et l'acceptation par le contrôle de déplacement serveur.
 - Refuser le même transfert depuis l'exploration, depuis l'ordinateur d'un autre joueur, avec des coordonnées envoyées à la place d'une clé et pendant le cooldown.
 - R6 et R15 : nager horizontalement, monter/descendre, rester immobile, viser au harpon et tourner en mode caméra M. La nage ne doit plus redémarrer à chaque image. Observer aussi le deuxième joueur.
-- Osciller près de la surface : pas d'alternance rapide des poses. Remonter l'échelle, marcher sur le pont, mourir et réapparaître : vérifier la restauration de la marche et des joints.
-- Tester huit clients avec aquariums pleins, cuves pleines et coraux visibles ; mesurer FPS/mémoire et vérifier le budget de détails. Ces essais natifs restent nécessaires avant publication.
+- Osciller près de la surface : pas d'alternance rapide des poses. Remonter le filet, marcher sur le pont, mourir et réapparaître : vérifier la restauration de la marche et des joints.
+- Tester huit clients avec aquariums pleins, cuves pleines et récifs visibles ; mesurer FPS/mémoire et vérifier le budget de détails. Ces essais natifs restent nécessaires avant publication.
 
 ## Modèles de décor importés
 
@@ -98,3 +98,12 @@ N'annoncer le gameplay natif et la qualité graphique validés qu'après ces ess
 - S’éloigner des plantes puis revenir : changement de détail sans branches coupées ni modèles définitivement disparus. Contrôler une arrivée tardive et les réapparitions.
 - Vérifier les œufs, boss, harpon et animaux près d’un récif dense : les budgets visuels sont distincts. Mesurer FPS/mémoire à huit joueurs, avant et après plusieurs allers-retours entre paliers. Les plafonds automatiques ne constituent pas une validation de performances natives.
 - Les attributions apparaissent dans Guide ; les conditions intégrales sont dans le ZIP et dans ReplicatedStorage.ThirdPartyNotices.
+
+## HUD discret et base rénovée
+
+- Au pont avec oxygène plein : jauge O₂ cachée, gold et profondeur compacts ; ☰ ouvre/ferme les huit pages. Inventaire et harpon restent accessibles sans ouvrir ce menu.
+- En plongée : O₂ réapparaît au-dessus de la barre d’outils native, passe au rouge sous 20 %, puis disparaît après recharge complète en surface. Vérifier ordinateur, mobile et format paysage sans chevauchement du joystick, des boutons tactiles ou de l’inventaire Roblox.
+- L’événement tient sur une ligne ; son nom actif et sa durée restent lisibles. Maximum deux notifications ; elles disparaissent après cinq secondes. Un échec de sauvegarde reste affiché discrètement.
+- Porter un œuf affiche le retour ; l’avoir sécurisé à la base affiche le dépôt. Une incubation commencée retire la consigne de dépôt inutile.
+- Comparer la terrasse, les caisses Kenney, les parois nervurées, le verre et les reflets avec/sans API de maillage. Les cinq niveaux d’aquarium conservent une vue dégagée, sans corail ; le socle reste au même niveau et le portrait remonte avec la cuve.
+- Observer le nouveau fusil Kenney en mouvement : son corps ne doit pas glisser par rapport à la poignée ou à la flèche. Tester nage, escalade, tir, corde et changements d’équipement en R6 et R15.

@@ -9,7 +9,7 @@ Jeu Roblox en Luau/Rojo : exploration de six profondeurs depuis le navire **Nér
 - [Télécharger le ZIP](downloads/UnderwaterEgg.zip), puis l'extraire dans un nouveau dossier.
 - Ouvrir `UnderwaterEgg.rbxl` dans Roblox Studio et appuyer sur **F5 / Play** pour jouer avec son personnage Roblox.
 - Attendre le chargement du navire et de l'océan. Retrouvez votre portrait et votre pseudo au-dessus de votre aquarium.
-- Tous les joueurs plongent et remontent par le bassin central, avec ses deux échelles.
+- Tous les joueurs plongent et remontent par le bassin central, avec ses deux filets grimpables.
 
 Le [fichier Studio seul](downloads/UnderwaterEgg.rbxl) est également fourni. Sur une page GitHub, utiliser **Download raw file** pour télécharger le fichier.
 
@@ -43,7 +43,7 @@ L'amélioration de la base est séparée : **F** à la pancarte dorée de sa pro
 | Atlantide | 12 500 | 10 | +30 % |
 | Palais des abysses | 60 000 | 12 | +40 % |
 
-La cuve grandit et reçoit filtres, coraux et cristaux. Le niveau de base reste acquis après un prestige.
+La cuve grandit vers le haut, sans enfoncer son socle dans le pont, et reçoit des filtres et un éclairage renforcé, sans coraux ni rochers à l’intérieur. Le niveau de base reste acquis après un prestige.
 
 ## Œufs, inventaire et boss
 
@@ -83,7 +83,7 @@ Les échéances sont sauvegardées avec les œufs : une reconnexion ne remet pas
 - Prestige avec bonus permanents ; décorations et palettes de galerie ; six classements du serveur.
 - DataStore avec bail de session, sauvegarde périodique, départ et fermeture ; validation des actions et déplacements côté serveur.
 
-La direction graphique suit un style Roblox coloré : sols de galerie à tenons, clôtures en bois, silhouettes lisibles, yeux expressifs, navire bleu/blanc/or, stands rayés et aquariums lumineux. Certaines espèces partagent une silhouette et se distinguent par leur palette et leurs statistiques. Dix-sept modèles sources CC0 de Microsoft, Kenney et Quaternius sont intégrés et adaptés ; quinze nouveaux modèles Quaternius donnent de véritables silhouettes distinctes aux poissons et aux boss. Les palettes sont adaptées au jeu ; certaines espèces partagent encore une silhouette. Les coraux, cuves et accessoires sont originaux. Voir [les crédits](assets/CREDITS.md).
+La direction graphique suit un style marin bleu, ivoire et laiton : terrasses en teck, garde-corps vitrés, cloisons nervurées, aquariums panoramiques et coffres de matériel Kenney. Le harpon combine un corps fin Kenney préexistant et un rail, une flèche à ardillons, des sandows et un moulinet détaillés. Dix-huit modèles sources CC0 de Microsoft, Kenney et Quaternius sont intégrés ; les récifs utilisent les sculptures Poly Pizza et WebGL Aquarium créditées plus bas. Certaines espèces partagent encore une silhouette. Voir [les crédits](assets/CREDITS.md).
 
 ## Commandes
 
@@ -132,7 +132,7 @@ Le prestige réinitialise les éléments annoncés dans l'interface après confi
 
 Chaque profondeur possède désormais un **fond sableux continu de 864 × 864 studs**, à la limite exacte du palier. Au récif, le fond est à **325 m**. Les cinq passages centraux dégagés ont un rayon minimum de 92 studs, un rebord rocheux naturel et une pancarte vers le palier suivant. Aucun grand carré flottant ni cadre néon ne traverse le passage. La dernière profondeur a un fond fermé.
 
-Les quatre parois et les jardins des six profondeurs utilisent désormais **14 modèles de décor préexistants**. Les coraux, éponges tubulaires, anémones et algues proviennent de **Poly Pizza**, créés par Poly by Google, God Appeasers, Device Lab et Laney XR Labs (CC-BY 3.0). Rochers, corniches, arches, colonnes, épave et coffres proviennent de la scène **WebGL Aquarium** (BSD 3-Clause). Les anciens coraux/cylindres, algues/ellipsoïdes et éponges en blocs sont supprimés, y compris dans les aquariums du navire.
+Les quatre parois et les jardins des six profondeurs utilisent désormais **14 modèles de décor préexistants**. Les coraux, éponges tubulaires, anémones et algues proviennent de **Poly Pizza**, créés par Poly by Google, God Appeasers, Device Lab et Laney XR Labs (CC-BY 3.0). Rochers, corniches, arches, colonnes, épave et coffres proviennent de la scène **WebGL Aquarium** (BSD 3-Clause). Les anciens coraux/cylindres, algues/ellipsoïdes et éponges en blocs sont supprimés. Les aquariums du navire restent sans coraux pour dégager la vue des animaux.
 
 Les modèles sont intégrés au fichier Studio, avec leurs couleurs et leurs crédits ; aucun téléchargement de scripts ni import manuel n’est requis. Les sept sources Poly Pizza, les sept géométries Aquarium et leurs sept textures sont conservées avec des empreintes dans `assets/manifest.json`. Les rochers et éponges sont recolorés en bleu pour la direction artistique du récif. Sources, attributions et modifications : [crédits des décors](assets/MARINE_SCENERY_CREDITS.md). Les conditions complètes sont incluses dans le ZIP et dans `ReplicatedStorage.ThirdPartyNotices` du fichier Studio.
 
@@ -151,3 +151,11 @@ Le contrôleur de nage ne relance plus l'état Swimming à chaque image. Une tol
 Pour inspecter les nouveaux modèles hors ligne : `blender -b -t 2 --python tools/preview_art.py -- --lod --marine`. Le rendu produit n'est pas une capture Roblox. Le build courant utilise les données incluses et ne nécessite pas Blender.
 
 Pour inspecter les modèles de décor intégrés : `blender -b -t 2 --python tools/preview_environment.py` ; ajouter `-- --scene` pour une étude de composition. Ces rendus utilisent les données du jeu mais ne sont pas des captures Roblox. `blender -b -t 2 --python tools/build_environment.py` régénère les 14 maillages à partir des sources incluses.
+
+## Bases et affichage simplifié
+
+Les galeries ont des terrasses en teck, des cloisons bleues, des garde-corps vitrés, des rangements 3D Kenney et des aquariums à filtration apparente. Deux vrais filets de corde, appuyés sur des `TrussPart` grimpables, relient l’eau au pont dans le bassin central. Leurs mailles sont visibles des deux côtés.
+
+Le HUD conserve deux petits compteurs pour le gold et la profondeur, et un événement sur une seule ligne. L’oxygène apparaît en plongée ou pendant sa recharge, au-dessus de la barre d’outils Roblox. Le bouton ☰ ouvre les huit pages du menu ; l’inventaire et le harpon gardent un accès direct. Les consignes de dépôt apparaissent uniquement lorsqu’un œuf attend à la base, les notifications sont limitées à deux, et les problèmes de sauvegarde restent visibles. **M** verrouille la caméra ; **Maj** déclenche le boost.
+
+[Aperçus des modèles et des bases](docs/previews/README.md) : rendus hors Roblox, sans validation de la physique ou des performances natives.

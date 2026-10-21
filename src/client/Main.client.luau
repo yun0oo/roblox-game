@@ -43,7 +43,7 @@ function context.Equip()
 end
 
 function context.Fire()
-    if not root or not humanoid or humanoid.Health <= 0 or (ui and ui.Tab) then return end
+    if not root or not humanoid or humanoid.Health <= 0 or (ui and (ui.Tab or ui.Menu.Visible)) then return end
     if not character:FindFirstChild("Harpon") then context.Equip(); return end
     local camera = workspace.CurrentCamera
     local input = UserInputService:GetLastInputType()
@@ -152,7 +152,7 @@ remotes.FX.OnClientEvent:Connect(function(kind, data)
 end)
 
 RunService:BindToRenderStep("UnderwaterAimLock", Enum.RenderPriority.Camera.Value + 1, function()
-    local blocked = ui.Tab ~= nil or UserInputService:GetFocusedTextBox() ~= nil or not humanoid or humanoid.Health <= 0 or not root or not root.Parent
+    local blocked = ui.Tab ~= nil or ui.Menu.Visible or UserInputService:GetFocusedTextBox() ~= nil or not humanoid or humanoid.Health <= 0 or not root or not root.Parent
     aim:Step(humanoid, root, workspace.CurrentCamera, blocked, character and character:FindFirstChild("Harpon") ~= nil)
 end)
 
@@ -167,11 +167,12 @@ RunService.RenderStepped:Connect(function(dt)
     local camera = workspace.CurrentCamera
     local lastInput = UserInputService:GetLastInputType()
     local armed = character:FindFirstChild("Harpon") ~= nil
-    ui.Reticle.Visible = not ui.Tab and not UserInputService:GetFocusedTextBox() and aim.Focused and armed
+    ui.Reticle.Visible = not ui.Tab and not ui.Menu.Visible and not UserInputService:GetFocusedTextBox() and aim.Focused and armed
     local inset = GuiService:GetGuiInset()
     local aimPoint = aim:Centered(lastInput) and camera.ViewportSize / 2 or UserInputService:GetMouseLocation()
     ui.Reticle.Position = UDim2.fromOffset((aimPoint.X - inset.X) / ui.Scale.Scale, (aimPoint.Y - inset.Y) / ui.Scale.Scale)
-    ui.CameraHint.Text = aim.Locked and "M · CAMÉRA VERROUILLÉE" or "M · VERROUILLER LA CAMÉRA"
+    ui.CameraHint.Text = aim.Locked and "M · Caméra verrouillée" or "M · Caméra libre   Maj · Boost"
+    ui.CameraHint.Visible = not UserInputService.TouchEnabled and not ui.Tab and (armed or aim.Locked)
     local move = Vector3.zero
     if not UserInputService:GetFocusedTextBox() and not ui.Tab then
         if controls then move = controls:GetMoveVector() else
@@ -221,6 +222,7 @@ RunService.RenderStepped:Connect(function(dt)
         local delta = destination - root.Position
         local localDirection = camera.CFrame:VectorToObjectSpace(delta)
         local arrow = math.abs(localDirection.X) > math.abs(localDirection.Z) and (localDirection.X > 0 and "→" or "←") or (localDirection.Z < 0 and "↑" or "↓")
+        ui.Compass.Visible = not ui.Tab and (navigation ~= nil or ui.State.Carrying ~= nil)
         ui.Compass.Text = navigation and (arrow .. "  " .. navigation.Title .. " · " .. math.floor(delta.Magnitude) .. " studs") or ui.State.OwnBase and "◇ VOTRE GALERIE · AQUARIUM SÉCURISÉ" or (arrow .. (toDive and "  Bassin commun · " or "  Votre galerie · ") .. math.floor(delta.Magnitude) .. " studs")
     end
 end)

@@ -115,24 +115,40 @@ function Visuals.Harpoon(tool, level)
     local accent = level >= 3 and Color3.fromRGB(255, 196, 78) or Color3.fromRGB(44, 180, 185)
     local handle = Visuals.Part(tool, "Handle", Vector3.new(0.5, 1.2, 0.65), CFrame.new(), dark, Enum.Material.SmoothPlastic)
     handle.Anchored = false; handle.Massless = true
-    handle:SetAttribute("ArtAsset", "harpoon"); handle:SetAttribute("ArtScale", 0.9)
+    handle:SetAttribute("ArtAsset", "harpoon"); handle:SetAttribute("ArtScale", 0.7)
+    handle:SetAttribute("ArtOffset", Vector3.new(0, 0.55, -0.45)); handle:SetAttribute("ArtRigid", true)
     local function piece(name, size, frame, color, shape)
         local p = Visuals.Part(tool, name, size, frame, color, Enum.Material.Metal, shape)
         p.Anchored = false; p.Massless = true
         local weld = Instance.new("WeldConstraint"); weld.Part0 = handle; weld.Part1 = p; weld.Parent = p
         return p
     end
-    -- Imported Kenney body is rendered over this physical tool handle.
+    -- Slender imported Kenney receiver, polished spear rail and twin rubber bands.
     handle.Color = accent
-    piece("Canon", Vector3.new(4.2, 0.35, 0.35), CFrame.new(0, 0.85, -1.7) * CFrame.Angles(0, math.pi / 2, 0), steel, Enum.PartType.Cylinder)
+    piece("Canon", Vector3.new(4.2, 0.35, 0.35), CFrame.new(0, 0.85, -1.7) * CFrame.Angles(0, math.pi / 2, 0), dark, Enum.PartType.Cylinder)
+    for _, z in ipairs({ -0.1, -1.25, -2.4, -3.65 }) do
+        piece("Bague de canon inox", Vector3.new(0.18, 0.52, 0.52), CFrame.new(0, 0.85, z) * CFrame.Angles(0, math.pi / 2, 0), steel, Enum.PartType.Cylinder)
+    end
     piece("Flèche", Vector3.new(0.12, 0.12, 5), CFrame.new(0, 1.1, -2), steel)
     local tip = piece("Pointe du harpon", Vector3.new(0.7, 0.7, 1.1), CFrame.new(0, 1.1, -4.6) * CFrame.Angles(-math.pi / 2, 0, 0), steel)
     local tipMesh = Instance.new("SpecialMesh"); tipMesh.MeshType = Enum.MeshType.Pyramid; tipMesh.Parent = tip
     for side = -1, 1, 2 do
         piece("Ardillon", Vector3.new(0.12, 0.12, 0.85), CFrame.new(side * 0.2, 1.1, -4.15) * CFrame.Angles(0, side * -0.55, 0), steel)
         piece("Sandow", Vector3.new(0.18, 0.18, 3), CFrame.new(side * 0.45, 0.7, -1.5), dark)
+        piece("Fourche de tête", Vector3.new(0.18, 0.4, 0.85), CFrame.new(side * 0.4, 0.85, -3.6), accent)
+        for i = 1, 5 do
+            piece("Rainure de préhension", Vector3.new(0.05, 0.6, 0.05), CFrame.new(side * 0.35, 0.4, 0.25 + i * 0.15) * CFrame.Angles(-0.2, 0, 0), dark)
+        end
     end
-    piece("Moulinet", Vector3.new(0.55, 0.8, 0.8), CFrame.new(0, -0.1, -1.1) * CFrame.Angles(0, 0, math.pi / 2), dark, Enum.PartType.Cylinder)
+    piece("Moulinet", Vector3.new(0.7, 0.75, 0.75), CFrame.new(0, -0.1, -1.1), dark, Enum.PartType.Cylinder)
+    for side = -1, 1, 2 do
+        piece("Flasque du moulinet", Vector3.new(0.1, 0.95, 0.95), CFrame.new(side * 0.4, -0.1, -1.1), accent, Enum.PartType.Cylinder)
+        piece("Axe du moulinet", Vector3.new(0.16, 0.24, 0.24), CFrame.new(side * 0.49, -0.1, -1.1), steel, Enum.PartType.Cylinder)
+    end
+    for x = -0.25, 0.25, 0.1 do
+        piece("Ligne enroulée", Vector3.new(0.04, 0.8, 0.8), CFrame.new(x, -0.1, -1.1), Color3.fromRGB(228, 215, 174), Enum.PartType.Cylinder)
+    end
+    piece("Guide de visée", Vector3.new(0.1, 0.23, 0.1), CFrame.new(0, 1.25, -3.5), accent)
     piece("Pontet", Vector3.new(0.13, 0.65, 0.13), CFrame.new(0, -0.25, -0.6), steel)
     piece("Détente", Vector3.new(0.12, 0.4, 0.12), CFrame.new(0, 0, -0.35) * CFrame.Angles(-0.35, 0, 0), dark)
     local origin = Instance.new("Attachment"); origin.Name = "RopeOrigin"; origin.Position = Vector3.new(0, 1.1, -4.7); origin.Parent = handle

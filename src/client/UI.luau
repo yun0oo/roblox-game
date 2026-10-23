@@ -63,6 +63,20 @@ function UI.Format(value)
     return tostring(math.floor(value))
 end
 
+function UI.RarityLabel(config, rarity)
+    local spec = config.Rarities[rarity]
+    return spec and spec.Label or string.upper(rarity)
+end
+function UI.EventDescription(config, spec)
+    local rarity = config.Rarities[spec.Rarity]
+    if not rarity or not rarity.EventOnly then return nil end
+    local source = rarity.Events.Major and "ÉVÉNEMENT MAJEUR / ABYSSAL STORM" or "ABYSSAL STORM UNIQUEMENT"
+    local reference = spec.IncomeReference and config.Animals[spec.IncomeReference]
+    local income = reference and ("×10 " .. reference.Name .. " · " .. UI.Format(reference.Income) .. " / min de référence")
+        or (spec.Rarity == "Celestial" and "×10 TEMPÊTE · ×100 le meilleur animal normal" or "×10 le meilleur animal normal du palier")
+    return source .. "\n" .. income
+end
+
 function UI.new(context)
     local self = setmetatable({ Ctx = context, Notices = {}, Tab = nil, Signature = "", Ascend = 0, Descend = 0, Ingredients = {}, RankBy = "Money" }, UI)
     local gui = make("ScreenGui", Players.LocalPlayer:WaitForChild("PlayerGui"), { Name = "UnderwaterEggUI", ResetOnSpawn = false, DisplayOrder = 10, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
@@ -105,7 +119,7 @@ function UI.new(context)
     self.OxygenBar = make("Frame", track, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.Teal, BorderSizePixel = 0 }); round(self.OxygenBar, 3)
     local menu = panel(root, { Name = "Menu d’expédition", Position = UDim2.fromOffset(20, 118), Size = UDim2.fromOffset(172, 484), BackgroundColor3 = C.Navy, BackgroundTransparency = 0.08, Visible = false, ZIndex = 5 })
     self.Menu = menu; self.MenuItems = {}
-    self.MenuButton = button(root, "☰", { Position = UDim2.fromOffset(20, 76), Size = UDim2.fromOffset(36, 32), TextSize = 20, BackgroundColor3 = C.Navy, TextColor3 = C.White }, function() menu.Visible = not menu.Visible end)
+    self.MenuButton = button(root, "☰", { Position = UDim2.fromOffset(20, 76), Size = UDim2.fromOffset(36, 32), TextSize = 20, BackgroundColor3 = C.Navy, TextColor3 = C.White }, function() self:ToggleMenu() end)
     self.QuickInventory = button(root, "🥚 0", { Position = UDim2.fromOffset(64, 76), Size = UDim2.fromOffset(76, 32), TextSize = 12, BackgroundColor3 = C.Navy, TextColor3 = C.White }, function() self:Open("Collection") end)
     self.EquipButton = button(root, "HARPON", { Position = UDim2.fromOffset(148, 76), Size = UDim2.fromOffset(77, 32), TextSize = 10, BackgroundColor3 = C.Navy, TextColor3 = C.Teal }, function() context.Equip() end)
     self.MenuHeading = label(menu, "EXPÉDITION", 10, C.Muted, { Position = UDim2.fromOffset(10, 10), Size = UDim2.fromOffset(152, 18), ZIndex = 6 })
@@ -183,6 +197,11 @@ function UI:Toast(message, tone)
         local index = table.find(self.Notices, frame)
         if index then table.remove(self.Notices, index); frame:Destroy() end
     end)
+end
+
+function UI:ToggleMenu()
+    if self.Tab then self:Open(nil) end
+    self.Menu.Visible = not self.Menu.Visible
 end
 
 function UI:Open(tab)
@@ -264,13 +283,16 @@ function UI:RenderBrowser()
     end
     self.Browser.Visible = true; self.Browser:ClearAllChildren()
     local entries, discovered = {}, 0
+    local function eligible(rarity) return not self.EventFilter or config.Rarities[rarity].EventOnly == true end
     if mode == "Œufs" then
-        for _, egg in ipairs(state.Eggs) do table.insert(entries, { Id = egg.Id, Kind = "Egg", Spec = egg, Known = true }) end
+        for _, egg in ipairs(state.Eggs) do if eligible(egg.Rarity) then table.insert(entries, { Id = egg.Id, Kind = "Egg", Spec = egg, Known = true }) end end
     else
         for id, spec in pairs(config.Animals) do
             local count = rules.SpeciesCount(state, id)
-            if state.Discovered[id] then discovered += 1 end
-            if mode == "Bestiaire" or count > 0 then table.insert(entries, { Id = id, Spec = spec, Count = count, Known = mode ~= "Bestiaire" or state.Discovered[id] == true }) end
+            if eligible(spec.Rarity) then
+                if state.Discovered[id] then discovered += 1 end
+                if mode == "Bestiaire" or count > 0 then table.insert(entries, { Id = id, Spec = spec, Count = count, Known = mode ~= "Bestiaire" or state.Discovered[id] == true }) end
+            end
         end
         table.sort(entries, function(a, b) return a.Spec.Floor == b.Spec.Floor and a.Spec.Income > b.Spec.Income or a.Spec.Floor < b.Spec.Floor end)
     end
@@ -289,8 +311,14 @@ function UI:RenderBrowser()
     local width = self.Modal.AbsoluteSize and self.Modal.AbsoluteSize.X or 1000
     local height = self.Modal.AbsoluteSize and self.Modal.AbsoluteSize.Y or 650
     local scale = self.Scale and self.Scale.Scale or 1
-    local layout = UI.BrowserLayout(width / scale - 40, height / scale - 155)
-    local grid = make("ScrollingFrame", self.Browser, { Name = "Grille de collection", Size = UDim2.fromOffset(layout.GridWidth, layout.GridHeight), CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, ScrollBarImageColor3 = C.Teal, BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 23 })
+    local layout = UI.BrowserLayout(width / scale - 40, height / scale - 197)
+    for i, filter in ipairs({ { "TOUT", false }, { "ÉVÉNEMENTS", true } }) do
+        local selected = (self.EventFilter == true) == filter[2]
+        button(self.Browser, filter[1], { Name = "Filtre " .. filter[1], Position = UDim2.fromOffset((i - 1) * 108, 0), Size = UDim2.fromOffset(100, 30), BackgroundColor3 = selected and C.Teal or C.Panel, TextColor3 = selected and C.Navy or C.Muted, TextSize = 10, ZIndex = 24 }, function()
+            self.EventFilter = filter[2]; self.SelectedCard = nil; self.CollectionPage = 1; self:RenderPanel()
+        end)
+    end
+    local grid = make("ScrollingFrame", self.Browser, { Name = "Grille de collection", Position = UDim2.fromOffset(0, 42), Size = UDim2.fromOffset(layout.GridWidth, layout.GridHeight), CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 5, ScrollBarImageColor3 = C.Teal, BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 23 })
     local cellHeight = layout.CellWidth + 72
     make("UIGridLayout", grid, { CellSize = UDim2.fromOffset(layout.CellWidth, cellHeight), CellPadding = UDim2.fromOffset(10, 12), SortOrder = Enum.SortOrder.LayoutOrder })
     local chosen
@@ -303,18 +331,21 @@ function UI:RenderBrowser()
         card:FindFirstChildOfClass("UIStroke").Transparency = 1
         local medallion = hexagon(card, layout.CellWidth - 14, entry.Known and tint:Lerp(C.Panel, 0.28) or C.Navy, chosen == entry)
         self:BrowserPreview(medallion, entry, entry.Known)
+        if config.Rarities[entry.Spec.Rarity].EventOnly then
+            label(card, "ÉVÉNEMENT", 9, C.White, { Position = UDim2.fromOffset(8, 6), Size = UDim2.new(1, -16, 0, 18), Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 28 })
+        end
         label(card, entry.Known and entry.Spec.Name or "???", 12, C.White, { Position = UDim2.fromOffset(5, layout.CellWidth), Size = UDim2.new(1, -10, 0, 30), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold, ZIndex = 26 })
         local caption = entry.Kind == "Egg" and (entry.Spec.Unsecured and "⚠ VOLABLE" or entry.Spec.ReadyAt and "INCUBATION" or "SÉCURISÉ") or entry.Known and ("+" .. UI.Format(entry.Spec.Income) .. " / min  ·  ×" .. entry.Count) or "À DÉCOUVRIR"
         label(card, caption, 11, entry.Known and tint or C.Muted, { Position = UDim2.fromOffset(4, layout.CellWidth + 33), Size = UDim2.new(1, -8, 0, 25), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold, ZIndex = 26 })
     end
-    local detail = panel(self.Browser, { Name = "Détail sélection", Position = layout.Stacked and UDim2.fromOffset(0, layout.GridHeight + 16) or UDim2.fromOffset(layout.GridWidth + 18, 0), Size = UDim2.fromOffset(layout.DetailsWidth, math.max(480, layout.Stacked and 510 or layout.GridHeight)), BackgroundColor3 = Color3.fromRGB(32, 99, 169), ZIndex = 23 })
+    local detail = panel(self.Browser, { Name = "Détail sélection", Position = layout.Stacked and UDim2.fromOffset(0, layout.GridHeight + 58) or UDim2.fromOffset(layout.GridWidth + 18, 42), Size = UDim2.fromOffset(layout.DetailsWidth, math.max(480, layout.Stacked and 510 or layout.GridHeight)), BackgroundColor3 = Color3.fromRGB(32, 99, 169), ZIndex = 23 })
     if chosen then
         local spec, known = chosen.Spec, chosen.Known
         local tint = self.Ctx.Visuals.Color(config.Rarities[spec.Rarity].Color)
         label(detail, known and spec.Name or "ESPÈCE INCONNUE", 20, C.White, { Position = UDim2.fromOffset(16, 12), Size = UDim2.new(1, -32, 0, 52), Font = Enum.Font.GothamBlack, ZIndex = 24 })
         local preview = make("Frame", detail, { Position = UDim2.fromOffset(12, 64), Size = UDim2.new(1, -24, 0, 170), BackgroundTransparency = 1, ZIndex = 24 })
         self:BrowserPreview(preview, chosen, known)
-        label(detail, known and string.upper(spec.Rarity) or "???", 17, known and tint or C.Muted, { Position = UDim2.fromOffset(18, 236), Size = UDim2.new(1, -36, 0, 26), Font = Enum.Font.GothamBold, ZIndex = 26 })
+        label(detail, known and UI.RarityLabel(config, spec.Rarity) or "???", 17, known and tint or C.Muted, { Position = UDim2.fromOffset(18, 236), Size = UDim2.new(1, -36, 0, 26), Font = Enum.Font.GothamBold, ZIndex = 26 })
         if chosen.Kind == "Egg" then
             local timer = label(detail, "", 13, C.White, { Position = UDim2.fromOffset(18, 274), Size = UDim2.new(1, -36, 0, 88), ZIndex = 26 })
             if spec.ReadyAt then table.insert(self.HatchTimers, { Egg = spec, Label = timer })
@@ -325,6 +356,8 @@ function UI:RenderBrowser()
                 if enabled then self.Ctx.Action:FireServer("Hatch", spec.Id)
                 elseif not state.OwnBase and not spec.Unsecured and not spec.ReadyAt then self.Ctx.Navigate(state.BasePosition, "VOTRE CUVE À ŒUFS"); self:Open(nil) end
             end)
+            local eventInfo = UI.EventDescription(config, spec)
+            if eventInfo then label(detail, eventInfo, 10, tint, { Position = UDim2.fromOffset(18, 441), Size = UDim2.new(1, -36, 0, 38), TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 26 }) end
         else
             local variants = state.Variants[chosen.Id] or {}
             local text = known and ("PALIER " .. spec.Floor .. "  ·  ×" .. chosen.Count .. " POSSÉDÉS\n+" .. UI.Format(spec.Income) .. " GOLD / MIN\nValeur : " .. UI.Format(spec.Income * 60) .. " gold\n\nNormal " .. (state.Animals[chosen.Id] or 0) .. " · Gold " .. (variants.Gold or 0) .. "\nDiamond " .. (variants.Diamond or 0) .. " · Mythic " .. (variants.Mythic or 0)) or ("PALIER " .. spec.Floor .. "\n\nRapportez et faites éclore des œufs de cette profondeur pour découvrir cet animal.")
@@ -333,6 +366,7 @@ function UI:RenderBrowser()
             for _, item in ipairs(state.Recipes or {}) do
                 if item.Output == chosen.Id then local names = {}; for _, id in ipairs(item.Ingredients) do table.insert(names, config.Animals[id].Name) end; recipe = "RECETTE : " .. table.concat(names, " + ") end
             end
+            recipe = UI.EventDescription(config, spec) or recipe
             label(detail, known and recipe or "???", 11, C.Teal, { Position = UDim2.fromOffset(18, 428), Size = UDim2.new(1, -36, 0, 52), ZIndex = 26 })
         end
     else
@@ -507,10 +541,11 @@ function UI:RenderPanel()
             "06  DESCENDEZ À VOS RISQUES\nToutes les profondeurs sont ouvertes. Combinaisons conseillées : 10 / 20 / 35 / 50 / 75. Les gardiens géants deviennent plus rapides et plus meurtriers si vous êtes mal équipé.",
             "07  RESPIREZ\nLes stations vertes O₂, la surface et le navire rechargent votre réserve. L'oxygène se consomme plus vite en profondeur. À zéro, votre santé diminue.",
             "08  PRENEZ DES RISQUES\nLes événements de 5, 15 et 40 minutes augmentent la rareté et le danger. Esquivez les ondes rouges annonçant les attaques des boss. Après sa défaite, un boss réapparaît après un court répit.",
+            "ÉVÉNEMENTS EXCLUSIFS\nLes œufs TEMPÊTE apparaissent pendant un événement majeur ou ABYSSAL STORM : leurs animaux rapportent exactement ×10 le meilleur animal normal du même palier. Les œufs CÉLESTE apparaissent uniquement pendant ABYSSAL STORM : ×10 TEMPÊTE, soit ×100 la référence normale. Un œuf récupéré peut éclore même après la fin de l’événement.",
             "09  ÉVOLUEZ\nFusionnez vos animaux dans votre habitat, découvrez les recettes secrètes, personnalisez la base et recommencez avec le prestige pour obtenir des bonus permanents.",
             "CRÉDITS DES DÉCORS\nPoly by Google, God Appeasers, Device Lab, Laney XR Labs — modèles via Poly Pizza, CC-BY 3.0 (creativecommons.org/licenses/by/3.0). Rochers, ruines et épave : WebGL Aquarium / Human Engines, Copyright Google Inc., BSD 3-Clause. Modèles adaptés et recolorés.",
-            "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · Maj / X manette : propulseur · M : verrouiller / libérer la caméra · clic / RT : tirer · E : interagir.",
-        }) do paragraph(text, 112) end
+            "COMMANDES\nWASD / joystick : nager · Espace / LB : monter · Ctrl / RB : descendre · Maj / X manette : propulseur · M : verrouiller / libérer la caméra · B : ouvrir / fermer le menu · clic / RT : tirer · E : interagir.",
+        }) do paragraph(text, string.find(text, "ÉVÉNEMENTS EXCLUSIFS", 1, true) and 160 or 112) end
     end
     task.defer(function() if self.List.Parent then self.List.CanvasPosition = position end end)
 end
@@ -533,7 +568,7 @@ function UI:Update(state)
     local waiting = 0
     for _, egg in ipairs(state.Eggs) do if not egg.ReadyAt then waiting += 1 end end
     self.Objective.Visible = state.Carrying ~= nil or (state.OwnBase and waiting > 0)
-    self.Objective.Text = state.Carrying and ("ŒUF " .. string.upper(state.Carrying.Rarity) .. " · Retournez à votre base") or "E · Déposer vos œufs dans la cuve"
+    self.Objective.Text = state.Carrying and ("ŒUF " .. UI.RarityLabel(self.Ctx.Config, state.Carrying.Rarity) .. " · Retournez à votre base") or "E · Déposer vos œufs dans la cuve"
     self.Objective.TextColor3 = state.Carrying and self.Ctx.Visuals.Color(self.Ctx.Config.Rarities[state.Carrying.Rarity].Color) or #state.Eggs > 0 and C.Gold or C.White
     local signature = self.Tab or ""
     if self.Tab == "Collection" or self.Tab == "Bestiaire" or self.Tab == "Fusion" then
@@ -582,7 +617,7 @@ function UI:Hatch(animalId, grade)
     self:Viewport(frame, spec)
     local viewport = frame:FindFirstChildOfClass("ViewportFrame"); viewport.Position = UDim2.fromOffset(65, 52); viewport.Size = UDim2.fromOffset(240, 150); viewport.ZIndex = 41
     label(frame, spec.Name, 24, C.White, { Position = UDim2.fromOffset(20, 205), Size = UDim2.fromOffset(330, 36), TextXAlignment = Enum.TextXAlignment.Center, Font = Enum.Font.GothamBold, ZIndex = 41 })
-    label(frame, string.upper(spec.Rarity) .. "  ·  +" .. UI.Format(spec.Income * (self.Ctx.Config.Grades[grade] or 1)) .. " gold / min de base", 14, self.Ctx.Visuals.Color(self.Ctx.Config.Rarities[spec.Rarity].Color), { Position = UDim2.fromOffset(20, 251), Size = UDim2.fromOffset(330, 24), TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 41 })
+    label(frame, UI.RarityLabel(self.Ctx.Config, spec.Rarity) .. "  ·  +" .. UI.Format(spec.Income * (self.Ctx.Config.Grades[grade] or 1)) .. " gold / min de base", 14, self.Ctx.Visuals.Color(self.Ctx.Config.Rarities[spec.Rarity].Color), { Position = UDim2.fromOffset(20, 251), Size = UDim2.fromOffset(330, 24), TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 41 })
     task.delay(4, function() frame:Destroy() end)
 end
 return UI

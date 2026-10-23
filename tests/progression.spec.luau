@@ -82,4 +82,24 @@ for floor = 1, 6 do
         check(id and not Config.Animals[id].FusionOnly, "Fusion-only creatures never hatch from ordinary eggs")
     end
 end
+for floorId = 1, #Config.Floors do
+    local p = Rules.NewProfile(Config)
+    p.Eggs = { { Id = "event-t" .. floorId, Floor = floorId, Rarity = "Tempest", Name = "Œuf de la Tempête" },
+        { Id = "event-c" .. floorId, Floor = floorId, Rarity = "Celestial", Name = "Œuf Céleste" } }
+    check(Rules.StartIncubation(p, Config, p.Eggs[1].Id, 1000), "A legitimately secured event egg can be incubated after its event")
+    check(Rules.StartIncubation(p, Config, p.Eggs[2].Id, 1000), "A celestial egg has an independent server deadline")
+    local saved = Rules.Sanitize(p, Config)
+    check(#saved.Eggs == 2 and saved.Eggs[1].ReadyAt == 1900 and saved.Eggs[2].ReadyAt == 2200, "Both event tiers and their incubation deadlines survive reconnection")
+    check(not Rules.Hatch(saved, Config, saved.Eggs[1].Id, .5, 1899), "Tempest cannot hatch early")
+    local first = Rules.Hatch(saved, Config, saved.Eggs[1].Id, .5, 1900)
+    check(first == "tempest_" .. floorId, "Event hatching preserves the exact floor and rarity without normal fallback")
+    local second = Rules.Hatch(saved, Config, saved.Eggs[1].Id, .5, 2200)
+    check(second == "celestial_" .. floorId and #saved.Eggs == 0, "Celestial hatches once at its deadline without an active event")
+    check(Rules.Income(saved, Config) == Config.EventIncome.Floors[floorId].Normal * 110, "Hatched event creatures contribute their full configured production")
+    local eventRestored = Rules.Sanitize(saved, Config)
+    check(eventRestored.Animals[first] == 1 and eventRestored.Animals[second] == 1 and eventRestored.Discovered[first] and eventRestored.Discovered[second], "Event collection and discoveries remain after save/load")
+    eventRestored.Prestige = 1000000
+    eventRestored.Variants[second] = { Mythic = Config.MaxAnimals - 2 }
+    check(Rules.IsFinite(Rules.Income(eventRestored, Config)), "Even maximum event collection and permanent bonuses remain finite")
+end
 print(string.format("Progression: %d assertions passed", passed))

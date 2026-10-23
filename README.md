@@ -47,7 +47,7 @@ La cuve grandit vers le haut, sans enfoncer son socle dans le pont, et reçoit d
 
 ## Œufs, inventaire et boss
 
-Chaque palier possède 16 nids possibles et au plus six œufs actifs, choisis aléatoirement. Les grandes coques ovoïdes mesurent de 7,5 à 20 studs de haut ; particules, halo et aura indiquent leur rareté. Les œufs expirent et les événements renouvellent une partie des apparitions.
+Chaque palier possède **40 nids possibles au sol et 12 œufs sauvages simultanés**, choisis aléatoirement. Les grandes coques ovoïdes mesurent de 7,5 à 25 studs de haut ; particules, halo et aura indiquent leur rareté. Les œufs expirent et les emplacements libres sont renouvelés automatiquement. Les œufs tombés ou transportés ne consomment pas ces douze places.
 
 **Le ramassage ajoute immédiatement un œuf NON SÉCURISÉ à l'inventaire affiché, sans modèle derrière le personnage.** Son transporteur apparaît en surbrillance de la couleur de sa rareté. Un seul œuf non sécurisé peut voyager à la fois ; les autres places accueillent les œufs déjà sécurisés ou en incubation. Une requête répétée ou un simple contact ne transfère rien.
 
@@ -73,6 +73,8 @@ Déposer un œuf avec **E** devant sa cuve d’incubation vitrée, séparée de 
 | Legendary | 3 min | Dorée |
 | Mythic | 6 min | Rose |
 | Secret | 12 min | Turquoise |
+| Tempête | 15 min | Bleu électrique |
+| Céleste | 20 min | Or lumineux |
 
 Les échéances sont sauvegardées avec les œufs : une reconnexion ne remet pas le délai à zéro. Un œuf prêt pendant une absence éclot au retour. Les animaux produisent des gold pendant la connexion ; toute la collection produit, même quand seule une partie est exposée.
 
@@ -83,7 +85,7 @@ Les échéances sont sauvegardées avec les œufs : une reconnexion ne remet pas
 - Prestige avec bonus permanents ; décorations et palettes de galerie ; six classements du serveur.
 - DataStore avec bail de session, sauvegarde périodique, départ et fermeture ; validation des actions et déplacements côté serveur.
 
-La direction graphique suit un style marin bleu, ivoire et laiton : terrasses en teck, garde-corps vitrés, cloisons nervurées, aquariums panoramiques et coffres de matériel Kenney. Le harpon combine un corps fin Kenney préexistant et un rail, une flèche à ardillons, des sandows et un moulinet détaillés. Dix-huit modèles sources CC0 de Microsoft, Kenney et Quaternius sont intégrés ; les récifs utilisent les sculptures Poly Pizza et WebGL Aquarium créditées plus bas. Certaines espèces partagent encore une silhouette. Voir [les crédits](assets/CREDITS.md).
+La direction graphique suit un style marin bleu, ivoire et laiton : terrasses en teck, garde-corps vitrés, cloisons nervurées, aquariums panoramiques et coffres de matériel Kenney. Le harpon combine un corps fin Kenney préexistant et un rail, une flèche à ardillons, des sandows et un moulinet détaillés. Trente modèles sources CC0 de Microsoft, Kenney et Quaternius sont intégrés ; les récifs utilisent les sculptures Poly Pizza et WebGL Aquarium créditées plus bas. Certaines espèces partagent encore une silhouette. Voir [les crédits](assets/CREDITS.md).
 
 ## Commandes
 
@@ -156,6 +158,27 @@ Pour inspecter les modèles de décor intégrés : `blender -b -t 2 --python too
 
 Les galeries ont des terrasses en teck, des cloisons bleues, des garde-corps vitrés, des rangements 3D Kenney et des aquariums à filtration apparente. Deux vrais filets de corde, appuyés sur des `TrussPart` grimpables, relient l’eau au pont dans le bassin central. Leurs mailles sont visibles des deux côtés.
 
-Le HUD conserve deux petits compteurs pour le gold et la profondeur, et un événement sur une seule ligne. L’oxygène apparaît en plongée ou pendant sa recharge, au-dessus de la barre d’outils Roblox. Le bouton ☰ ouvre les huit pages du menu ; l’inventaire et le harpon gardent un accès direct. Les consignes de dépôt apparaissent uniquement lorsqu’un œuf attend à la base, les notifications sont limitées à deux, et les problèmes de sauvegarde restent visibles. **M** verrouille la caméra ; **Maj** déclenche le boost.
+Le HUD conserve deux petits compteurs pour le gold et la profondeur, et un événement sur une seule ligne. L’oxygène apparaît en plongée ou pendant sa recharge, au-dessus de la barre d’outils Roblox. Le bouton ☰ ouvre les huit pages du menu ; l’inventaire et le harpon gardent un accès direct. Les consignes de dépôt apparaissent uniquement lorsqu’un œuf attend à la base, les notifications sont limitées à deux, et les problèmes de sauvegarde restent visibles. **M** verrouille la caméra ; **Maj** déclenche le boost ; **B** ouvre/ferme le menu sans perdre le choix de verrouillage.
 
 [Aperçus des modèles et des bases](docs/previews/README.md) : rendus hors Roblox, sans validation de la physique ou des performances natives.
+
+## Carte modernisée et œufs d’événement
+
+Douze modèles supplémentaires issus des packs **Kenney Nature, Pirate, Castle et Space** (CC0) composent maintenant les six panoramas : grottes coralliennes, véritable épave avec canons et tonneaux, cité à arches et escaliers, forêt de kelp, cavernes à cristaux et sanctuaire final. Les falaises et les jardins encadrent des parcours de collecte dégagés ; les œufs reposent sur le fond sableux. Les anciennes soucoupes flottantes sont retirées. Les stations O₂ sont de petites installations avec bouteilles et conduites. [Sources et licences des nouveaux packs](assets/MODERN_PACKS_CREDITS.md).
+
+Les six ambiances lumineuses se fondent progressivement avec la profondeur et le passage de la surface. Les couleurs des modèles restent visibles en profondeur, même pendant une tempête ; le plancton est local et léger. Les géométries proches/lointaines et les budgets de rendu restent actifs.
+
+Les probabilités et l’attribution restent contrôlées par le serveur :
+
+| Rareté exclusive | Disponibilité | Revenu de base |
+| --- | --- | --- |
+| Tempête | Événement majeur toutes les 15 min, ou tempête légendaire | ×10 de l’animal ordinaire le plus rentable du même palier |
+| Céleste | Tempête légendaire toutes les 40 min | ×10 de l’animal Tempête du même palier |
+
+Douze créatures événementielles, deux par palier, complètent le bestiaire. Par exemple, au récif : Raie normale 100 gold/min → Raie des cyclones 1 000 → Raie constellation 10 000. Les bonus de fusion, prestige et base s’appliquent ensuite de la même manière. Le filtre **Événement** de la collection montre les créatures, leur événement requis et la référence du multiplicateur. Une petite crête de cristaux et une aura les distinguent dans l’aquarium.
+
+Au début d’un événement majeur, au moins un œuf Tempête apparaît dans chaque palier ; la tempête légendaire garantit aussi un Céleste. Seuls quelques nids sauvages intacts sont renouvelés, sans toucher au butin transporté ou déjà tombé. La fin d’un événement retire les œufs exclusifs sauvages non récupérés ; les œufs déjà obtenus restent volables en exploration, puis définitivement conservés après sécurisation, y compris après reconnexion. Les délais d’incubation restent sauvegardés.
+
+Les boss restent plus rapides et meurtriers contre un équipement insuffisant. Un plongeur correctement équipé subit une poursuite moins rapide ; un tir de harpon réussi étourdit brièvement le boss et annule son attaque spéciale en préparation, pour permettre une fuite. Leur taille est prise en compte pour éviter qu’ils s’enfoncent dans le sol.
+
+Cette livraison est construite et vérifiée automatiquement. La validation du rendu, des collisions, du multijoueur à huit et de DataStore connecté exige encore **Roblox Studio sur Windows/macOS** ; elle n’a pas été exécutée dans le cloud Linux. La procédure native est dans [STUDIO_TESTS.md](docs/STUDIO_TESTS.md).

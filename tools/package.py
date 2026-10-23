@@ -11,107 +11,104 @@ if not source.is_file() or not source.read_bytes().startswith(b'<roblox!'):
 downloads = ROOT / 'downloads'
 downloads.mkdir(exist_ok=True)
 shutil.copyfile(source, downloads / source.name)
-instructions = '''UNDERWATER EGG — NÉRÉIDE · BASES, FILETS ET HARPON
+instructions = '''UNDERWATER EGG — NÉRÉIDE · CARTE MODERNISÉE ET ŒUFS D’ÉVÉNEMENT
 
-1. Extraire ce ZIP dans un nouveau dossier.
-2. Ouvrir le fichier UnderwaterEgg.rbxl avec Roblox Studio sur Windows/macOS.
-3. Appuyer sur F5 (Play) pour jouer avec son personnage Roblox.
-4. Attendre le chargement : votre galerie est sur le navire NÉRÉIDE.
-   Retrouvez votre portrait et votre pseudo au-dessus de votre aquarium.
-5. Rejoindre le bassin central : tous les joueurs plongent et remontent ici.
-   Grimper sur les grands filets aux deux extrémités pour revenir sur le pont.
-6. Explorer vers le bas : un boss géant surveille chaque palier.
-   E près d’un œuf l’ajoute à votre inventaire NON SÉCURISÉ.
-   Aucun œuf n’est attaché au personnage : sa rareté colore le plongeur.
-   Un harpon peut faire tomber cet œuf pour permettre son vol.
-7. Rejoindre sa propre galerie sécurise définitivement l’œuf.
-   Déposer ensuite l’œuf de l’inventaire au terminal devant
-   la cuve vitrée avec E, ou utiliser Collection > Déposer.
-   Les œufs incubent dans leur cuve ; les animaux rejoignent le grand aquarium.
-8. Attendre l'éclosion : l'animal nage dans l'aquarium et produit des gold.
-   Dépenser ces gold chez les 7 marchands spécialisés sur le pont.
-   E à un stand ouvre sa boutique : prix et effets avant achat.
-   E à votre ordinateur ouvre les destinations : choisissez un marchand
-   pour être téléporté devant son stand. Le transfert est gratuit.
-9. F à la pancarte dorée de sa galerie améliore la base et l’aquarium.
-   Cette pancarte est séparée du dépôt des œufs.
+JOUER SUR WINDOWS / MACOS
 
-Toutes les profondeurs sont ouvertes, même sans le niveau conseillé. Attention :
-les monstres mythologiques sont géants et de plus en plus rapides en profondeur.
-Ils gagnent encore en vitesse et dégâts si votre combinaison est insuffisante.
+1. Extraire ce ZIP dans un NOUVEAU dossier.
+2. Ouvrir UnderwaterEgg.rbxl dans Roblox Studio.
+3. Appuyer sur F5 / Play et attendre le chargement.
+   Le personnage Roblox apparaît sur le navire, devant sa galerie.
+
+PREMIÈRE EXPÉDITION
+
+- Rejoindre le bassin central et plonger. Les deux filets servent à remonter.
+- Explorer le récif : douze œufs apparaissent parmi quarante nids au sol.
+  Un seul grand boss surveille chaque profondeur. E ramasse un œuf.
+- L’œuf est dans l’inventaire, sans modèle derrière le personnage.
+  La surbrillance du plongeur montre sa rareté. Un harpon peut le faire tomber.
+- Revenir dans sa propre galerie sécurise définitivement l’œuf.
+- E devant la cuve à œufs le met en incubation ; l’animal obtenu rejoint
+  l’aquarium principal, sans coraux, et produit des gold.
+- Acheter l’équipement avec E chez les sept marchands. L’ordinateur de sa
+  galerie permet de choisir un marchand et de s’y téléporter gratuitement.
+- F à la pancarte dorée améliore la base. Le socle reste sur le pont.
+
+COMMANDES
+
+Commandes Roblox / WASD : déplacement ; Espace : monter ; Ctrl : descendre.
+Maj : boost. M : verrouiller/libérer la caméra. Clic gauche : harpon.
+B ou ☰ : ouvrir/fermer les menus, y compris lorsque M est sélectionné.
+E : interaction avec œuf, cuve, ordinateur ou marchand. F : améliorer la base.
+
+NOUVEAUTÉS
+
+Six panoramas réaménagés avec douze modèles de packs Kenney supplémentaires :
+grottes de récif, épave avec canons et tonneaux, cité à arches et colonnes,
+forêt de kelp, cavernes à cristaux bleu/violet et sanctuaire interdit.
+Les sols sont continus, les passages ouverts, les nids posés sur le sable.
+L’éclairage évolue en douceur et laisse les zones lisibles en profondeur.
+Les modèles sont intégrés : aucun import manuel ou achat de skin requis.
+
+Douze œufs sauvages par palier, soit soixante-douze pour toute la carte.
+Les œufs ramassés et tombés ne consomment pas les douze emplacements sauvages.
+
+ÉVÉNEMENTS ET REVENUS
+
+Toutes les 5 minutes : petit événement et meilleures probabilités ordinaires.
+Toutes les 15 minutes : événement majeur avec œufs TEMPÊTE.
+Toutes les 40 minutes : tempête légendaire avec œufs TEMPÊTE et CÉLESTES.
+
+Tempête : l’animal rapporte exactement dix fois le meilleur animal ordinaire
+éclosable du même palier. Céleste : exactement dix fois l’animal Tempête.
+Exemple au récif : Raie 100 gold/min → Raie des cyclones 1 000 →
+Raie constellation 10 000, avant les mêmes bonus de base/fusion/prestige.
+Le filtre ÉVÉNEMENT de la collection présente ces douze nouvelles créatures.
+
+Un événement majeur garantit au moins un Tempête par palier ; la tempête
+légendaire garantit aussi un Céleste. Ces raretés ne spawnent pas au calme.
+Les œufs exclusifs sauvages non récupérés disparaissent avec l’événement ;
+les œufs déjà ramassés restent transportables/volables, puis conservés une
+fois sécurisés, même après l’événement ou une reconnexion sauvegardée.
 
 Incubation : Common 15 s, Rare 40 s, Epic 90 s, Legendary 3 min,
-Mythic 6 min, Secret 12 min. La couleur de l'aura indique la rareté de l'œuf.
-Avec une vraie sauvegarde, une reconnexion ne remet pas le délai à zéro.
+Mythic 6 min, Secret 12 min, Tempête 15 min, Céleste 20 min.
 
-Aucune case API à cocher pour cette partie de test. Une session locale non
-publiée est temporaire : sa progression ne sera pas sauvegardée.
+Les six profondeurs restent accessibles sans le niveau conseillé, mais les
+boss sont beaucoup plus rapides et dangereux avec une combinaison insuffisante.
+Un bon équipement réduit la vitesse de poursuite ; toucher le boss au harpon
+l’étourdit brièvement et interrompt sa capacité spéciale en préparation.
 
-Commandes : commandes Roblox / WASD pour nager, Espace pour monter,
-Ctrl pour descendre, Maj pour accélérer, clic gauche pour tirer,
-M pour bloquer/libérer la caméra (viseur centré).
-E près d’un œuf pour le mettre dans l’inventaire, au terminal pour le déposer,
-ou chez un marchand pour sa boutique. F à la pancarte améliore la base.
+SAUVEGARDE ET VALIDATION
 
-Pour conserver la progression : publier une expérience privée, puis autoriser
-l'accès Studio aux services API dans les paramètres de l'expérience.
+Un fichier Studio non publié démarre sans case API à cocher, en session
+TEMPORAIRE explicitement marquée NON SAUVEGARDÉE. Pour conserver la progression,
+publier une expérience privée et autoriser l’accès Studio aux services API.
 
-Nouveautés : bases en teck, métal, verre et laiton, rangements Kenney CC0,
-filets de remontée réellement grimpables et nouveau corps de harpon Kenney.
-Petit HUD : gold et profondeur, oxygène seulement utile, événement sur une ligne.
-Le bouton ☰ ouvre les menus ; inventaire et harpon restent en accès direct.
-M = caméra, Maj = boost. Aucune case ou import supplémentaire.
+Les tests automatisés du code, des services, des événements, des sauvegardes
+simulées et de la construction réussissent. Le cloud Linux ne lance pas
+Roblox Studio : rendu, collisions, test à huit joueurs et DataStore connecté
+restent à valider dans Studio avant publication publique.
 
-14 décors 3D préexistants intégrés : coraux, éponges et plantes
-Poly Pizza (Poly by Google, God Appeasers, Device Lab, Laney XR Labs), rochers,
-arches, colonnes, épave et coffres de la scène WebGL Aquarium. Les anciens
-coraux et algues en pièces simples sont remplacés dans les récifs.
-Les aquariums sont désormais sans coraux ni rochers.
-Modèles détaillés ou allégés selon le rendu disponible, chargés à proximité.
-Crédits, sources et licences dans CREDITS-DECORS.md et le dossier LICENCES.
-APERCU-MODELES-HORS-ROBLOX.png présente les sculptures séparément :
-Les fichiers APERCU-BASE-HORS-ROBLOX.png et APERCU-HARPON-HORS-ROBLOX.png
-montrent les géométries construites par le jeu avec un éclairage Blender.
-Ces aperçus sont des rendus hors Roblox, pas des captures en jeu.
+APERCU-CARTE-HORS-ROBLOX.png montre les géométries du jeu avec Blender.
+C’est un rendu hors Roblox, pas une capture du jeu ni un test de performances.
+Sources, modifications et licences : fichiers CREDITS et dossier LICENCES.
 
-Fonds sableux continus dans les six profondeurs (récif à 325 m),
-passages centraux ouverts, parois entièrement habillées, herbiers denses,
-éponges bleues creuses et plateaux de corail rose. Plus de 60 jardins par zone.
-Marchands en armures à gemmes et or, coiffures et accessoires propres à chacun.
-Interface bleu/cyan : cartes hexagonales, onglets Animaux/Œufs/Bestiaire,
-grand aperçu détaillé et pagination. M = caméra, Maj = boost.
-15 modèles marins Quaternius CC0 intégrés, nouveaux boss,
-coraux ramifiés/gorgones/plateaux, récif sans carré flottant,
-cuve à œufs séparée, ordinateur de téléportation et nage R6/R15 retravaillée.
-7 marchands, boutique avec aperçu 3D et comparaison des niveaux,
-pancarte de base séparée, équipements visibles sur le personnage, style Roblox
-plus coloré, aquariums lumineux, œufs géants et un seul boss par profondeur.
-Le harpon vole les œufs NON SÉCURISÉS : le tir les fait tomber, puis E les
-récupère. Les œufs arrivés dans leur propre base restent protégés à jamais.
-Un viseur suit la souris en mode libre et reste centré en mode caméra M.
-Les bases ont cinq niveaux : achat près de la pancarte avec vos gold.
-Les modèles sont intégrés : aucun import manuel n'est requis.
-
-Correction incluse : démarrage sans DataStore dans un fichier non publié,
-suppression d'une écriture réservée à Studio qui arrêtait la carte, apparition
-et réapparition automatiques des avatars, message de chargement et d'erreur.
-
-Les sources et tests sont sur https://github.com/yun0oo/roblox-game/tree/codex/underwater-egg
-Les contrôles automatisés ne remplacent pas un essai natif dans Roblox Studio.
+Sources : https://github.com/yun0oo/roblox-game/tree/codex/underwater-egg
+Procédure de test Studio : docs/STUDIO_TESTS.md dans le dépôt.
 '''
 with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip', 'w', zipfile.ZIP_DEFLATED) as package:
     package.write(source, source.name)
     package.writestr('LIRE-MOI.txt', instructions.encode('utf-8'))
     package.write(ROOT / 'assets/CREDITS.md', 'CREDITS-MODELES.md')
     package.write(ROOT / 'assets/MARINE_SCENERY_CREDITS.md', 'CREDITS-DECORS.md')
-    package.write(ROOT / 'docs/previews/reef-models.png', 'APERCU-MODELES-HORS-ROBLOX.png')
+    package.write(ROOT / 'assets/MODERN_PACKS_CREDITS.md', 'CREDITS-PACKS-MODERNES.md')
+    package.write(ROOT / 'docs/previews/map.png', 'APERCU-CARTE-HORS-ROBLOX.png')
     package.write(ROOT / 'assets/source/Aquarium.LICENSE.md', 'LICENCES/Aquarium-BSD-3-Clause.txt')
     package.write(ROOT / 'assets/source/PolyPizza.CC-BY-3.0.txt', 'LICENCES/PolyPizza-CC-BY-3.0.txt')
     package.write(ROOT / 'assets/source/PolyPizza.ATTRIBUTION.md', 'LICENCES/PolyPizza-Attribution.md')
     package.write(ROOT / 'assets/source/Kenney.LICENSE.txt', 'LICENCES/Kenney-CC0.txt')
     package.write(ROOT / 'assets/source/Kenney.README.md', 'LICENCES/Kenney-Provenance.md')
-    package.write(ROOT / 'docs/previews/base.png', 'APERCU-BASE-HORS-ROBLOX.png')
-    package.write(ROOT / 'docs/previews/harpoon.png', 'APERCU-HARPON-HORS-ROBLOX.png')
 with zipfile.ZipFile(downloads / 'UnderwaterEgg.zip') as package:
     assert package.testzip() is None
     assert package.read(source.name) == source.read_bytes()

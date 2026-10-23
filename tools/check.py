@@ -35,7 +35,7 @@ run('luau', 'tests/rules.spec.luau')
 run('luau', 'tests/progression.spec.luau')
 run('luau', 'tests/art_budget.spec.luau')
 run('python3', 'tools/check_art.py')
-for suite in ('services', 'startup', 'ui', 'swimming', 'artstream'):
+for suite in ('services', 'guardian', 'startup', 'ui', 'swimming', 'artstream'):
     module_sources = []
     if suite == 'services':
         for name in ('World', 'EggSystem', 'HarpoonSystem', 'DataSystem', 'GuardianSystem', 'EventSystem'):

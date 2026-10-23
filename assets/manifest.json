@@ -336,6 +336,118 @@
       "license": "CC0-1.0",
       "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/blaster-e.glb",
       "sha256": "df3e35c9286d7bfe8bde2ff7231ef40ff89b1e7caa52fbf80ea685cb601de3ca"
+    },
+    {
+      "file": "Kenney_modern_cave.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/cliff_cave_rock.glb",
+      "sha256": "2d83296b0166ad0e980152ad4f45b4e45349e932a6b6c2adbe7eb606a6472d8d",
+      "pack": "nature"
+    },
+    {
+      "file": "Kenney_modern_rock.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/rock_largeC.glb",
+      "sha256": "23aee8b727adeaf260207af3e0615dc69aa766c6d87de1d44cbc8c2711d74dd1",
+      "pack": "nature"
+    },
+    {
+      "file": "Kenney_modern_pinnacle.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/rock_tallB.glb",
+      "sha256": "b3fb7899c317a3b026fa6ced0e1eaaa596d9dd0d95efeacfb5e05d25322f19b9",
+      "pack": "nature"
+    },
+    {
+      "file": "Kenney_modern_cliff.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/cliff_large_rock.glb",
+      "sha256": "f9bf79cd3a76bbe11f4887053655585e467e14f2528678215a820896669e4e8e",
+      "pack": "nature"
+    },
+    {
+      "file": "Kenney_modern_crystals_a.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/space/rock_crystalsLargeA.glb",
+      "sha256": "cfe8f339f6be4a321e5f3822237002b6a70f9c5d03596a7c347adabd5247fbd9",
+      "pack": "space"
+    },
+    {
+      "file": "Kenney_modern_crystals_b.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/space/rock_crystalsLargeB.glb",
+      "sha256": "3fe54711b8d0fbeaebcc055409f256bf414ad7493e7f97adba4b213e44f11117",
+      "pack": "space"
+    },
+    {
+      "file": "Kenney_modern_wreck.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/pirate/ship-wreck.glb",
+      "sha256": "0b2cac74f23ffdc3bf5020880126338287a0a0317d6a98ce4250123d8821ad2b",
+      "pack": "pirate"
+    },
+    {
+      "file": "Kenney_modern_barrel.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/pirate/barrel.glb",
+      "sha256": "7616dedf7c1023afa6ecd3c52a4609460aae0e582dee14e60ec5e47c1174793b",
+      "pack": "pirate"
+    },
+    {
+      "file": "Kenney_modern_cannon.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/pirate/cannon.glb",
+      "sha256": "b2ea71475fa52de312a0fe3fb9085e1a3f83f9e6bb167668fb62f71383cbc41a",
+      "pack": "pirate"
+    },
+    {
+      "file": "Kenney_modern_arch.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/castle/wall-doorway.glb",
+      "sha256": "8daf5cccceace888d51d74b0e0254e192004faf926e07f1b28e94191879af3a6",
+      "pack": "castle"
+    },
+    {
+      "file": "Kenney_modern_pillar.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/castle/wall-pillar.glb",
+      "sha256": "22d359abfaa3cf3dc5a2fece09a108024a07a4e263b21a4a0689da0e630699ed",
+      "pack": "castle"
+    },
+    {
+      "file": "Kenney_modern_stairs.glb",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/castle/stairs-stone.glb",
+      "sha256": "ec21b1d65c04ba6384734c31ac542bb4015541e652c411796fd7bcf292e6413c",
+      "pack": "castle"
+    },
+    {
+      "file": "Kenney_pirate_colormap.png",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/pirate/Textures/colormap.png",
+      "sha256": "451e1d7a53b8e76f4b2ee58742e241509fee5f82cf2cee6e3f7aca86ba718abe",
+      "pack": "pirate"
+    },
+    {
+      "file": "Kenney_castle_colormap.png",
+      "author": "Kenney",
+      "license": "CC0-1.0",
+      "source": "https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/castle/Textures/colormap.png",
+      "sha256": "66fd49be148f32e88f6c8cace67120250d1943a7856601158ad0ff24651db0b0",
+      "pack": "castle"
     }
   ]
 }

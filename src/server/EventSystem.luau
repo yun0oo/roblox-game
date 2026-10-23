@@ -10,6 +10,7 @@ function EventSystem:Step()
     local now, ctx = os.clock(), self.Ctx
     if ctx.Event and now >= ctx.Event.Ends then
         ctx.Event = nil
+        ctx.Eggs:EndEvent()
         ctx:Broadcast("Les courants se calment. Rareté habituelle rétablie.", "Success")
     end
     local priority = { Minor = 1, Major = 2, Legendary = 3 }
@@ -21,7 +22,8 @@ function EventSystem:Step()
             if not ctx.Event or priority[key] > priority[ctx.Event.Key] then
                 local name = spec.Names[ctx.Random:NextInteger(1, #spec.Names)]
                 ctx.Event = { Key = key, Name = name, Ends = now + spec.Duration }
-                ctx:Broadcast("🌊 " .. name .. " EN COURS !\n💎 La rareté des œufs et le danger augmentent !", "Legendary")
+                local exclusive = key == "Legendary" and "\n🌟 Œufs TEMPÊTE et CÉLESTES disponibles !" or key == "Major" and "\n⚡ Œufs TEMPÊTE disponibles !" or ""
+                ctx:Broadcast("🌊 " .. name .. " EN COURS !\n💎 La rareté des œufs et le danger augmentent !" .. exclusive, "Legendary")
                 -- Replenish available nests immediately under the new probability table.
                 ctx.Eggs.NextSpawn = 0
                 ctx.Eggs:RefreshForEvent()

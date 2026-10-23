@@ -60,6 +60,20 @@ function Visuals.Animal(parent, spec, frame, scale, title)
     local body = Visuals.Part(model, "Body", Vector3.new(bounds[1], bounds[2], bounds[3]) * scale, CFrame.new(), color, Enum.Material.SmoothPlastic, Enum.PartType.Ball)
     body.Transparency = 0.85
     body:SetAttribute("ArtAsset", key); body:SetAttribute("ArtScale", scale)
+    if spec.EventOnly then
+        model:SetAttribute("EventRarity", spec.Rarity)
+        local aura = Instance.new("Highlight"); aura.Name = "Aura événementielle"
+        aura.Adornee = model; aura.FillColor = color; aura.OutlineColor = color
+        aura.FillTransparency = 0.86; aura.OutlineTransparency = 0.3
+        aura.DepthMode = Enum.HighlightDepthMode.Occluded; aura.Parent = model
+        -- A small original crystal crest distinguishes event sculpts even when
+        -- their imported base mesh keeps its authored colours.
+        for i = -1, 1 do
+            local gem = Visuals.Part(model, "Cristal événementiel", Vector3.new(0.3, 0.65 + (i == 0 and 0.3 or 0), 0.3) * scale,
+                CFrame.new(i * 0.4 * scale, (bounds[2] / 2 + 0.35) * scale, 0) * CFrame.Angles(0, math.pi / 4, i * -0.2), color, Enum.Material.Neon)
+            local mesh = Instance.new("SpecialMesh"); mesh.MeshType = Enum.MeshType.Pyramid; mesh.Parent = gem
+        end
+    end
     model.PrimaryPart = body
     if game:GetService("RunService"):IsClient() then
         local renderer = require(modules.ArtRenderer)
@@ -105,6 +119,14 @@ function Visuals.Egg(parent, name, rarity, frame)
     image.Image = "rbxasset://textures/particles/flare_main.dds"
     image.ImageColor3 = color; image.ImageTransparency = 0.4; image.Parent = halo
     egg:SetAttribute("AuraPower", power)
+    if rarity.EventOnly then
+        egg:SetAttribute("EventExclusive", true)
+        particles.Rate = math.min(particles.Rate, 24)
+        particles.LightEmission = 1
+        light.Brightness = 1.6
+        aura.FillTransparency = 0.86; aura.OutlineTransparency = 0.02
+        image.ImageTransparency = 0.52
+    end
     egg.Parent = parent
     return egg
 end

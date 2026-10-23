@@ -5,6 +5,18 @@ function GuardianSystem.new(context)
     return setmetatable({ Ctx = context, Active = {}, ByFloor = {}, RespawnAt = {} }, GuardianSystem)
 end
 
+local function tuning(ctx, key, fallback)
+    local value = ctx.Config.GuardianTuning and ctx.Config.GuardianTuning[key]
+    return type(value) == "number" and value == value and math.abs(value) < math.huge and value or fallback
+end
+
+local function keepAboveSeabed(record, position, clearance)
+    local halfHeight = record.Model.PrimaryPart.Size.Y / 2
+    local bottom = record.Floor.Bottom + halfHeight + clearance
+    local top = math.max(bottom, record.Floor.Top - halfHeight - clearance)
+    return Vector3.new(position.X, math.clamp(position.Y, bottom, top), position.Z)
+end
+
 function GuardianSystem:Spawn(egg, floor)
     local existing = self.ByFloor[floor.Id]
     if existing then return existing end
@@ -30,6 +42,8 @@ function GuardianSystem:Spawn(egg, floor)
     local record = { Model = model, Home = home, Floor = floor, Health = floor.BossHealth,
         MaxHealth = floor.BossHealth, Power = 1 + (floor.Id - 1) * 0.1, LastAttack = 0, Phase = ctx.Random:NextNumber(0, 6),
         NextAbility = os.clock() + 8, Ability = floor.Ability }
+    record.Home = keepAboveSeabed(record, home, math.max(0, tuning(ctx, "SeabedClearance", 3)))
+    model:PivotTo(CFrame.new(record.Home))
     self.Active[model] = record; self.ByFloor[floor.Id] = record
     self:UpdateLabel(record)
     return record
@@ -50,12 +64,25 @@ end
 
 function GuardianSystem:Damage(model, amount, player)
     local record = self.Active[model]
-    if not record then return end
+    if not record or not self.Ctx.Rules.IsFinite(amount) or amount <= 0 then return false end
     record.Health -= amount
     if record.Health <= 0 then
         self:Remove(record)
         self.Ctx:Notify(player, "👹 Gardien vaincu ! La voie est libre.", "Success")
-    else self:UpdateLabel(record) end
+    else
+        -- A precise harpoon hit opens an escape window even for a solo diver.
+        -- Health and cooldown still belong entirely to the server.
+        local now = os.clock()
+        record.StaggerUntil = now + math.clamp(tuning(self.Ctx, "StaggerDuration", 1.25), 0, 3)
+        record.LastAttack = record.StaggerUntil
+        record.Telegraph = nil
+        record.NextAbility = math.max(record.NextAbility or 0, record.StaggerUntil + 2)
+        model:SetAttribute("StaggerUntil", record.StaggerUntil)
+        model:SetAttribute("Staggered", true)
+        model:SetAttribute("ChaseSpeed", 0)
+        self:UpdateLabel(record)
+    end
+    return true
 end
 
 function GuardianSystem:Step(dt)
@@ -65,6 +92,13 @@ function GuardianSystem:Step(dt)
     end
     for _, record in pairs(self.Active) do
         local model = record.Model
+        if os.clock() < (record.StaggerUntil or 0) then
+            model:SetAttribute("ChaseSpeed", 0)
+            continue
+        elseif record.StaggerUntil then
+            record.StaggerUntil = nil
+            model:SetAttribute("StaggerUntil", 0); model:SetAttribute("Staggered", false)
+        end
         local position = model:GetPivot().Position
         local home = record.Home
         local target, nearest = nil, math.huge
@@ -83,6 +117,9 @@ function GuardianSystem:Step(dt)
         local rageSpeed, rageDamage = 1, 1
         if target then rageSpeed, rageDamage = ctx.Rules.GuardianThreat(target.Profile, record.Floor, ctx.Config) end
         local chaseSpeed = record.Floor.GuardianSpeed * (1 + (record.Power - 1) * 0.08) * strength * rageSpeed
+        if target and ctx.Rules.IsPrepared(target.Profile, record.Floor) then
+            chaseSpeed *= math.clamp(tuning(ctx, "PreparedSpeedMultiplier", 0.65), 0.1, 1)
+        end
         model:SetAttribute("ChaseSpeed", chaseSpeed)
         if delta.Magnitude > 0.5 then
             local travel = delta.Unit * math.min(delta.Magnitude, chaseSpeed * dt)
@@ -90,8 +127,7 @@ function GuardianSystem:Step(dt)
             params.FilterDescendantsInstances = { ctx.World.Guardians, ctx.World.Eggs }; params.IgnoreWater = true
             local obstacle = workspace:Raycast(position, travel.Unit * (travel.Magnitude + 5), params)
             if obstacle and not (root and obstacle.Instance:IsDescendantOf(target.Player.Character)) then travel = Vector3.new(0, math.min(9 * dt, 2), 0) end
-            local nextPosition = position + travel
-            nextPosition = Vector3.new(nextPosition.X, math.clamp(nextPosition.Y, record.Floor.Bottom + 12, record.Floor.Top - 15), nextPosition.Z)
+            local nextPosition = keepAboveSeabed(record, position + travel, math.max(0, tuning(ctx, "SeabedClearance", 3)))
             if not ctx.World:SafeBase(nextPosition) then model:PivotTo(CFrame.lookAt(nextPosition, nextPosition + delta.Unit)) end
         end
         if root and nearest < record.Floor.AttackRange and os.clock() - record.LastAttack > record.Floor.AttackCooldown then

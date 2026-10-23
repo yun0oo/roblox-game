@@ -51,7 +51,8 @@ local function nativeMesh(key, asset, tint)
         end
         local part = service:CreateMeshPartAsync(Content.fromObject(editable))
         part.Name = "Sculpture"; part.Anchored = true; part.CanCollide = false; part.CanTouch = false; part.CanQuery = false
-        part.Material = Enum.Material.SmoothPlastic
+        part.Material = Enum.Material[asset.Material or "SmoothPlastic"]
+        part.CastShadow = asset.Kind == "environment" or asset.Kind == "creature" or asset.Kind == "licensed"
         return part
     end)
     if not ok then

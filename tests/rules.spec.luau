@@ -78,7 +78,11 @@ local floorCounts = { 0, 0, 0, 0, 0, 0 }
 for id, animal in pairs(Config.Animals) do
     floorCounts[animal.Floor] += 1
     check(animal.Income > 0 and (animal.Weight > 0 or animal.FusionOnly), "Animal must be profitable and obtainable: " .. id)
-    if not animal.FusionOnly then check((Config.Floors[animal.Floor].Weights[animal.Rarity] or 0) > 0, "Animal reachable without an event: " .. id) end
+    if not animal.FusionOnly and not animal.EventOnly then check((Config.Floors[animal.Floor].Weights[animal.Rarity] or 0) > 0, "Animal reachable without an event: " .. id) end
+    if animal.EventOnly then
+        check(Config.Rarities[animal.Rarity].EventOnly and Rules.CanSpawnRarity(Config, animal.Floor, animal.Rarity, "Legendary"), "Event creature has an obtainable server-gated egg: " .. id)
+        equal(animal.Income, Config.Animals[animal.IncomeReference].Income * 10, "Each event rank earns exactly ten times its comparator")
+    end
 end
 for i = 1, 6 do check(floorCounts[i] >= 10, "Ten species per floor") end
 local function expectedRank(entries)
@@ -102,6 +106,23 @@ for floorId = 1, 6 do
         check(Rules.RollAnimal(Config, { Floor = floorId, Rarity = rarity }, 0.5) ~= nil, "Every event egg has an animal pool")
     end
 end
+for floorId = 1, #Config.Floors do
+    for _, key in ipairs({ "none", "Minor", "Major", "Legendary", "made-up" }) do
+        local eventKey = key ~= "none" and key or nil
+        equal(Rules.CanSpawnRarity(Config, floorId, "Tempest", eventKey), key == "Major" or key == "Legendary", "Tempest is restricted to major and legendary events")
+        equal(Rules.CanSpawnRarity(Config, floorId, "Celestial", eventKey), key == "Legendary", "Celestial is restricted to the forty-minute storm")
+    end
+    local baseline = Config.EventIncome.Floors[floorId]
+    equal(Config.Animals["tempest_" .. floorId].Income, baseline.Normal * 10, "Tempest production is ten times the best ordinary species in its floor")
+    equal(Config.Animals["celestial_" .. floorId].Income, baseline.Normal * 100, "Celestial production is ten times Tempest in the same floor")
+    check(not Config.Animals[baseline.Reference].FusionOnly and (Config.Floors[floorId].Weights[Config.Animals[baseline.Reference].Rarity] or 0) > 0, "Income comparator is genuinely available from ordinary eggs")
+end
+local ordinaryWeight = Config.Floors[1].Weights.Tempest
+Config.Floors[1].Weights.Tempest = 1000000
+check(not Rules.CanSpawnRarity(Config, 1, "Tempest"), "A mistaken normal probability cannot leak an event-only rarity")
+check(not Rules.CanSpawnRarity(Config, 1, "Tempest", "Minor"), "A minor event cannot bypass exclusive-rarity gates")
+Config.Floors[1].Weights.Tempest = ordinaryWeight
+check(Rules.RollAnimal(Config, { Floor = 1, Rarity = "made-up" }, .5) == nil, "Unknown egg rarity never falls back to an event creature")
 local distribution = { { Value = "A", Weight = 70 }, { Value = "B", Weight = 30 }, { Value = "ZERO", Weight = 0 } }
 local counts = { A = 0, B = 0 }
 for i = 1, 1000 do local value = Rules.PickWeighted(distribution, (i - 0.5) / 1000); counts[value] += 1 end

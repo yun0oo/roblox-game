@@ -90,15 +90,30 @@ end
 
 function Rules.RarityWeights(config, floorId, eventKey)
     local floor = config.Floors[floorId]
+    if not floor then return {} end
     local event = eventKey and config.Events[eventKey]
     local bonuses = event and event.Bonuses[floorId] or {}
     local supported = {}
-    for _, animal in pairs(config.Animals) do if animal.Floor == floorId and not animal.FusionOnly then supported[animal.Rarity] = true end end
+    for _, animal in pairs(config.Animals) do
+        if animal.Floor == floorId and not animal.FusionOnly and animal.Weight > 0 then supported[animal.Rarity] = true end
+    end
     local result = {}
     for _, rarity in ipairs(config.RarityOrder) do
-        table.insert(result, { Value = rarity, Weight = supported[rarity] and ((floor.Weights[rarity] or 0) + (bonuses[rarity] or 0)) or 0 })
+        local spec = config.Rarities[rarity]
+        local allowed = not spec.EventOnly or (event and spec.Events and spec.Events[eventKey] == true)
+        local weight = (floor.Weights[rarity] or 0) + (bonuses[rarity] or 0)
+            + (event and event.ExclusiveWeights and event.ExclusiveWeights[rarity] or 0)
+        table.insert(result, { Value = rarity, Weight = supported[rarity] and allowed and math.max(0, weight) or 0 })
     end
     return result
+end
+
+function Rules.CanSpawnRarity(config, floorId, rarity, eventKey)
+    if type(rarity) ~= "string" then return false end
+    for _, entry in ipairs(Rules.RarityWeights(config, floorId, eventKey)) do
+        if entry.Value == rarity then return entry.Weight > 0 end
+    end
+    return false
 end
 
 function Rules.RollAnimal(config, egg, unit)

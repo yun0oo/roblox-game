@@ -20,14 +20,15 @@ Config.BaseUpgrades = {
     { Name = "Atlantide", Cost = 12500, Display = 10, IncomeBonus = 0.3 },
     { Name = "Palais des abysses", Cost = 60000, Display = 12, IncomeBonus = 0.4 },
 }
-Config.HatchTimes = { Common = 15, Rare = 40, Epic = 90, Legendary = 180, Mythic = 360, Secret = 720 }
+Config.HatchTimes = { Common = 15, Rare = 40, Epic = 90, Legendary = 180, Mythic = 360, Secret = 720, Tempest = 900, Celestial = 1200 }
 Config.UndergearedSpeedBonus = 0.85
 Config.UndergearedDamageBonus = 1.5
 Config.MaxStoredEggs = 24
 Config.MaxAnimals = 10000
 Config.MaxMoney = 1e15
 Config.SpawnInterval = 14
-Config.EggsPerFloor = 6
+Config.EggsPerFloor = 12
+Config.EventRefreshCount = 3
 Config.DroppedEggLifetime = 75
 Config.EggLifetime = 210
 Config.PickupDistance = 11
@@ -37,7 +38,7 @@ Config.SessionLease = 300
 Config.AllowStudioOffline = true
 Config.DataStoreName = "UnderwaterEgg_v1"
 
-Config.RarityOrder = { "Common", "Rare", "Epic", "Legendary", "Mythic", "Secret" }
+Config.RarityOrder = { "Common", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Tempest", "Celestial" }
 Config.Rarities = {
     Common = { Slow = 0.94, Label = "COMMON", Color = { 183, 215, 218 }, Size = 6, Power = 1 },
     Rare = { Slow = 0.89, Label = "RARE", Color = { 62, 178, 255 }, Size = 7.5, Power = 1.2 },
@@ -45,6 +46,10 @@ Config.Rarities = {
     Legendary = { Slow = 0.73, Label = "LEGENDARY", Color = { 255, 195, 74 }, Size = 11, Power = 1.9 },
     Mythic = { Slow = 0.64, Label = "MYTHIC", Color = { 255, 99, 141 }, Size = 13, Power = 2.5 },
     Secret = { Slow = 0.55, Label = "SECRET", Color = { 119, 255, 223 }, Size = 16, Power = 3.5 },
+    Tempest = { Slow = 0.5, Label = "TEMPÊTE", Color = { 94, 227, 255 }, Size = 18, Power = 4,
+        EventOnly = true, Events = { Major = true, Legendary = true }, EggName = "Œuf de la Tempête" },
+    Celestial = { Slow = 0.45, Label = "CÉLESTE", Color = { 255, 235, 148 }, Size = 20, Power = 4.5,
+        EventOnly = true, Events = { Legendary = true }, EggName = "Œuf Céleste" },
 }
 
 Config.Floors = {
@@ -272,5 +277,36 @@ end
 for index, floor in ipairs(Config.Floors) do
     floor.BossStyle = ({ "q_piranha", "q_goblinshark", "q_manta_ray", "q_anglerfish", "q_shark", "q_leviathan" })[index]
     floor.BossName = ({ "TYRAN DU RÉCIF", "REQUIN GOBELIN GÉANT", "RAIE TITAN D’ATLANTIS", "BAUDROIE DES ABYSSES", "MÉGALODON ANCESTRAL", "LÉVIATHAN PRIMORDIAL" })[index]
+end
+-- Exclusive tiers have their own server gates; ordinary weights/bonuses cannot
+-- accidentally enable them. The guaranteed nests are part of the 12-egg cap.
+Config.Events.Major.ExclusiveWeights = { Tempest = 6 }
+Config.Events.Major.GuaranteedEggs = { "Tempest" }
+Config.Events.Legendary.ExclusiveWeights = { Tempest = 16, Celestial = 5 }
+Config.Events.Legendary.GuaranteedEggs = { "Tempest", "Celestial" }
+Config.EventIncome = { Multiplier = 10, Floors = {} }
+local tempestNames = { "Raie des cyclones", "Requin de l’ouragan", "Orque des marées royales", "Baudroie foudroyante", "Kraken des tempêtes", "Léviathan du déluge" }
+local celestialNames = { "Raie constellation", "Requin stellaire", "Orque de l’aurore", "Baudroie nova", "Kraken astral", "Léviathan du firmament" }
+local eventArt = { "q_manta_ray", "q_goblinshark", "q_whale", "q_anglerfish", "kraken", "q_leviathan" }
+local eventStyles = { "ray", "shark", "whale", "round", "octopus", "leviathan" }
+for floorId, floor in ipairs(Config.Floors) do
+    -- The comparator is the most profitable species actually hatchable from
+    -- an ordinary egg in this floor; fusion recipes never inflate that basis.
+    local basis, sourceId = 0, nil
+    for id, animal in pairs(Config.Animals) do
+        if animal.Floor == floorId and not animal.FusionOnly and not animal.EventOnly
+            and (floor.Weights[animal.Rarity] or 0) > 0 and animal.Income > basis then
+            basis, sourceId = animal.Income, id
+        end
+    end
+    assert(sourceId, "Each floor needs an ordinary hatchable income comparator")
+    Config.EventIncome.Floors[floorId] = { Reference = sourceId, Normal = basis, Tempest = basis * 10, Celestial = basis * 100 }
+    for _, rarity in ipairs({ "Tempest", "Celestial" }) do
+        local id = string.lower(rarity) .. "_" .. floorId
+        Config.Animals[id] = { Name = rarity == "Tempest" and tempestNames[floorId] or celestialNames[floorId],
+            Floor = floorId, Rarity = rarity, Income = Config.EventIncome.Floors[floorId][rarity], Weight = 1,
+            Style = eventStyles[floorId], Art = eventArt[floorId], Color = Config.Rarities[rarity].Color,
+            EventOnly = true, IncomeReference = rarity == "Tempest" and sourceId or ("tempest_" .. floorId), IncomeMultiplier = 10 }
+    end
 end
 return Config

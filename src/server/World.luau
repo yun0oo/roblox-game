@@ -43,50 +43,20 @@ function World.Build(config, visuals)
         task.wait()
         local folder = Instance.new("Folder"); folder.Name = floor.Id .. "_" .. floor.ShortName; folder.Parent = self.Floors
         local color = visuals.Color(floor.Color)
-        reef.Floor(folder, floor, config, visuals, rng)
+        self.Spawns[floor.Id] = reef.Nests(floor, rng)
+        reef.Floor(folder, floor, config, visuals, rng, self.Spawns[floor.Id])
         local title = visuals.Part(folder, "Signal", Vector3.new(1, 1, 1), CFrame.new(0, floor.Top - 45, -82), color)
         title.Transparency = 1
         visuals.Label(title, string.format("%02d  /  %s\n%d–%d m · COMBI CONSEILLÉE %d", floor.Id, string.upper(floor.Name), config.WaterTop - floor.Top, config.WaterTop - floor.Bottom, floor.MinLevel), color, 0, 240)
-        self.Spawns[floor.Id] = {}
-        for i = 1, 16 do
-            local angle = i / 16 * math.pi * 2
-            local radius = rng:NextNumber(135, 320)
-            local pos = Vector3.new(math.cos(angle) * radius, floor.Bottom + rng:NextNumber(38, 120), math.sin(angle) * radius)
-            local marker = visuals.Part(self.EggSpawns, "Nest_" .. floor.Id .. "_" .. i, Vector3.new(8, 1, 8), CFrame.new(pos - Vector3.new(0, 3, 0)), color, Enum.Material.Sand, Enum.PartType.Ball)
-            marker.Transparency = 0.45
-            table.insert(self.Spawns[floor.Id], { Id = floor.Id .. ":" .. i, Position = pos })
+        for index, point in ipairs(self.Spawns[floor.Id]) do
+            -- Internal locator only: eggs rest on the real seabed, without the
+            -- old translucent saucer suspended underneath every spawn.
+            local marker = visuals.Part(self.EggSpawns, "Nest_" .. floor.Id .. "_" .. index, Vector3.one, CFrame.new(point.Position), color)
+            marker.Transparency = 1
+            marker:SetAttribute("GroundY", point.GroundY)
         end
-        local stationPos = Vector3.new(105, floor.Bottom + 95, -45)
-        local station = visuals.Part(self.NPCs, "Station oxygène " .. floor.Id, Vector3.new(9, 13, 9), CFrame.new(stationPos), Color3.fromRGB(92, 248, 205), Enum.Material.Neon, Enum.PartType.Cylinder)
-        station.Transparency = 0.35
-        visuals.Label(station, "O₂  RECHARGE\nApprochez-vous pour respirer", Color3.fromRGB(174, 255, 228), 10, 150)
-        table.insert(self.Stations, stationPos)
-        if floor.Id == 2 then
-            reef.Prop(folder, "reef_wreck", Vector3.new(-185, floor.Bottom, -5), 32, visuals, -0.25)
-            for i = 1, 6 do reef.Prop(folder, "reef_chest", Vector3.new(-160 + i * 14, floor.Bottom, 65), 1.8, visuals, i * 0.8) end
-        elseif floor.Id == 3 then
-            reef.Prop(folder, "reef_arch", Vector3.new(195, floor.Bottom, 70), 19, visuals, math.pi / 2)
-            reef.Prop(folder, "reef_columns", Vector3.new(210, floor.Bottom, 15), 17, visuals, 0)
-            reef.Prop(folder, "reef_columns", Vector3.new(210, floor.Bottom, 125), 17, visuals, math.pi)
-        elseif floor.Id >= 5 then
-            local origin = Vector3.new(-175, floor.Bottom + 125, 60)
-            for i = -3, 3 do
-                local a = origin + Vector3.new(i * 18, -40, -55)
-                local b = origin + Vector3.new(i * 18, 15, 0)
-                local c = origin + Vector3.new(i * 18, -40, 55)
-                visuals.Rod(folder, "Côte du titan", a, b, 5, Color3.fromRGB(135, 160, 173), Enum.Material.Limestone)
-                visuals.Rod(folder, "Côte du titan", b, c, 5, Color3.fromRGB(135, 160, 173), Enum.Material.Limestone)
-            end
-            if floor.Id == 6 then
-                local altar = solid(folder, "Trône interdit", Vector3.new(60, 8, 60), Vector3.new(190, floor.Bottom + 45, 90), color:Lerp(rock, 0.5), Enum.Material.Marble)
-                for i = 1, 8 do
-                    local angle = i * math.pi / 4
-                    local p = altar.Position + Vector3.new(math.cos(angle) * 45, 38, math.sin(angle) * 45)
-                    visuals.Part(folder, "Rune primordiale", Vector3.new(8, 60, 8), CFrame.new(p) * CFrame.Angles(0, angle, 0.15), color, Enum.Material.Neon)
-                end
-                visuals.Label(altar, "LA FOSSE INTERDITE\nLE RISQUE EST VOTRE RICHESSE", Color3.fromRGB(211, 178, 255), 90, 250)
-            end
-        end
+        table.insert(self.Stations, reef.Station(self.NPCs, floor, visuals))
+        reef.Landmark(folder, floor, visuals)
     end
     require(script.Parent.Ship).Build(self, config, visuals)
     return self

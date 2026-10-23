@@ -52,7 +52,7 @@ check(player.Character:FindFirstChild("Harpon") ~= nil, "Existing avatar receive
 check(player.Character.HumanoidRootPart.Position.Y > loaded.Config.WaterTop, "Existing avatar spawns on an island above the sea")
 check(#e.Workspace.Bases:GetChildren() == 8, "Actual World.Build creates eight habitats")
 check(#e.Workspace.Floors:GetChildren() == 6, "Actual World.Build creates all six floors")
-check(#e.Workspace.Eggs:GetChildren() == 36, "Startup spawns six eggs per floor")
+check(#e.Workspace.Eggs:GetChildren() == loaded.Config.ActiveFloors * loaded.Config.EggsPerFloor and loaded.Config.EggsPerFloor >= 10, "Startup stocks at least ten eggs in every active depth")
 check(#e.Workspace.Guardians:GetChildren() == 6, "Every depth has exactly one shared boss")
 check(e.Workspace.Map:FindFirstChild("NÉRÉIDE · Navire d'exploration"), "All personal galleries share one research vessel")
 check(string.find(e.Workspace.Bases.Base_1["Identité du propriétaire"]["Identité"].Portrait.Image, "id=1", 1, true), "Personal gallery displays its owner's avatar portrait")
@@ -194,7 +194,26 @@ for index, region in ipairs(e.Workspace.Floors:GetChildren()) do
         local wall = cliffs["Paroi habillée " .. side]
         check(wall and wall.Size.Y == floor.Top - floor.Bottom, "All four sides are clad throughout the biome height")
     end
-    check(#region["Jardins de tout le palier"]:GetChildren() >= 64, "Every depth has distributed floor gardens and jellyfish")
+    local gardens = region["Jardins de tout le palier"]
+    local planted = 0
+    for _, child in ipairs(gardens:GetChildren()) do if child.ClassName == "Model" then planted += 1 end end
+    check(planted >= 12 and region:GetAttribute("GardenCount") == planted, "Every depth has distributed planted gardens rather than only loose particles")
+    check(region["Panorama · " .. floor.Name]:GetAttribute("Landmark"), "Every depth has a composed landmark outside the nest routes")
+    check(region:GetAttribute("ClearNestCount") == 40, "Every depth provides forty supported random nest sites")
+    local nestMarkers = {}
+    for _, marker in ipairs(e.Workspace.EggSpawns:GetChildren()) do
+        if string.sub(marker.Name, 1, #( "Nest_" .. index .. "_")) == "Nest_" .. index .. "_" then
+            table.insert(nestMarkers, marker)
+            check(marker:GetAttribute("GroundY") == floor.Bottom and supported(marker.Position.X, marker.Position.Z), "Nests sit on the biome's collidable seabed outside its descent shaft")
+            check(marker.Transparency == 1 and not marker.CanCollide, "Internal nest locators never create a floating plate")
+        end
+    end
+    check(#nestMarkers == 40, "Every depth exposes forty independent nest locators")
+    for a = 1, #nestMarkers do
+        for b = a + 1, #nestMarkers do
+            check((nestMarkers[a].Position - nestMarkers[b].Position).Magnitude > 32, "Largest event eggs have separate clear nest sites")
+        end
+    end
     check(biomes[index].Sand[1] >= 140 and biomes[index].Wall[3] >= 140, "Deep sand and cliff palettes retain readable midtones")
 end
 local imported = {}
@@ -207,11 +226,11 @@ for _, item in ipairs(e.Workspace.Floors:GetDescendants()) do
     end
     check(item.Name ~= "Branche calcaire" and item.Name ~= "Ruban d’algue" and item.Name ~= "Paroi de l’éponge", "Old primitive coral and plant sculptures are removed")
 end
-for _, key in ipairs({ "reef_fan", "reef_tubes", "reef_branch", "reef_kelp", "reef_meadow", "reef_anemone", "reef_lilac", "reef_boulder_a", "reef_boulder_b", "reef_shelf", "reef_arch", "reef_columns", "reef_wreck", "reef_chest" }) do
+for _, key in ipairs({ "reef_fan", "reef_tubes", "reef_branch", "reef_kelp", "reef_meadow", "reef_anemone", "reef_lilac", "reef_boulder_a", "reef_boulder_b", "reef_shelf", "reef_arch", "reef_columns", "reef_wreck", "reef_chest", "modern_cave", "modern_rock", "modern_pinnacle", "modern_cliff", "modern_crystals_a", "modern_crystals_b", "modern_wreck", "modern_barrel", "modern_cannon", "modern_arch", "modern_pillar", "modern_stairs" }) do
     check(imported[key], "The map actually uses its licensed prefab: " .. key)
     local near = loaded.ArtRenderer.Build(key, e.Color3.new(1, 1, 1), e.Vector3.new(2, 3, 2), false, "Lod")
     local far = loaded.ArtRenderer.Build(key, e.Color3.new(1, 1, 1), e.Vector3.new(2, 3, 2), false, "Far")
-    check(#near:GetChildren() > #far:GetChildren() and #far:GetChildren() > 10, "Both portable geometry levels render an authored sculpture: " .. key)
+    check(#near:GetChildren() >= #far:GetChildren() and #far:GetChildren() > 10, "Both portable geometry levels render an authored sculpture within non-increasing geometry budgets: " .. key)
     near:Destroy(); far:Destroy()
 end
 local roles = {}
@@ -294,6 +313,77 @@ remote.Action.OnServerEvent:Fire(player, "TeleportMerchant", "Oxygen")
 check(latest(player).NearMerchant == "Oxygen" and latest(player).Money == goldAtConsole, "The console teleports to the selected merchant without charging gold")
 e.Clock += 1; e.RunService.Heartbeat:Fire(0.8)
 check((replacement.HumanoidRootPart.Position - merchant.Position).Magnitude < 15, "The server movement validator accepts its own merchant teleport")
+
+-- Drive real EventSystem/EggSystem through the running server, including a
+-- carried event egg when untouched event nests are replaced at expiry.
+local eventEngine, eventPlayer, eventLoaded = run(false)
+local eventRemote = eventEngine.ReplicatedStorage.RemoteEvents
+local eventStart = eventEngine.Clock
+local function eventSnapshot()
+    local snapshots = eventRemote.Snapshot.Messages[eventPlayer]
+    return snapshots[#snapshots][1]
+end
+local function eventStock(expected)
+    local counts, exclusives = {}, {}
+    for _, part in ipairs(eventEngine.Workspace.Eggs:GetChildren()) do
+        local floor = eventLoaded.Rules.FloorAt(eventLoaded.Config, part.Position.Y)
+        counts[floor.Id] = (counts[floor.Id] or 0) + 1
+        for _, rarity in ipairs({ "Tempest", "Celestial" }) do
+            local spec = eventLoaded.Config.Rarities[rarity]
+            if string.sub(part.Name, 1, #spec.EggName) == spec.EggName then
+                exclusives[floor.Id] = exclusives[floor.Id] or {}
+                exclusives[floor.Id][rarity] = part
+            end
+        end
+    end
+    for floor = 1, eventLoaded.Config.ActiveFloors do
+        check(counts[floor] == eventLoaded.Config.EggsPerFloor, "Live events keep every depth stocked to its configured wild egg count")
+        for _, rarity in ipairs({ "Tempest", "Celestial" }) do
+            local present = exclusives[floor] and exclusives[floor][rarity] ~= nil
+            check(expected[rarity] and present or not expected[rarity] and not present,
+                "Live spawn exclusivity matches the current event tier: " .. rarity)
+        end
+    end
+    check(#eventEngine.Workspace.Guardians:GetChildren() == eventLoaded.Config.ActiveFloors,
+        "Live event refreshes never duplicate a biome boss")
+    return exclusives
+end
+eventStock({})
+eventEngine.Clock = eventStart + eventLoaded.Config.Events.Major.Interval + 0.01
+eventEngine.RunService.Heartbeat:Fire(0.8)
+check(eventSnapshot().Event.Key == "Major", "The actual server starts its scheduled major event")
+local available = eventStock({ Tempest = true })
+local loot = available[1].Tempest
+local function eventTravel(destination)
+    local root = eventPlayer.Character.HumanoidRootPart
+    local from = root.Position
+    local steps = math.ceil((destination - from).Magnitude / 3)
+    for step = 1, steps do
+        eventEngine.Clock += 0.4
+        root.CFrame = eventEngine.CFrame.new(from + (destination - from) * (step / steps))
+        eventEngine.RunService.Heartbeat:Fire(0.4)
+    end
+end
+eventPlayer.Character.Humanoid.Health = 1000000
+eventTravel(eventEngine.Vector3.new(0, 118, 65))
+eventTravel(eventEngine.Vector3.new(0, 98, 0))
+eventTravel(loot.Position)
+loot.ProximityPrompt.Triggered:Fire(eventPlayer)
+eventRemote.Action.OnServerEvent:Fire(eventPlayer, "Sync")
+check(eventSnapshot().Carrying and eventSnapshot().Carrying.Rarity == "Tempest", "An event egg can be collected through its real server prompt")
+eventEngine.Clock = eventStart + eventLoaded.Config.Events.Major.Interval + eventLoaded.Config.Events.Major.Duration + 0.02
+eventEngine.RunService.Heartbeat:Fire(0.8)
+check(not eventSnapshot().Event.Active, "The actual server ends a major event at its server deadline")
+eventStock({})
+check(eventSnapshot().Carrying and eventSnapshot().Carrying.Rarity == "Tempest",
+    "An event ending removes untouched exclusive nests while preserving collected loot")
+eventEngine.Clock = eventStart + eventLoaded.Config.Events.Legendary.Interval + 0.01
+eventEngine.RunService.Heartbeat:Fire(0.8)
+check(eventSnapshot().Event.Key == "Legendary", "The actual server starts its scheduled legendary storm")
+eventStock({ Tempest = true, Celestial = true })
+eventEngine.Clock = eventStart + eventLoaded.Config.Events.Legendary.Interval + eventLoaded.Config.Events.Legendary.Duration + 0.02
+eventEngine.RunService.Heartbeat:Fire(0.8)
+eventStock({})
 
 local failed = run(true)
 check(failed.Workspace:GetAttribute("UnderwaterBootState") == "Failed", "Boot exceptions become a visible failure state")

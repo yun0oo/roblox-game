@@ -26,8 +26,8 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 
 ## Collecte et inventaire
 
-- Observer six œufs maximum et **un seul boss par palier**. Attendre plusieurs cycles : positions et raretés varient, sans doublon de nid.
-- Comparer les six auras et grandes coques ovoïdes, de Common à Secret. E doit fonctionner à la surface de chaque taille, sans traverser les murs.
+- Observer douze œufs sauvages par palier, répartis aléatoirement parmi quarante nids au sol, et **un seul boss par palier**. Attendre plusieurs cycles : positions et raretés varient, sans doublon de nid.
+- Comparer les huit auras et grandes coques ovoïdes, de Common à Céleste. E doit fonctionner à la surface de chaque taille, sans traverser les murs.
 - Ramasser sous l'eau : retrait immédiat du monde, notification et entrée dans Inventaire. Aucun modèle derrière le joueur, ni ralentissement lié au transport.
 - Deux joueurs activent simultanément le même œuf : un seul le reçoit. Répéter le prompt ou son identifiant ne duplique rien.
 - Remplir les 24 places : la collecte supplémentaire échoue et l'œuf reste disponible.
@@ -60,7 +60,7 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 ## Aquarium et économie
 
 - Un œuf d'inventaire n'éclot pas avant dépôt. E au terminal ou Inventaire → Déposer, dans sa propre galerie, démarre l'incubation et expose l'œuf dans la cuve.
-- Délais : 15/40/90/180/360/720 secondes selon rareté. Répéter la requête ne remet pas le timer à zéro ni ne l'accélère.
+- Délais : 15/40/90/180/360/720/900/1200 secondes selon rareté. Répéter la requête ne remet pas le timer à zéro ni ne l'accélère.
 - Quitter sa galerie : éclosion automatique et animal visible à l'échéance. Avec DataStore réel, une reconnexion conserve le délai et termine une incubation dépassée.
 - Observer les animaux nager dans les vitres, les bulles et les éclairages. Vérifier que tous les revenus sont crédités pendant une minute connecté, puis acheter un équipement avec ces gold.
 - Vérifier bestiaire, fusion classique, recettes connues/secrètes, expérience inconnue sans consommation, prestige et cosmétiques.
@@ -72,7 +72,7 @@ Utiliser une expérience privée avec deux joueurs locaux, puis huit pour les pe
 - Avec API activées dans une expérience privée, tester sauvegarde périodique, départ, fermeture et reconnexion. Vérifier tous les champs, les échéances et le niveau de base.
 - Tester le refus d'une deuxième session concurrente et l'absence d'écriture de secours après erreur de chargement. Studio utilise uniquement le magasin suffixé `_Studio`.
 - Tester le rendu de secours sans API de maillage, puis le rendu natif si disponible. Aucune activation particulière ne doit être requise pour afficher les modèles.
-- Mesurer FPS/mémoire avec huit joueurs, aquariums pleins, six boss et 36 œufs. Vérifier la distance d'affichage, le chargement progressif et la destruction des modèles devenus lointains.
+- Mesurer FPS/mémoire avec huit joueurs, aquariums pleins, six boss et 72 œufs. Vérifier la distance d'affichage, le chargement progressif et la destruction des modèles devenus lointains.
 
 N'annoncer le gameplay natif et la qualité graphique validés qu'après ces essais. Ajuster l'économie et les performances à partir de sessions réelles avant une publication publique.
 
@@ -107,3 +107,15 @@ N'annoncer le gameplay natif et la qualité graphique validés qu'après ces ess
 - Porter un œuf affiche le retour ; l’avoir sécurisé à la base affiche le dépôt. Une incubation commencée retire la consigne de dépôt inutile.
 - Comparer la terrasse, les caisses Kenney, les parois nervurées, le verre et les reflets avec/sans API de maillage. Les cinq niveaux d’aquarium conservent une vue dégagée, sans corail ; le socle reste au même niveau et le portrait remonte avec la cuve.
 - Observer le nouveau fusil Kenney en mouvement : son corps ne doit pas glisser par rapport à la poignée ou à la flèche. Tester nage, escalade, tir, corde et changements d’équipement en R6 et R15.
+
+## Packs modernes et raretés d’événement
+
+- Parcourir les six panoramas : grotte corallienne, épave équipée, ruines avec escaliers, forêt de kelp, caverne à cristaux, sanctuaire. Les sols restent continus et les passages centraux traversables ; les nouveaux modèles ne doivent ni masquer les nids ni bloquer les poursuites. Vérifier les palettes Pirate/Castle et les versions détaillées/allégées.
+- Approcher chaque œuf au sol : son bas reste au-dessus du sable, sans soucoupe flottante. Ramasser plusieurs œufs simultanément avec plusieurs clients : le stock remonte vers douze sans dépasser ce plafond de nids sauvages. Les œufs tombés ne réduisent pas le stock.
+- Après quinze minutes : événement majeur, au moins un Tempête par palier et jamais de Céleste. Après quarante minutes : tempête légendaire avec au moins un de chaque par palier. Aucun nouveau Tempête/Céleste pendant une période calme ou un petit événement.
+- Tester un prompt reçu exactement à la fin d’un événement : un nid exclusif intact expiré n’est pas attribué. Un œuf déjà récupéré, transporté ou tombé reste conservé à sa durée normale ; la base le sécurise sans changer sa rareté.
+- Sécuriser et déposer les deux raretés ; attendre quinze/vingt minutes ou accélérer uniquement une copie privée. Vérifier le poisson à crête cristalline, l’aura, le bestiaire, la reconnexion et les revenus. Récif : 100 → 1 000 → 10 000 gold/min avant bonus ; vérifier le même facteur dix aux six profondeurs et avec les mêmes bonus.
+- Pendant une tempête, les six zones restent lisibles ; les transitions lumineuses ne clignotent pas aux passages. Les effets de plancton doivent suivre la caméra, disparaître en surface et ne pas s’accumuler après réapparition.
+- Tirer sur un boss vivant : il reste immobile environ 1,25 s, annule une capacité en préparation puis reprend après récupération. Les dégâts, la mort et la réapparition restent serveur. Comparer équipement recommandé/insuffisant sans perdre l’accès aux zones.
+- Équiper/déséquiper le harpon vingt fois : un seul modèle visible par outil, pas de croissance continue des instances. Contrôler aussi la destruction des maillages hors Workspace et leur restauration à la rééquipée.
+- Appuyer sur B pendant M verrouillé : menu accessible au curseur, fermeture puis retour au verrouillage ; Maj conserve le boost.

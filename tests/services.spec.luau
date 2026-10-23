@@ -63,7 +63,7 @@ local function fakePart(position)
     return { Position = position, Size = V.new(3, 4, 3), SetAttribute = function() end, Destroy = function(self) self.Destroyed = true end, FindFirstChild = function() return nil end }
 end
 local function fakeModel(name, position)
-    return { Name = name, Position = position, PrimaryPart = { FindFirstChild = function() return nil end },
+    return { Name = name, Position = position, PrimaryPart = { Size = V.new(6, 4, 6), FindFirstChild = function() return nil end },
         SetAttribute = function() end, Destroy = function(self) self.Destroyed = true end,
         GetPivot = function(self) return { Position = self.Position } end,
         PivotTo = function(self, frame) self.Position = frame.Position end }
@@ -206,13 +206,17 @@ local blocked = second:Load(p)
 check(blocked == nil, "Concurrent session cannot load or overwrite a locked profile")
 data.Money = 1234
 data.BaseLevel = 3
-data.Eggs = { { Id = "incubating", Name = "Œuf", Floor = 1, Rarity = "Common", StartedAt = os.time(), ReadyAt = os.time() + 15 } }
+data.Eggs = { { Id = "incubating", Name = "Œuf", Floor = 1, Rarity = "Common", StartedAt = os.time(), ReadyAt = os.time() + 15 },
+    { Id = "celestial-incubating", Name = "Œuf Céleste", Floor = 6, Rarity = "Celestial", StartedAt = os.time(), ReadyAt = os.time() + Config.HatchTimes.Celestial } }
+data.Animals.tempest_6 = 2; data.Variants.celestial_6 = { Gold = 1 }
 check(first:Save(p, false) and store.Value.Data.Money == 1234, "Autosave persists actual profile state")
 check(first:Save(p, true) and store.Value.Session == nil, "Leaving releases the lease")
 local restored = second:Load(p)
 check(restored and restored.Money == 1234, "Reconnect restores saved progression")
 check(restored.BaseLevel == 3, "Reconnect restores the upgraded aquarium gallery")
 check(restored.Eggs[1].ReadyAt == data.Eggs[1].ReadyAt, "Reconnect preserves incubation deadline without restarting it")
+check(restored.Eggs[2].Rarity == "Celestial" and restored.Eggs[2].ReadyAt == data.Eggs[2].ReadyAt, "Actual DataStore round trip preserves celestial incubation without an active event")
+check(restored.Animals.tempest_6 == 2 and restored.Variants.celestial_6.Gold == 1 and restored.Discovered.tempest_6, "Actual save/load preserves new event animals, fusion grades and discoveries")
 local existing = store.Value
 store.Fail = true
 local failed = DataSystem.new(Config, Rules)
@@ -331,11 +335,13 @@ for _, spawnedEgg in pairs(ctx.Eggs.Eggs) do
 end
 check(spawned == Config.EggsPerFloor, "Egg count respects floor capacity")
 local sharedBoss = ctx.Guardians.ByFloor[1]
-local replacements = 0
-ctx.Eggs.Spawn = function() replacements += 1 end
+ctx.Event = { Key = "Major", Name = "TSUNAMI", Ends = clock + 150 }
 ctx.Eggs:RefreshForEvent()
 check(ctx.Guardians.ByFloor[1] == sharedBoss and not sharedBoss.Model.Destroyed, "Event egg replacement preserves the zone boss")
-check(replacements == Config.ActiveFloors, "Event rarity applies immediately to every active floor")
+check(ctx.Eggs:WildCount(1) == Config.EggsPerFloor, "Refreshing event rarity preserves the floor's full wild population")
+local guaranteed = 0
+for _, e in pairs(ctx.Eggs.Eggs) do if e.Rarity == "Tempest" then guaranteed += 1 end end
+check(guaranteed >= 1, "Major events make at least one exclusive egg immediately available even if all nests were full")
 for _, ability in ipairs({ "Siphon", "Shock", "Vortex" }) do
     ctx = context(); a = state(ctx, 1, V.new(60, -1000, 0)); a.Oxygen = 100
     item = egg(ctx, "boss-" .. ability, V.new(0, -1003, 0))
@@ -353,4 +359,85 @@ for _, ability in ipairs({ "Siphon", "Shock", "Vortex" }) do
     clock += 1.3; ctx.Guardians:Step(0.01)
     check(a.Oxygen == 100 and a.Humanoid.Health == 100 and not a.SlowUntil, "Base immunity also blocks boss abilities")
 end
+-- Full six-floor spawn population, exclusive-event contracts and expiry order.
+local function stocked()
+    local c = context()
+    for _, floor in ipairs(Config.Floors) do
+        for i = 1, 24 do table.insert(c.World.Spawns[floor.Id], { Id = floor.Id .. "-point-" .. i,
+            Position = V.new(i * 20, floor.Bottom + 13, 0), GroundY = floor.Bottom }) end
+        c.Eggs:FillFloor(floor)
+    end
+    return c
+end
+clock = 100
+ctx = stocked()
+check(Config.EggsPerFloor >= 10, "Every floor supports at least ten simultaneous wild eggs")
+for _, floor in ipairs(Config.Floors) do check(ctx.Eggs:WildCount(floor.Id) == Config.EggsPerFloor, "All six floors fill to the configured capacity") end
+check(not ctx.Eggs:Spawn(Config.Floors[1], "Tempest"), "Forced event spawn cannot bypass a full floor")
+local removed
+for _, e in pairs(ctx.Eggs.Eggs) do if e.Floor == 1 then removed = e; break end end
+ctx.Eggs:Remove(removed)
+check(not ctx.Eggs:Spawn(Config.Floors[1], "Tempest"), "Forced Tempest spawn is rejected outside events")
+ctx.Event = { Key = "Legendary", Name = "STALE", Ends = clock }
+check(not ctx.Eggs:Spawn(Config.Floors[1], "Celestial"), "An expired event key cannot authorize an exclusive spawn")
+ctx.Event = nil; ctx.Eggs:FillFloor(Config.Floors[1])
+local now = clock
+clock += Config.EggLifetime
+ctx.Eggs.NextSpawn = clock + Config.SpawnInterval
+ctx.Eggs:Step()
+for _, floor in ipairs(Config.Floors) do check(ctx.Eggs:WildCount(floor.Id) == Config.EggsPerFloor, "Synchronized expiry refills every floor in the same heartbeat") end
+ctx.Event = { Key = "Legendary", Name = "ABYSSAL STORM", Ends = clock + Config.Events.Legendary.Duration }
+ctx.Eggs:RefreshForEvent()
+local celestial, tempest
+for _, floor in ipairs(Config.Floors) do
+    local counts = { Tempest = 0, Celestial = 0 }
+    for _, e in pairs(ctx.Eggs.Eggs) do
+        if e.Floor == floor.Id and counts[e.Rarity] then
+            counts[e.Rarity] += 1
+            check(e.Home.Y >= floor.Bottom + Config.Rarities[e.Rarity].Size * 1.25 / 2 + .8, "Large event eggs sit above their actual seabed")
+            if floor.Id == 1 then if e.Rarity == "Celestial" then celestial = e else tempest = e end end
+        end
+    end
+    check(counts.Tempest >= 1 and counts.Celestial >= 1 and ctx.Eggs:WildCount(floor.Id) == Config.EggsPerFloor, "Legendary storms guarantee both event tiers inside each floor's capacity")
+end
+local originalWorld = ctx.World
+ctx.World = { Spawns = originalWorld.Spawns, Eggs = originalWorld.Eggs, Guardians = originalWorld.Guardians, Bases = originalWorld.Bases,
+    SafeBase = function() return nil end }
+a = state(ctx, 1, celestial.Home)
+ctx.Eggs:Pickup(a.Player, celestial.Id)
+check(a.Carrying == celestial.Id and ctx.Eggs:WildCount(1) == Config.EggsPerFloor - 1, "A collected event egg becomes pending inventory outside the wild-egg count")
+ctx.Eggs:FillFloor(Config.Floors[1])
+check(ctx.Eggs:WildCount(1) == Config.EggsPerFloor, "Carried event loot never consumes a wild spawn slot")
+ctx.Eggs:Drop(a, "Harpoon")
+b = state(ctx, 2, celestial.Home)
+ctx.Eggs:Pickup(b.Player, celestial.Id)
+check(b.Carrying == celestial.Id and b.Profile.Stats.Steals == 1, "Event eggs remain stealable only through a real harpoon drop")
+ctx.Eggs:Drop(b, "Harpoon")
+ctx.Event = nil; ctx.Eggs:EndEvent()
+check(ctx.Eggs.Eggs[celestial.Id] == celestial and celestial.State == "Dropped", "Event end preserves already-collected dropped loot")
+check(ctx.Eggs.Eggs[tempest.Id] == nil, "Event end removes untouched exclusive wild eggs")
+for _, e in pairs(ctx.Eggs.Eggs) do check(e.State ~= "World" or not Config.Rarities[e.Rarity].EventOnly, "Normal conditions contain no newly spawned exclusive world eggs") end
+ctx.Eggs:Pickup(a.Player, celestial.Id)
+a.LastPosition = V.new(200, 0, 0); a.Root.Position = a.LastPosition
+ctx.World.SafeBase = function() return { OwnerId = a.Player.UserId } end
+check(ctx.Eggs:Secure(a), "A recovered event egg can still be secured after its event ends")
+local kept = Rules.Sanitize(a.Profile, Config)
+check(kept.Eggs[1] and kept.Eggs[1].Rarity == "Celestial", "Permanent event ownership survives save sanitization")
+ctx.World = originalWorld
+ctx = context(); ctx.World.Spawns[1] = { { Id = "one", Position = V.new(0, -200, 0) } }
+ctx.Eggs:FillFloor(Config.Floors[1])
+check(ctx.Eggs:WildCount(1) == 1, "Top-up stops safely when all available nests are occupied")
+ctx = context(); ctx.World.Spawns[1] = { { Id = "expiry", Position = V.new(0, -200, 0) } }
+ctx.Event = { Key = "Major", Name = "TSUNAMI", Ends = clock + 5 }
+local expiredEventEgg = ctx.Eggs:Spawn(Config.Floors[1], "Tempest")
+a = state(ctx, 1, expiredEventEgg.Home)
+clock = ctx.Event.Ends
+ctx.Eggs:Pickup(a.Player, expiredEventEgg.Id)
+check(not a.Carrying and not ctx.Eggs.Eggs[expiredEventEgg.Id], "A delayed pickup cannot collect an untouched event egg at the exact ending boundary")
+ctx.Event = nil
+local expiredOrdinary = ctx.Eggs:Spawn(Config.Floors[1])
+a.Root.Position = expiredOrdinary.Home; a.LastPosition = a.Root.Position
+clock = expiredOrdinary.Expires
+ctx.Eggs:Pickup(a.Player, expiredOrdinary.Id)
+check(not a.Carrying and not ctx.Eggs.Eggs[expiredOrdinary.Id], "Expired ordinary nests also reject stale prompts before cleanup runs")
 print(string.format("Services: %d assertions passed (deterministic engine fakes)", passed))

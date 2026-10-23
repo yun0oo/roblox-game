@@ -1,6 +1,7 @@
 --!nonstrict
 -- Exercise actual shop callbacks with engine doubles, not native rendering.
 local Engine = require("./support/Engine")
+local OceanLook = require("../src/client/OceanLook")
 local e = Engine.new()
 local game, workspace, script = e.Game, e.Workspace, e.Script
 local Instance, Vector3, CFrame, Color3, Enum = e.Instance, e.Vector3, e.CFrame, e.Color3, e.Enum
@@ -32,6 +33,22 @@ state.Money = 1000
 shop.State = state
 local passed = 0
 local function check(value, message) assert(value, message); passed += 1 end
+local daylight = OceanLook.At(Config, Config.WaterTop + 10, 1)
+local reefLook = OceanLook.At(Config, Config.WaterTop - 60, 1)
+check(daylight.Underwater == 0 and reefLook.Underwater == 1, "The look follows camera immersion and leaves the deck in daylight")
+for _, floor in ipairs(Config.Floors) do
+    local y = (floor.Top + floor.Bottom) / 2
+    local normal = OceanLook.At(Config, y, 1)
+    local storm = OceanLook.At(Config, y, 1, "Legendary")
+    local lamp = OceanLook.At(Config, y, Config.Upgrades.Lamp.Max)
+    check(normal.Brightness >= 2.3 and storm.Brightness > 2.2 and storm.FogEnd > 300, "Every biome and storm keeps playable lighting and visible pursuit distance")
+    check(lamp.FogEnd > normal.FogEnd and normal.Density < .14, "A stronger lamp improves visibility without a thick colour veil")
+end
+for i = 1, #Config.Floors - 1 do
+    local boundary = Config.Floors[i].Bottom
+    local a, b = OceanLook.At(Config, boundary + .01, 1), OceanLook.At(Config, boundary - .01, 1)
+    check(math.abs(a.FogEnd - b.FogEnd) < .1 and math.abs(a.Exposure - b.Exposure) < .001 and math.abs(a.FogColor[1] - b.FogColor[1]) < .1, "Colour, fog and exposure remain continuous at a depth boundary")
+end
 local function click(text)
     for _, item in ipairs(shop.List:GetDescendants()) do
         if item.ClassName == "TextButton" and item.Text == text then item.Activated:Fire(); return end
@@ -107,6 +124,9 @@ check(full.Gui.Parent == playerGui and full.CollectionTabs, "The real HUD and co
 check(not full.Menu.Visible and not full.OxygenPanel.Visible and not full.Objective.Visible, "Exploration starts with the drawer closed and no empty objective or surface oxygen meter")
 full.MenuButton.Activated:Fire()
 check(full.Menu.Visible, "The compact menu button exposes all expedition pages")
+full:ToggleMenu(); check(not full.Menu.Visible, "B menu uses the same reversible drawer state as the mouse button")
+full:ToggleMenu()
+check(full.Menu.Visible, "Keyboard access can release camera lock without changing its selected mode")
 state.Eggs = {}; state.Income = 100; state.Oxygen = 100; state.MaxOxygen = 100
 state.Depth = 0; state.Floor = 1; state.SaveStatus = "Sauvegardé"; state.Offline = false
 state.Event = { Name = "Prochain événement", Active = false, Remaining = 300 }
@@ -143,6 +163,21 @@ local function cards()
     return result
 end
 check(#cards() == 12 and full.BrowserPages > 1, "A large collection is limited to twelve preview cards per page")
+local allCount = full.BrowserPages
+full.Browser["Filtre ÉVÉNEMENTS"].Activated:Fire()
+check(full.EventFilter and #cards() == 12 and full.BrowserPages < allCount, "The event filter isolates the twelve exclusive species without losing pagination")
+for _, card in ipairs(cards()) do
+    local id = string.sub(card.Name, 7)
+    check(Config.Animals[id].EventOnly, "Event collection cards cannot include an ordinary animal")
+end
+check(UI.RarityLabel(Config, "Tempest") == "TEMPÊTE" and UI.RarityLabel(Config, "Celestial") == "CÉLESTE", "French names are used for the new rarity labels")
+local tempest = Config.Animals.tempest_1
+local celestial = Config.Animals.celestial_1
+check(string.find(UI.EventDescription(Config, tempest), Config.Animals[tempest.IncomeReference].Name, 1, true), "Event animal details name the exact income comparison species")
+check(string.find(UI.EventDescription(Config, celestial), "ABYSSAL STORM UNIQUEMENT", 1, true), "Celestial acquisition is explicitly limited to the legendary event")
+check(UI.EventDescription(Config, Config.Animals.clownfish) == nil, "Ordinary species do not gain an event-only label")
+full.Browser["Filtre TOUT"].Activated:Fire()
+check(not full.EventFilter and full.BrowserPages == allCount, "Clearing the event filter restores the entire collection")
 local firstPage = cards()[1].Name
 full.NextPage.Activated:Fire()
 check(full.CollectionPage == 2 and cards()[1].Name ~= firstPage, "Next page displays a different set of animals")

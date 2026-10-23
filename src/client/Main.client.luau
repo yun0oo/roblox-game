@@ -15,6 +15,7 @@ local Rules = require(modules.Rules)
 local Visuals = require(modules.Visuals)
 local UI = require(script.Parent.UI)
 local SwimController = require(script.Parent.SwimController)
+local OceanLook = require(script.Parent.OceanLook)
 local swimmer
 local aim = require(script.Parent.AimController).new(UserInputService)
 local controls
@@ -91,10 +92,13 @@ UserInputService.InputBegan:Connect(function(input, processed)
     local action = aim.InputAction(input.KeyCode)
     if action == "Camera" then aim:Toggle()
     elseif action == "Boost" then context.Action:FireServer("Boost")
+    elseif input.KeyCode == Enum.KeyCode.B then ui:ToggleMenu()
     elseif input.KeyCode == Enum.KeyCode.ButtonL1 then padUp = true
     elseif input.KeyCode == Enum.KeyCode.ButtonR1 then padDown = true
     elseif input.UserInputType == Enum.UserInputType.MouseButton1 or input.KeyCode == Enum.KeyCode.ButtonR2 then context.Fire()
-    elseif input.KeyCode == Enum.KeyCode.Escape and ui.Tab then ui:Open(nil) end
+    elseif input.KeyCode == Enum.KeyCode.Escape then
+        if ui.Tab then ui:Open(nil) else ui.Menu.Visible = false end
+    end
 end)
 UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.ButtonL1 then padUp = false end
@@ -104,7 +108,22 @@ UserInputService.WindowFocused:Connect(function() aim.Focused = true end)
 UserInputService.WindowFocusReleased:Connect(function() aim.Focused = false; ui.Ascend = 0; ui.Descend = 0; padUp = false; padDown = false end)
 
 local correction = Instance.new("ColorCorrectionEffect")
-correction.Name = "UnderwaterAtmosphere"; correction.Saturation = 0.12; correction.Parent = Lighting
+correction.Name = "UnderwaterAtmosphere"; correction.Saturation = 0.045; correction.Parent = Lighting
+local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
+local sunRays = Lighting:FindFirstChildOfClass("SunRaysEffect")
+local bloom = Lighting:FindFirstChildOfClass("BloomEffect")
+-- A single local emitter creates a few suspended motes around the camera.
+-- No point lights, global scans or physics parts are added per frame.
+local motes = Visuals.Part(workspace:WaitForChild("Events"), "Particules locales d’eau", Vector3.new(22, 14, 22), CFrame.new(), Color3.new(1, 1, 1))
+motes.Transparency = 1
+local dust = Instance.new("ParticleEmitter"); dust.Name = "Plancton"
+dust.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+dust.Rate = 5; dust.Lifetime = NumberRange.new(2.5, 4); dust.Speed = NumberRange.new(0.1, 0.4)
+dust.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.07), NumberSequenceKeypoint.new(0.6, 0.11), NumberSequenceKeypoint.new(1, 0.02) })
+dust.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.25, 0.83), NumberSequenceKeypoint.new(0.75, 0.88), NumberSequenceKeypoint.new(1, 1) })
+dust.Color = ColorSequence.new(Color3.fromRGB(166, 222, 244)); dust.LightEmission = 0.35; dust.LightInfluence = 0.4
+dust.SpreadAngle = Vector2.new(180, 180); dust.Shape = Enum.ParticleEmitterShape.Box; dust.Enabled = false; dust.Parent = motes
+local function rgb(values) return Color3.fromRGB(values[1], values[2], values[3]) end
 local function localSound(position, soundId, volume)
     local part = Visuals.Part(workspace.Events, "Audio", Vector3.one, CFrame.new(position), Color3.new())
     part.Transparency = 1
@@ -171,8 +190,8 @@ RunService.RenderStepped:Connect(function(dt)
     local inset = GuiService:GetGuiInset()
     local aimPoint = aim:Centered(lastInput) and camera.ViewportSize / 2 or UserInputService:GetMouseLocation()
     ui.Reticle.Position = UDim2.fromOffset((aimPoint.X - inset.X) / ui.Scale.Scale, (aimPoint.Y - inset.Y) / ui.Scale.Scale)
-    ui.CameraHint.Text = aim.Locked and "M · Caméra verrouillée" or "M · Caméra libre   Maj · Boost"
-    ui.CameraHint.Visible = not UserInputService.TouchEnabled and not ui.Tab and (armed or aim.Locked)
+    ui.CameraHint.Text = aim.Locked and "M · Caméra verrouillée   B · Menu" or "M · Caméra   Maj · Boost   B · Menu"
+    ui.CameraHint.Visible = not UserInputService.TouchEnabled and not ui.Tab and not ui.Menu.Visible and (armed or aim.Locked)
     local move = Vector3.zero
     if not UserInputService:GetFocusedTextBox() and not ui.Tab then
         if controls then move = controls:GetMoveVector() else
@@ -194,26 +213,30 @@ RunService.RenderStepped:Connect(function(dt)
     lampAttachment.CFrame = root.CFrame:ToObjectSpace(CFrame.lookAt(root.Position, root.Position + camera.CFrame.LookVector))
     local lampLevel = player:GetAttribute("LampLevel") or 1
     light.Range = 24 + (lampLevel - 1) * 8; light.Brightness = 2.4 + lampLevel * 0.3
-    local floor = Rules.FloorAt(Config, root.Position.Y)
-    local event = ui.State and ui.State.Event.Active
-    local darkness = (floor.Id - 1) / math.max(1, #Config.Floors - 1) * 0.78 + (event and 0.12 or 0)
-    Lighting.Brightness = 3 - darkness * 1.3
-    Lighting.Ambient = Color3.fromRGB(142, 190, 201):Lerp(Color3.fromRGB(77, 98, 151), darkness)
-    Lighting.FogColor = Color3.fromRGB(54, 167, 199):Lerp(Color3.fromRGB(57, 70, 121), darkness)
-    Lighting.FogStart = 55; Lighting.FogEnd = 340 - darkness * 120 + lampLevel * 6
-    correction.TintColor = Color3.fromRGB(207, 246, 255):Lerp(Color3.fromRGB(139, 172, 225), darkness * 0.5)
-    if not underwater then
-        Lighting.Brightness = 3; Lighting.Ambient = Color3.fromRGB(155, 179, 204)
-        Lighting.FogStart = 700; Lighting.FogEnd = 1800
-        Lighting.FogColor = Color3.fromRGB(170, 221, 241)
-        correction.TintColor = Color3.new(1, 1, 1)
-    end
-    local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
+    local event = ui.State and ui.State.Event
+    local look = OceanLook.At(Config, camera.CFrame.Position.Y, lampLevel, event and event.Active and event.Key or nil)
+    local blend = 1 - math.exp(-dt * 3.5)
+    Lighting.Brightness += (look.Brightness - Lighting.Brightness) * blend
+    Lighting.Ambient = Lighting.Ambient:Lerp(rgb(look.Ambient), blend)
+    Lighting.OutdoorAmbient = Lighting.OutdoorAmbient:Lerp(rgb(look.OutdoorAmbient), blend)
+    Lighting.FogColor = Lighting.FogColor:Lerp(rgb(look.FogColor), blend)
+    Lighting.FogStart += (look.FogStart - Lighting.FogStart) * blend
+    Lighting.FogEnd += (look.FogEnd - Lighting.FogEnd) * blend
+    Lighting.ExposureCompensation += (look.Exposure - Lighting.ExposureCompensation) * blend
+    Lighting.EnvironmentDiffuseScale += (look.Diffuse - Lighting.EnvironmentDiffuseScale) * blend
+    correction.TintColor = correction.TintColor:Lerp(rgb(look.TintColor), blend)
+    correction.Saturation += (look.Saturation - correction.Saturation) * blend
+    correction.Contrast += (look.Contrast - correction.Contrast) * blend
     if atmosphere then
-        atmosphere.Density = underwater and (0.16 + darkness * 0.16) or 0.18
-        atmosphere.Haze = underwater and (0.6 + darkness * 1.1) or 0.6
-        atmosphere.Color = underwater and Lighting.FogColor or Color3.fromRGB(176, 209, 227)
+        atmosphere.Density += (look.Density - atmosphere.Density) * blend
+        atmosphere.Haze += (look.Haze - atmosphere.Haze) * blend
+        atmosphere.Color = atmosphere.Color:Lerp(rgb(look.FogColor), blend)
+        atmosphere.Decay = atmosphere.Decay:Lerp(rgb(look.Ambient), blend)
     end
+    if sunRays then sunRays.Intensity += (look.SunRays - sunRays.Intensity) * blend end
+    if bloom then bloom.Intensity += (look.Bloom - bloom.Intensity) * blend end
+    motes.CFrame = CFrame.new(camera.CFrame.Position)
+    dust.Enabled = look.Underwater > 0.65 and aim.Focused
     camera.FieldOfView += ((70 + math.max(0, speed - 25) * 0.35) - camera.FieldOfView) * math.min(1, dt * 5)
     if ui.State then
         local toDive = root.Position.Y > Config.WaterTop and #ui.State.Eggs == 0 and not ui.State.OwnBase

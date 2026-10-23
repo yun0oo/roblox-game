@@ -27,3 +27,13 @@ Corps Kenney `blaster-e` CC0, adapté en fusil-harpon avec rail, sandows, moulin
 Ces deux images utilisent un éclairage et des matériaux Blender : elles ne sont **pas des captures Roblox Studio**, et ne valident ni le rendu Roblox, ni la prise en main, ni les performances natives.
 
 Génération : `blender -b -t 2 --python tools/preview_ship.py`. Le script exécute les constructeurs du jeu avec des primitives simulées, exporte leurs positions/couleurs, puis rend les géométries hors Roblox.
+
+## Six panoramas de la carte
+
+![Six zones modernisées, aperçu hors Roblox](map.png)
+
+Vue des géométries construites par les véritables fonctions `World.Build` et `Reef`, avec leurs modèles intégrés et un éclairage Blender. Les variations aléatoires utilisent un générateur simulé. Les particules, l’interface, l’eau volumétrique et la physique Roblox ne sont pas représentées. Cet aperçu ne valide pas les performances natives et ne remplace pas une partie dans Studio.
+
+Packs Kenney Nature/Pirate/Castle/Space (CC0), complétés par les sculptures Poly Pizza (CC-BY 3.0) et WebGL Aquarium (BSD 3-Clause). [Crédits des packs modernes](../../assets/MODERN_PACKS_CREDITS.md).
+
+Génération : `blender -b -t 2 --python tools/preview_map.py`.

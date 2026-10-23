@@ -10,13 +10,14 @@ local function artFrame(root)
     return offset and root.CFrame * CFrame.new(offset) or root.CFrame
 end
 local function watch(instance)
-    if instance:IsA("BasePart") and instance:GetAttribute("ArtAsset") then roots[instance] = {} end
+    if instance:IsA("BasePart") and instance:GetAttribute("ArtAsset") and not roots[instance] then roots[instance] = {} end
 end
 for _, instance in ipairs(workspace:GetDescendants()) do watch(instance) end
 workspace.DescendantAdded:Connect(watch)
 local tick = 0
 local function unload(root, record)
     if record.Model then record.Model:Destroy(); record.Model = nil end
+    root.LocalTransparencyModifier = 0
     active[root] = nil
 end
 RunService.RenderStepped:Connect(function(dt)
@@ -28,7 +29,7 @@ RunService.RenderStepped:Connect(function(dt)
         tick = 0
         local candidates = {}
         for root, record in pairs(roots) do
-            if not root.Parent then unload(root, record); roots[root] = nil; continue end
+            if not root:IsDescendantOf(workspace) then unload(root, record); roots[root] = nil; continue end
             local environment = root:GetAttribute("ArtEnvironment") == true
             local distance = (root.Position - camera.CFrame.Position).Magnitude
             local range = root:GetAttribute("ArtDistance") or (root.Parent:GetAttribute("Guardian") and 420 or 270)
@@ -59,7 +60,7 @@ RunService.RenderStepped:Connect(function(dt)
                 record.Loading = false
                 if not ok then record.Failed = true; warn("[Underwater Egg] Modèle indisponible:", key, model); return end
                 local native = model:GetAttribute("ArtCost") == 1
-                if not root.Parent or not record.Wanted or (not native and record.RequestedQuality ~= quality) then model:Destroy(); return end
+                if roots[root] ~= record or not root:IsDescendantOf(workspace) or not record.Wanted or (not native and record.RequestedQuality ~= quality) then model:Destroy(); return end
                 local frame = artFrame(root)
                 model.Parent = root; model:PivotTo(frame)
                 root.LocalTransparencyModifier = 1

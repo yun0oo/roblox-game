@@ -3,11 +3,30 @@ Run: blender -b -t 2 --python tools/build_environment.py
 Credits and upstream/mirror hashes: assets/manifest.json and assets/CREDITS.md.
 """
 from pathlib import Path
-import bpy, bmesh, json, math
+import bpy, bmesh, json, math, struct
 from mathutils import Vector, Matrix
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'assets/source'
 OUTPUT = ROOT / 'assets/generated'
+
+def import_gltf(filename):
+    """Resolve each pack's own palette without altering archived source bytes."""
+    source = SOURCE / filename
+    if filename.startswith('Kenney_modern_'):
+        manifest = json.loads((ROOT / 'assets/manifest.json').read_text())
+        pack = next(row['pack'] for row in manifest['sources'] if row['file'] == filename)
+        raw = source.read_bytes(); length, kind = struct.unpack_from('<II', raw, 12)
+        model = json.loads(raw[20:20 + length])
+        for image in model.get('images', []):
+            if image.get('uri') == 'Textures/colormap.png':
+                image['uri'] = str(SOURCE / ('Kenney_' + pack + '_colormap.png'))
+        encoded = json.dumps(model, separators=(',', ':')).encode()
+        encoded += b' ' * ((-len(encoded)) % 4)
+        payload = struct.pack('<II', len(encoded), kind) + encoded + raw[20 + length:]
+        cache = ROOT / 'build/import-cache'; cache.mkdir(parents=True, exist_ok=True)
+        source = cache / filename
+        source.write_bytes(struct.pack('<4sII', b'glTF', 2, len(payload) + 12) + payload)
+    bpy.ops.import_scene.gltf(filepath=str(source))
 ITEMS = [
     ('reef_tubes', 'PolyPizza_Coral.glb', 'tubes', 3500, 1000, 520),
     ('reef_fan', 'PolyPizza_EnviroCoral.glb', None, 6000, 1400, 360),
@@ -81,7 +100,7 @@ def sample_color(obj, poly, mode):
 
 def bake(key, filename, mode, full, lod, far):
     clear()
-    if filename.endswith('.glb'): bpy.ops.import_scene.gltf(filepath=str(SOURCE / filename))
+    if filename.endswith('.glb'): import_gltf(filename)
     else: load_aquarium(filename)
     bpy.context.view_layer.update()
     meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']

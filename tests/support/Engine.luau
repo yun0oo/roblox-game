@@ -65,6 +65,14 @@ function Engine.new()
         return copy
     end
     function methods:IsA(class) return self.ClassName == class or (class == "BasePart" and (self.ClassName == "Part" or self.ClassName == "WedgePart")) end
+    function methods:IsDescendantOf(ancestor)
+        local parent = self.Parent
+        while parent do
+            if parent == ancestor then return true end
+            parent = parent.Parent
+        end
+        return false
+    end
     function methods:GetChildren() return table.clone(self._children) end
     function methods:GetDescendants()
         local result = {}
